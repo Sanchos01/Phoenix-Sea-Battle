@@ -58,4 +58,12 @@ config :logger, level: :info
 
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.
-import_config "prod.secret.exs"
+
+# Copy from prod.secret.exs
+# Configure your database
+config :phoenix_sea_battle, PhoenixSeaBattle.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "postgres",
+  password: "postgres",
+  database: "phoenix_sea_battle_prod",
+  pool_size: 20

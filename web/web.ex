@@ -36,6 +36,7 @@ defmodule PhoenixSeaBattle.Web do
 
       import PhoenixSeaBattle.Router.Helpers
       import PhoenixSeaBattle.Gettext
+      import PhoenixSeaBattle.Auth, only: [authenticate_user: 2]
     end
   end
 
@@ -58,6 +59,7 @@ defmodule PhoenixSeaBattle.Web do
   def router do
     quote do
       use Phoenix.Router
+      import PhoenixSeaBattle.Auth, only: [authenticate_user: 2]
     end
   end
 
