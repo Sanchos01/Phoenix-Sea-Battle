@@ -55,12 +55,37 @@ let socket = new Socket("/socket", {
 // Finally, pass the token on connect as below. Or remove it
 // from connect if you don't care about authentication.
 
-// socket.connect()
+socket.connect()
 
 // Now that you are connected, you can join channels with a topic:
-// let channel = socket.channel("topic:subtopic", {})
-// channel.join()
-//   .receive("ok", resp => { console.log("Joined successfully", resp) })
-//   .receive("error", resp => { console.log("Unable to join", resp) })
+let channel           = socket.channel("room:lobby", {})
+let chatInput         = document.querySelector("#chat-input")
+let messagesContainer = document.querySelector("#messages")
+
+chatInput.addEventListener("keypress", event => {
+  if(event.keyCode === 13){
+    channel.push("new_msg", {body: chatInput.value})
+      .receive("error", e => console.log(e))
+    chatInput.value = ""
+  }
+})
+
+channel.on("new_msg", payload => {
+  let messageItem = document.createElement("li");
+  let date = new Date;
+  messageItem.innerText = `[${date.toTimeString()}] (${payload.user}): ${payload.body}`
+  messagesContainer.appendChild(messageItem)
+})
+
+channel.on("join_user", payload => {
+  let messageItem = document.createElement("li");
+  let date = new Date;
+  messageItem.innerText = `[${date.toTimeString()}] ${payload.user} Joined!`
+  messagesContainer.appendChild(messageItem)
+})
+
+channel.join()
+  .receive("ok", resp => { console.log("Joined successfully", resp) })
+  .receive("error", resp => { console.log("Unable to join", resp) })
 
 export default socket

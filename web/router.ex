@@ -8,6 +8,7 @@ defmodule PhoenixSeaBattle.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug PhoenixSeaBattle.Auth, repo: PhoenixSeaBattle.Repo
+    plug :put_user_token
   end
 
   pipeline :api do
@@ -20,6 +21,15 @@ defmodule PhoenixSeaBattle.Router do
     resources "/sessions", SessionController, only: [:new, :create, :delete]
 
     get "/", PageController, :index
+  end
+
+  defp put_user_token(conn, _) do
+    if current_user = conn.assigns[:current_user] do
+      token = Phoenix.Token.sign(conn, "user socket", current_user.id)
+      assign(conn, :user_token, token)
+    else
+      conn
+    end
   end
   
   # Other scopes may use custom stacks.
