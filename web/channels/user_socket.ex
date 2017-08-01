@@ -1,4 +1,5 @@
 defmodule PhoenixSeaBattle.UserSocket do
+  require Logger
   use Phoenix.Socket
 
   ## Channels
@@ -22,15 +23,21 @@ defmodule PhoenixSeaBattle.UserSocket do
   @max_age 2 * 7 * 24 * 60 * 60
   
   def connect(%{"token" => token}, socket) do
-    case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
-      {:ok, user_id} ->
-        {:ok, assign(socket, :user_id, user_id)}
-      {:error, _reason} ->
-        :error
+    socket = case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
+      {:ok, user_id} -> assign(socket, :user_id, user_id)
+      {:error, reason} -> Logger.error("user unauthorized #{inspect reason}")
+                          assign(socket, :anonymous, Ecto.UUID.generate())
     end
+    Logger.info("joined #{inspect socket}")
+    {:ok, socket}
   end
   def connect(_params, _socket), do: :error
-  def id(socket), do: "users_socket:#{socket.assigns.user_id}"
+  def id(socket) do
+    case socket.assigns[:user_id] do
+      nil -> nil
+      user_id -> "users_socket:#{user_id}"
+    end
+  end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:
   #
