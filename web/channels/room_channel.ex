@@ -21,7 +21,7 @@ defmodule PhoenixSeaBattle.RoomChannel do
   end
 
   def handle_in("new_msg", %{"body" => body}, socket) do
-    Logger.info("new_msg on socket: #{inspect body}; #{inspect socket}")
+    Logger.debug("new_msg on socket: #{inspect body}; #{inspect socket}")
     username = case socket.assigns[:user_id] do
       nil -> <<uuid::bytes-size(6), _::binary>> = socket.assigns[:anonymous]
              "Anon:" <> uuid

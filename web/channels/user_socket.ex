@@ -28,7 +28,7 @@ defmodule PhoenixSeaBattle.UserSocket do
       {:error, reason} -> Logger.error("user unauthorized #{inspect reason}")
                           assign(socket, :anonymous, Ecto.UUID.generate())
     end
-    Logger.info("joined #{inspect socket}")
+    Logger.debug("joined #{inspect socket}")
     {:ok, socket}
   end
   def connect(_params, _socket), do: :error

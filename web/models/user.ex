@@ -10,7 +10,7 @@ defmodule PhoenixSeaBattle.User do
     timestamps()
   end
 
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params \\ %{}) do
     model
     |> cast(params, [:name, :username])
     |> validate_required(:username)
