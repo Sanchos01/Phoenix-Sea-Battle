@@ -6,7 +6,8 @@ defmodule PhoenixSeaBattle.UserSocket do
   channel "room:*", PhoenixSeaBattle.RoomChannel
 
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket
+  transport :websocket, Phoenix.Transports.WebSocket,
+    transport_log: :debug
   # transport :longpoll, Phoenix.Transports.LongPoll
 
   # Socket params are passed from the client and can
@@ -25,7 +26,7 @@ defmodule PhoenixSeaBattle.UserSocket do
   def connect(%{"token" => token}, socket) do
     socket = case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
       {:ok, user_id} -> assign(socket, :user_id, user_id)
-      {:error, reason} -> Logger.error("user unauthorized #{inspect reason}")
+      {:error, reason} -> Logger.warn("user unauthorized #{inspect reason}")
                           assign(socket, :anonymous, Ecto.UUID.generate())
     end
     Logger.debug("joined #{inspect socket}")
@@ -34,7 +35,7 @@ defmodule PhoenixSeaBattle.UserSocket do
   def connect(_params, _socket), do: :error
   def id(socket) do
     case socket.assigns[:user_id] do
-      nil -> nil
+      nil -> "users_socket:anonymous"
       user_id -> "users_socket:#{user_id}"
     end
   end

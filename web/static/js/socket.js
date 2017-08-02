@@ -77,7 +77,7 @@ channel.on("new_msg", payload => {
   messagesContainer.appendChild(messageItem)
 })
 
-channel.on("join_user", payload => {
+channel.on("user_joined", payload => {
   let messageItem = document.createElement("li");
   let date = new Date;
   messageItem.innerText = `[${date.toTimeString()}] ${payload.user} Joined!`

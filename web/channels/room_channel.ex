@@ -15,7 +15,7 @@ defmodule PhoenixSeaBattle.RoomChannel do
     case socket.assigns[:user_id] do
       nil -> {:noreply, socket}
       user_id -> username = Repo.get(PhoenixSeaBattle.User, user_id).username
-                 broadcast! socket, "join_user", %{user: username}
+                 broadcast! socket, "user_joined", %{user: username}
                  {:noreply, socket}
     end
   end
@@ -23,8 +23,8 @@ defmodule PhoenixSeaBattle.RoomChannel do
   def handle_in("new_msg", %{"body" => body}, socket) do
     Logger.debug("new_msg on socket: #{inspect body}; #{inspect socket}")
     username = case socket.assigns[:user_id] do
-      nil -> <<uuid::bytes-size(6), _::binary>> = socket.assigns[:anonymous]
-             "Anon:" <> uuid
+      nil -> <<uid::bytes-size(8), _::binary>> = socket.assigns[:anonymous]
+             "Anon:" <> uid
       user_id -> Repo.get(PhoenixSeaBattle.User, user_id).username
     end
     broadcast! socket, "new_msg", %{body: body, user: username}
