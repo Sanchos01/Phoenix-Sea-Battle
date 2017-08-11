@@ -1,4 +1,15 @@
-<div class="jumbotron">
-  <div id="messages"></div>
-  <input id="chat-input" type="text"></input>
+<div class="row">
+  <div class="col-md-8">
+    <h3>Messages:</h3>
+    <div id="messages" class="panel body-annotations">
+    </div>
+
+    <input id="chat-input" type="text" class="form-control"></input>
+  </div>
+
+  <div class="cold-md-4">
+    <h3>Users Online:</h3>
+    <ul id="userList" class="list-unsyled">
+    </ul>
+  </div>
 </div>

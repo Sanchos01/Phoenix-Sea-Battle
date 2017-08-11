@@ -1,1 +1,5 @@
 /* This file is for your main application css. */
+#messages {
+  height: 190px;
+  overflow: auto;
+}
