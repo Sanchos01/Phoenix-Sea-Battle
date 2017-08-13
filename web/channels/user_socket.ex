@@ -22,14 +22,14 @@ defmodule PhoenixSeaBattle.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   @max_age 2 * 7 * 24 * 60 * 60
-  
+
   def connect(%{"token" => token}, socket) do
     socket = case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
       {:ok, user_id} -> assign(socket, :user_id, user_id)
       {:error, reason} -> Logger.warn("user unauthorized #{inspect reason}")
                           assign(socket, :anonymous, Ecto.UUID.generate())
     end
-    Logger.debug("joined #{inspect socket}")
+    # Logger.debug("joined #{inspect socket}")
     {:ok, socket}
   end
   def connect(_params, _socket), do: :error

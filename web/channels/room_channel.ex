@@ -2,6 +2,7 @@ defmodule PhoenixSeaBattle.RoomChannel do
   require Logger
   use Phoenix.Channel
   alias PhoenixSeaBattle.Repo
+  alias PhoenixSeaBattle.Presence
 
   def join("room:lobby", _message, socket) do
     send self(), :after_join
@@ -13,10 +14,17 @@ defmodule PhoenixSeaBattle.RoomChannel do
 
   def handle_info(:after_join, socket) do
     case socket.assigns[:user_id] do
-      nil -> {:noreply, socket}
-      user_id -> username = Repo.get(PhoenixSeaBattle.User, user_id).username
-                 broadcast! socket, "user_joined", %{user: username}
-                 {:noreply, socket}
+      nil -> push socket, "presence_state", Presence.list(socket)
+             {:noreply, socket}
+      user_id ->  username = Repo.get(PhoenixSeaBattle.User, user_id).username
+                  Logger.debug("#{inspect username}")
+                  Presence.track(socket, username, %{
+                    online_at: System.system_time(:milliseconds)
+                  })
+                  broadcast! socket, "user_joined", %{user: username,
+                                                      timestamp: System.system_time(:milliseconds)}
+                  push socket, "presence_state", Presence.list(socket)
+                  {:noreply, socket}
     end
   end
 
@@ -27,7 +35,9 @@ defmodule PhoenixSeaBattle.RoomChannel do
              "Anon:" <> uid
       user_id -> Repo.get(PhoenixSeaBattle.User, user_id).username
     end
-    broadcast! socket, "new_msg", %{body: body, user: username}
+    broadcast! socket, "new_msg", %{body: body,
+                                    user: username,
+                                    timestamp: System.system_time(:milliseconds)}
     {:noreply, socket}
   end
 end

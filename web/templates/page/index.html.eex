@@ -9,7 +9,7 @@
 
   <div class="cold-md-4">
     <h3>Users Online:</h3>
-    <ul id="userList" class="list-unsyled">
+    <ul id="userList" class="list-unstyled">
     </ul>
   </div>
 </div>
