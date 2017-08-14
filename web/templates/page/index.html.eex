@@ -1,3 +1,8 @@
+<%= if !@conn.assigns[:current_user] do %>
+  <div class="alert alert-danger">
+    <p>You should logging for using this web-service</p>
+  </div>
+<% end %>
 <div class="chat container">
   <div class="col-md-9">
     <div class="panel panel-default chat-room">

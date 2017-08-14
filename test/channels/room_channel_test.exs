@@ -6,9 +6,6 @@ defmodule PhoenixSeaBattle.RoomChannelTest do
   alias PhoenixSeaBattle.User
 
   setup do
-    {:ok, _, anon_socket} =
-      socket("user_id", %{anonymous: Ecto.UUID.generate()})
-      |> subscribe_and_join(RoomChannel, "room:lobby")
     query = from u in User,
     select: u.id
     user_id = Repo.all(query) |> List.first
@@ -17,41 +14,16 @@ defmodule PhoenixSeaBattle.RoomChannelTest do
       socket("user_id", %{user_id: user_id})
       |> subscribe_and_join(RoomChannel, "room:lobby")
 
-    {:ok, socket: [anon_socket, {auth_socket, username}]}
+    {:ok, socket: auth_socket, user: username}
   end
 
-  test "new message broadcasts to room:lobby", %{socket: sockets} do
-    Enum.map(sockets, fn
-      {auth_socket, username} ->
-        push auth_socket, "new_msg", %{"body" => "hi there"}
-        assert_broadcast "new_msg", %{body: "hi there", user: ^username}
-      anon_socket ->
-        push anon_socket, "new_msg", %{"body" => "hi there"}
-        assert_broadcast "new_msg", %{body: "hi there", user: "Anon:" <> _}
-      end
-    )
+  test "new message broadcasts to room:lobby", %{socket: socket, user: username} do
+    push socket, "new_msg", %{"body" => "hi there"}
+    assert_broadcast "new_msg", %{body: "hi there", user: ^username}, 2_000
   end
 
-  # test "new message broadcasts to room:lobby", %{socket: [anon_socket, auth_socket]} do
-  #   push anon_socket, "new_msg", %{"body" => "hi there"}
-  #   assert_broadcast "new_msg", %{body: "hi there"}
-  #   push auth_socket, "new_msg", %{"body" => "hi there"}
-  #   assert_broadcast "new_msg", %{body: "hi there", username: "123"}
-  #   # Enum.map(sockets, fn socket ->
-  #   #   push socket, "new_msg", %{"body" => "hi there"}
-  #   #   assert_broadcast "new_msg", %{body: "hi there"}
-  #   # end)
-  # end
-
-  test "broadcasts are pushed to the client", %{socket: sockets} do
-    Enum.map(sockets, fn
-      {auth_socket, _username} ->
-        broadcast_from! auth_socket, "broadcast", %{"some" => "data"}
-        assert_push "broadcast", %{"some" => "data"}
-      anon_socket ->
-        broadcast_from! anon_socket, "broadcast", %{"some" => "data"}
-        assert_push "broadcast", %{"some" => "data"}
-      end
-    )
+  test "broadcasts are pushed to the client", %{socket: socket} do
+    broadcast_from! socket, "broadcast", %{"some" => "data"}
+    assert_push "broadcast", %{"some" => "data"}, 2_000
   end
 end
