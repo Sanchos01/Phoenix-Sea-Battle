@@ -1,5 +1,18 @@
 /* This file is for your main application css. */
 #messages {
-  height: 190px;
   overflow: auto;
+  margin-top: 0em;
+  min-height: 200px;
+}
+.chat {
+  margin-top: 0em;
+}
+.chat-room {
+  margin-top: 1em;
+}
+.panel-messages, .panel-users {
+  height: 300px;
+}
+.users{
+  padding-bottom: 0.5em;
 }

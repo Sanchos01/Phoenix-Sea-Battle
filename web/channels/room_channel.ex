@@ -8,9 +8,6 @@ defmodule PhoenixSeaBattle.RoomChannel do
     send self(), :after_join
     {:ok, socket}
   end
-  def join("room:" <> _private_room_id, _params, _socket) do
-    {:error, %{reason: "unauthorized"}}
-  end
 
   def handle_info(:after_join, socket) do
     case socket.assigns[:user_id] do
@@ -19,7 +16,8 @@ defmodule PhoenixSeaBattle.RoomChannel do
       user_id ->  username = Repo.get(PhoenixSeaBattle.User, user_id).username
                   Logger.debug("#{inspect username}")
                   Presence.track(socket, username, %{
-                    online_at: System.system_time(:milliseconds)
+                    online_at: System.system_time(:milliseconds),
+                    state: "lobby"
                   })
                   broadcast! socket, "user_joined", %{user: username,
                                                       timestamp: System.system_time(:milliseconds)}
