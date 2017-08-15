@@ -21,7 +21,7 @@ let Lobby = {
     chatInput.addEventListener("keypress", event => {
       if(event.keyCode === 13 && chatInput.value != ""){
         lobby.push("new_msg", {body: chatInput.value})
-        .receive("error", e => console.log(e))
+          .receive("error", e => console.log(e))
         chatInput.value = ""
       }
     })
@@ -43,13 +43,6 @@ let Lobby = {
       messagesContainer.scrollTop = messagesContainer.scrollHeight
     })
 
-    lobby.on("user_joined", payload => {
-      let messageItem = document.createElement("div");
-      messageItem.innerText = `[${this.formatedTimestamp(payload.timestamp)}] ${payload.user} Joined!`
-      messagesContainer.appendChild(messageItem)
-      messagesContainer.scrollTop = messagesContainer.scrollHeight
-    })
-
     lobby.join()
       .receive("ok", resp => { console.log("Joined successfully", resp) })
       .receive("error", resp => { console.log("Unable to join", resp) })
@@ -66,7 +59,6 @@ let Lobby = {
   listBy(user, {metas: metas}){
     return {
       user: user,
-      onlineAt: Lobby.formatedTimestamp(metas[0].online_at),
       state: metas[0].state
     }
   },
@@ -77,9 +69,8 @@ let Lobby = {
         <li class="users">
           ${presence.user}
           <br>
-          <small>online since ${presence.onlineAt}</small>
-          <br>
           <small>in ${presence.state}</small>
+          <a class="btn btn-default btn-xs" href="/games/${presence.user}">Join</a>
         </li>
       `)
       .join("")

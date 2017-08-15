@@ -4,15 +4,18 @@
   margin-top: 0em;
   min-height: 200px;
 }
-.chat {
+.chat, .game {
   margin-top: 0em;
 }
-.chat-room {
+.chat-room, .game-panel {
   margin-top: 1em;
 }
-.panel-messages, .panel-users {
+.panel-messages, .panel-users, .panel-game {
   height: 300px;
 }
 .users{
   padding-bottom: 0.5em;
+}
+.btn-default{
+  width: 100%;
 }

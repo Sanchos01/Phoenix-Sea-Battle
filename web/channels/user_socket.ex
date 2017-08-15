@@ -3,7 +3,8 @@ defmodule PhoenixSeaBattle.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  channel "room:*", PhoenixSeaBattle.RoomChannel
+  channel "room:lobby", PhoenixSeaBattle.RoomChannel
+  channel "game:*", PhoenixSeaBattle.GameChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket,

@@ -19,6 +19,8 @@ defmodule PhoenixSeaBattle.Router do
     pipe_through :browser # Use the default browser stack
     resources "/users", UserController, only: [:index, :show, :new, :create]
     resources "/sessions", SessionController, only: [:new, :create, :delete]
+    resources "/game", GameController, only: [:index]
+    resources "/game/:id", GameController, only: [:index]
 
     get "/", PageController, :index
   end
