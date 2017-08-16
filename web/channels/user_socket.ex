@@ -30,7 +30,6 @@ defmodule PhoenixSeaBattle.UserSocket do
       {:ok, user_id} ->
         username = Repo.get(PhoenixSeaBattle.User, user_id).username
         {:ok, socket |> assign(:user_id, user_id) |> assign(:user, username)}
-      {:ok, user_id} -> {:ok, assign(socket, :user_id, user_id)}
       {:error, reason} -> (Logger.warn("user unauthorized #{inspect reason}"); :error)
     end
   end

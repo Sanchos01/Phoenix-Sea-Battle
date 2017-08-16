@@ -11,7 +11,7 @@ defmodule PhoenixSeaBattle.RoomChannelTest do
     user_id = Repo.all(query) |> List.first
     username = Repo.get(PhoenixSeaBattle.User, user_id).username
     {:ok, _, auth_socket} =
-      socket("user_id", %{user_id: user_id})
+      socket("user_id", %{user_id: user_id, user: username})
       |> subscribe_and_join(RoomChannel, "room:lobby")
 
     {:ok, socket: auth_socket, user: username}

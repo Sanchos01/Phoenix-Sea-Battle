@@ -3,7 +3,7 @@ defmodule PhoenixSeaBattle.GameChannel do
   use PhoenixSeaBattle.Web, :channel
   alias PhoenixSeaBattle.Presence
 
-  def join("game:" <> id, _message, socket) do
+  def join("game:" <> _id, _message, socket) do
     send self(), :after_join
     {:ok, socket}
   end
