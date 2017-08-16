@@ -1,5 +1,5 @@
 # PhoenixSeaBattle
-[![Build Status](https://secure.travis-ci.org/Sanchos01/Phoenix-Sea-Battle.svg "Build Status")](http://travis-ci.org/Sanchos01/Phoenix-Sea-Battle) [![Deps Status](https://beta.hexfaktor.org/badge/all/github/Sanchos01/Phoenix-Sea-Battle.svg)](https://beta.hexfaktor.org/github/Sanchos01/Phoenix-Sea-Battle) [![Coverage Status](https://coveralls.io/repos/github/Sanchos01/Phoenix-Sea-Battle/badge.svg?branch=master)](https://coveralls.io/github/Sanchos01/Phoenix-Sea-Battle?branch=master)
+[![Build Status](https://secure.travis-ci.org/Sanchos01/Phoenix-Sea-Battle.svg "Build Status")](http://travis-ci.org/Sanchos01/Phoenix-Sea-Battle) [![Coverage Status](https://coveralls.io/repos/github/Sanchos01/Phoenix-Sea-Battle/badge.svg?branch=master)](https://coveralls.io/github/Sanchos01/Phoenix-Sea-Battle?branch=master)
 
 To start your Phoenix app:
 
