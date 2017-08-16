@@ -3,6 +3,7 @@ defmodule PhoenixSeaBattle.RoomChannel do
   use PhoenixSeaBattle.Web, :channel
   alias PhoenixSeaBattle.Presence
 
+  # states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   def join("room:lobby", message, socket) do
     case message["game"] do
       nil -> send self(), :after_join
@@ -14,7 +15,7 @@ defmodule PhoenixSeaBattle.RoomChannel do
   def handle_info(:after_join, socket) do
     socket = assign(socket, :state, "lobby")
     Presence.track(socket, socket.assigns[:user], %{
-      state: "lobby"
+      state: 0
     })
     push socket, "presence_state", Presence.list(socket)
     {:noreply, socket}
@@ -23,7 +24,7 @@ defmodule PhoenixSeaBattle.RoomChannel do
   def handle_info({:after_join, gameId}, socket) do
     socket = assign(socket, :state, "game")
     Presence.track(socket, socket.assigns[:user], %{
-      state: "game",
+      state: 1,
       gameId: gameId
     })
     {:noreply, socket}
@@ -33,6 +34,11 @@ defmodule PhoenixSeaBattle.RoomChannel do
     broadcast! socket, "new_msg", %{body: body,
                                     user: socket.assigns[:user],
                                     timestamp: System.system_time(:milliseconds)}
+    {:noreply, socket}
+  end
+  
+  def handle_in("close_state", %{"body" => _gameId}, socket) do # TODO: rework
+    socket = assign(socket, :state, 2)
     {:noreply, socket}
   end
 

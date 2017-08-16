@@ -1,3 +1,5 @@
+import {Presence} from "phoenix"
+
 let GameSocket = {
 
   init(socket, element, gameId){
@@ -14,6 +16,7 @@ let GameSocket = {
   onReady(game, lobby, gameId){
     let chatInput         = document.querySelector("#chat-input")
     let messagesContainer = document.querySelector("#messages")
+    let presences         = {}
 
     chatInput.addEventListener("keypress", event => {
       if(event.keyCode === 13 && chatInput.value != ""){
@@ -28,6 +31,14 @@ let GameSocket = {
       messageItem.innerText = `(${payload.user}): ${payload.body}`
       messagesContainer.appendChild(messageItem)
       messagesContainer.scrollTop = messagesContainer.scrollHeight
+    })
+
+    game.on("presence_diff", diff => {
+      presences = Presence.syncDiff(presences, diff)
+      let users_count = Presence.list(presences, function(user, {metas: metas}){return user}).length
+      if (users_count >= 2){
+        lobby.push("close_state", {body: gameId})
+      }
     })
 
     lobby.join()

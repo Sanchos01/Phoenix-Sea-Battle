@@ -4,7 +4,7 @@ defmodule PhoenixSeaBattle.Mixfile do
   def project do
     [app: :phoenix_sea_battle,
      version: "0.0.1",
-     elixir: "~> 1.2",
+     elixir: "~> 1.4",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -41,7 +41,8 @@ defmodule PhoenixSeaBattle.Mixfile do
      {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"},
      {:comeonin, "~> 3.2"},
-     {:excoveralls, "~> 0.6", only: :test}]
+     {:excoveralls, "~> 0.6", only: :test},
+     {:exactor, "~> 2.2.3", warn_missing: false}]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

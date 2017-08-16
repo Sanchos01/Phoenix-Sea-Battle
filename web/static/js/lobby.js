@@ -59,20 +59,45 @@ let Lobby = {
   listBy(user, {metas: metas}){
     return {
       user: user,
-      state: metas[0].state
+      state: metas[0].state,
+      gameId: metas[0].gameId
     }
   },
 
+  // states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full
   render(presences){
     userList.innerHTML = Presence.list(presences, Lobby.listBy)
-      .map(presence => `
-        <li class="users">
+      .map(function (presence) {
+        switch (presence.state) {
+          case 1:
+          console.log(presence);
+          return `
+          <li class="users">
           ${presence.user}
           <br>
-          <small>in ${presence.state}</small>
-          <a class="btn btn-default btn-xs" href="/games/${presence.user}">Join</a>
-        </li>
-      `)
+          <small>in game</small>
+          <a class="btn btn-default btn-xs" href="/game/${presence.gameId}">Join</a>
+          </li>
+          `
+          case 2:
+          return `
+          <li class="users">
+          ${presence.user}
+          <br>
+          <small>in game</small>
+          </li>
+          `
+          default:
+          return `
+            <li class="users">
+              ${presence.user}
+              <br>
+              <small>in lobby</small>
+            </li>
+          `
+        }
+      }
+    )
       .join("")
   },
 }
