@@ -26,6 +26,7 @@ defmodule PhoenixSeaBattle.ConnCase do
       import Ecto.Query
 
       import PhoenixSeaBattle.Router.Helpers
+      import PhoenixSeaBattle.TestHelpers
 
       # The default endpoint for testing
       @endpoint PhoenixSeaBattle.Endpoint

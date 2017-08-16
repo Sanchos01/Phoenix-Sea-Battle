@@ -16,7 +16,7 @@ defmodule PhoenixSeaBattle.Auth do
   end
 
   def login_by_username_and_pass(conn, username, given_pass, opts) do
-    repo = Keyword.fetch!(opts, :repo)
+    repo = init(opts)
     user = repo.get_by(PhoenixSeaBattle.User, username: username)
 
     cond do
@@ -32,9 +32,7 @@ defmodule PhoenixSeaBattle.Auth do
     end
   end
 
-  def init(opts) do
-    Keyword.fetch!(opts, :repo)
-  end
+  def init(opts), do: Keyword.fetch!(opts, :repo)
 
   def call(conn, repo) do
     user_id = get_session(conn, :user_id)

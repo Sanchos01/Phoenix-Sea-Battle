@@ -1,13 +1,13 @@
 defmodule PhoenixSeaBattle.SessionController do
+  alias PhoenixSeaBattle.Auth
   use PhoenixSeaBattle.Web, :controller
 
   def new(conn, _) do
     render conn, "new.html"
   end
 
-  def create(conn, %{"session" => %{"username" => user, "password" =>
-        pass}}) do
-    case PhoenixSeaBattle.Auth.login_by_username_and_pass(conn, user, pass, repo:
+  def create(conn, %{"session" => %{"username" => user, "password" => pass}}) do
+    case Auth.login_by_username_and_pass(conn, user, pass, repo:
         Repo) do
       {:ok, conn} ->
         conn
@@ -22,7 +22,7 @@ defmodule PhoenixSeaBattle.SessionController do
 
   def delete(conn, _) do
     conn
-    |> PhoenixSeaBattle.Auth.logout()
+    |> Auth.logout()
     |> redirect(to: page_path(conn, :index))
   end
 end
