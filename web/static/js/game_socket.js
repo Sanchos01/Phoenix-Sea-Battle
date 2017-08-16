@@ -6,11 +6,12 @@ let GameSocket = {
     socket.onOpen( ev => console.log("OPEN", ev) )
     socket.onError( ev => console.log("ERROR", ev) )
     socket.onClose( e => console.log("CLOSE", e) )
+    let lobby = socket.channel("room:lobby", {game: `${gameId}`})
     let game = socket.channel(`game:${ gameId }`)
-    this.onReady(game)
+    this.onReady(game, lobby, gameId)
   },
 
-  onReady(game){
+  onReady(game, lobby, gameId){
     let chatInput         = document.querySelector("#chat-input")
     let messagesContainer = document.querySelector("#messages")
 
@@ -29,10 +30,17 @@ let GameSocket = {
       messagesContainer.scrollTop = messagesContainer.scrollHeight
     })
 
+    lobby.join()
+    .receive("ok", resp => { console.log("Joined successfully", resp) })
+    .receive("error", resp => { console.log("Unable to join", resp) })
+
+    lobby.onError(e => console.log("something went wrong", e))
+    lobby.onClose(e => console.log("channel closed", e))
+
     game.join()
       .receive("ok", resp => { console.log("Joined successfully", resp) })
       .receive("error", resp => { console.log("Unable to join", resp) })
-  
+
     game.onError(e => console.log("something went wrong", e))
     game.onClose(e => console.log("channel closed", e))
   },

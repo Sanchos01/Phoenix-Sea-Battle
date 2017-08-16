@@ -1,6 +1,7 @@
 defmodule PhoenixSeaBattle.UserSocket do
   require Logger
   use Phoenix.Socket
+  alias PhoenixSeaBattle.Repo
 
   ## Channels
   channel "room:lobby", PhoenixSeaBattle.RoomChannel
@@ -26,6 +27,9 @@ defmodule PhoenixSeaBattle.UserSocket do
 
   def connect(%{"token" => token}, socket) do
     case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
+      {:ok, user_id} ->
+        username = Repo.get(PhoenixSeaBattle.User, user_id).username
+        {:ok, socket |> assign(:user_id, user_id) |> assign(:user, username)}
       {:ok, user_id} -> {:ok, assign(socket, :user_id, user_id)}
       {:error, reason} -> (Logger.warn("user unauthorized #{inspect reason}"); :error)
     end
