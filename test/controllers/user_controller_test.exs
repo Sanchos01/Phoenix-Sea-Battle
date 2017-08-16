@@ -1,6 +1,5 @@
 defmodule PhoenixSeaBattle.UserControllerTest do
   use PhoenixSeaBattle.ConnCase
-  require Logger
 
   setup %{conn: conn} = config do
     if username = config[:login_as] do

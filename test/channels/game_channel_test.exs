@@ -13,6 +13,6 @@ defmodule PhoenixSeaBattle.GameChannelTest do
   
   test "new message broadcast to game:*", %{socket: socket} do
     push socket, "new_msg", %{"body" => "hi there"}
-    assert_broadcast "new_msg", %{body: "hi there"}, 2_000
+    assert_broadcast "new_msg", %{body: "hi there"}, 1_000
   end
 end
