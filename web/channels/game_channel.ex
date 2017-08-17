@@ -3,20 +3,19 @@ defmodule PhoenixSeaBattle.GameChannel do
   use PhoenixSeaBattle.Web, :channel
   alias PhoenixSeaBattle.Presence
 
-  def join("game:" <> _id, _message, socket) do
+  def join("game:" <> id, _message, socket) do
     list_users = Presence.list(socket) |> Map.keys()
     cond do
       length(list_users) > 1 ->
         {:error, "this room is full"}
       true ->
         send self(), :after_join
-        {:ok, socket}
+        {:ok, assign(socket, :game_id, id)}
     end
   end
 
   def handle_info(:after_join, socket) do
     Presence.track(socket, socket.assigns[:user], %{
-      state: "game"
     })
     {:noreply, socket}
   end

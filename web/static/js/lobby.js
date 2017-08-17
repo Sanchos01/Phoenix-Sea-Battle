@@ -60,39 +60,39 @@ let Lobby = {
     return {
       user: user,
       state: metas[0].state,
-      gameId: metas[0].gameId
+      gameId: metas[0].gameId,
+      with: metas[0].with
     }
   },
 
-  // states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full
+  // states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   render(presences){
     userList.innerHTML = Presence.list(presences, Lobby.listBy)
       .map(function (presence) {
         switch (presence.state) {
-          case 1:
-          console.log(presence);
+          case 0:
           return `
-          <li class="users">
-          ${presence.user}
-          <br>
-          <small>in game</small>
-          <a class="btn btn-default btn-xs" href="/game/${presence.gameId}">Join</a>
-          </li>
+            <li class="users">
+              ${presence.user}
+              <br>
+              <small>in lobby</small>
+            </li>
           `
-          case 2:
+          case 1:
           return `
-          <li class="users">
-          ${presence.user}
-          <br>
-          <small>in game</small>
-          </li>
+            <li class="users">
+              ${presence.user}
+              <br>
+              <small>in game</small>
+              <a class="btn btn-default btn-xs" href="/game/${presence.gameId}">Join</a>
+            </li>
           `
           default:
           return `
             <li class="users">
               ${presence.user}
               <br>
-              <small>in lobby</small>
+              <small>in game with ${presence.with}</small>
             </li>
           `
         }

@@ -19,8 +19,8 @@
       </div>
     </div>
     <td class="text-right">
-      <%= link "Exit Game", to: page_path(@conn, :index),
-            data: [confirm: "Are you sure?"], class: "btn btn-default" %>
+      <%= link "Exit Game", to: game_path(@conn, :delete, @id), method: "delete",
+            data: [confirm: "You want leave the game?"], class: "btn btn-default" %>
     </td>
   </div>
 </div>

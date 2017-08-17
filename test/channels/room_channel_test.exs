@@ -2,6 +2,11 @@ defmodule PhoenixSeaBattle.RoomChannelTest do
   use PhoenixSeaBattle.ChannelCase
   alias PhoenixSeaBattle.RoomChannel
 
+  setup_all do
+    PhoenixSeaBattle.Game.Supervisor.new_game("12345678")
+    :ok
+  end
+
   setup config do
     if username = config[:login_as] do
       user = insert_user(%{username: username, password: "secret"})
