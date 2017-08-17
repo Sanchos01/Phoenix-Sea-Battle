@@ -11,7 +11,8 @@ defmodule PhoenixSeaBattle.GameController do
               |> redirect(to: page_path(conn, :index))
       pid -> username = conn.assigns[:current_user].username
              case PhoenixSeaBattle.Game.add_user(pid, username) do
-               :ok -> render(conn, "index.html", [id: id])
+               {:ok, :admin} -> render(conn, "index.html", [id: id, admin: true])
+               {:ok, :opponent} -> render(conn, "index.html", [id: id, admin: false])
                {:error, reason} -> conn
                                    |> put_flash(:error, reason)
                                    |> redirect(to: page_path(conn, :index))
@@ -31,7 +32,7 @@ defmodule PhoenixSeaBattle.GameController do
   def delete(conn, %{"id" => id}) do
     case GenServer.whereis(GameSupervisor.via_tuple(id)) do
       nil -> :ok
-      pid -> send(pid, :terminate)
+      pid -> send(pid, {:terminate, conn.assigns[:current_user]})
     end
     conn
       |> redirect(to: page_path(conn, :index))

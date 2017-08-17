@@ -87,7 +87,7 @@ let Lobby = {
               <a class="btn btn-default btn-xs" href="/game/${presence.gameId}">Join</a>
             </li>
           `
-          default:
+          case 2:
           return `
             <li class="users">
               ${presence.user}
@@ -95,9 +95,24 @@ let Lobby = {
               <small>in game with ${presence.with}</small>
             </li>
           `
+          case 3:
+          return `
+            <li class="users">
+              ${presence.user}
+              <br>
+              <small>game ended</small>
+            </li>
+          `
+          default:
+          return `
+            <li class="users">
+              ${presence.user}
+              <br>
+              <small>Unknown state</small>
+            </li>
+          `
         }
-      }
-    )
+      })
       .join("")
   },
 }

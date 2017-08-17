@@ -25,12 +25,13 @@ defmodule PhoenixSeaBattle.RoomChannel do
   def handle_info({:after_join, gameId}, socket) do
     pid = GenServer.whereis(via_tuple(gameId))
     {:ok, [gamestate: %Game{admin: admin, opponent: opponent}]} = Game.get(pid)
+    user = socket.assigns[:user]
     meta = cond do
-      admin && opponent -> %{state: 2, with: (admin || opponent)}
+      admin && opponent -> if user == admin, do: %{state: 2, with: opponent}, else: %{state: 2, with: admin}
       true -> %{state: 1, gameId: gameId}
     end
     socket = assign(socket, :state, 1)
-    Presence.track(socket, socket.assigns[:user], meta)
+    Presence.track(socket, user, meta)
     {:noreply, socket}
   end
 
@@ -62,9 +63,9 @@ defmodule PhoenixSeaBattle.RoomChannel do
   end
 
   def handle_out("change_state", %{"users" => users}, socket) do
-    Enum.map(users, fn {user, meta} ->
-      Presence.update(socket, user, meta)
-    end)
+    if meta = Map.get(users, socket.assigns[:user]) do
+      Presence.update(socket, socket.assigns[:user], meta)
+    end
     {:noreply, socket}
   end
 end
