@@ -16,6 +16,7 @@ let GameSocket = {
   onReady(game_channel, lobby, gameId){
     let chatInput         = document.querySelector("#chat-input")
     let messagesContainer = document.querySelector("#messages")
+    let adminButton       = document.querySelector("#game-control")
     let presences         = {}
 
     chatInput.addEventListener("keypress", event => {

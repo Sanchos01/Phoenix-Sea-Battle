@@ -3,6 +3,8 @@
     <div class="panel panel-default game-panel">
       <div class="panel-heading state-bar">
         State bar (wip)
+        <div id="game-control">
+        </div>
       </div>
       <div id="game" class="panel-body panel-game">
       </div>

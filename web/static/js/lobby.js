@@ -68,6 +68,27 @@ let Lobby = {
   // states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   render(presences){
     userList.innerHTML = Presence.list(presences, Lobby.listBy)
+      .sort(function (a, b) {
+        if(a.gameId == null && b.gameId != null) {
+          return 1;
+        }
+        if(a.gameId != null && b.gameId == null) {
+          return -1;
+        }
+        if(a.state > b.state) {
+          return 1;
+        }
+        if(a.state < b.state) {
+          return -1;
+        }
+        if(a.user > b.user) {
+          return 1;
+        }
+        if(a.user < b.user) {
+          return -1;
+        }
+        return 0;
+      })
       .map(function (presence) {
         switch (presence.state) {
           case 0:
