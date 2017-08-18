@@ -19,7 +19,7 @@ defmodule PhoenixSeaBattle.GameChannel do
     })
     {:noreply, socket}
   end
-  
+
   def handle_in("new_msg", %{"body" => body}, socket) do
     broadcast! socket, "new_msg", %{body: body,
                                     user: socket.assigns[:user]}

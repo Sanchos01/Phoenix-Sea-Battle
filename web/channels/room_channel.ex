@@ -23,16 +23,22 @@ defmodule PhoenixSeaBattle.RoomChannel do
   end
 
   def handle_info({:after_join, gameId}, socket) do
-    pid = GenServer.whereis(via_tuple(gameId))
-    {:ok, [gamestate: %Game{admin: admin, opponent: opponent}]} = Game.get(pid)
     user = socket.assigns[:user]
-    meta = cond do
-      admin && opponent -> if user == admin, do: %{state: 2, with: opponent}, else: %{state: 2, with: admin}
-      true -> %{state: 1, gameId: gameId}
+    case GenServer.whereis(via_tuple(gameId)) do
+      nil ->
+        socket = assign(socket, :state, 3)
+        Presence.track(socket, user, %{state: 3})
+        {:noreply, socket}
+      pid ->
+        {:ok, %Game{admin: admin, opponent: opponent}} = Game.get(pid)
+        meta = cond do
+          admin && opponent -> if user == admin, do: %{state: 2, with: opponent}, else: %{state: 2, with: admin}
+          true -> %{state: 1, gameId: gameId}
+        end
+        socket = assign(socket, :state, 1)
+        Presence.track(socket, user, meta)
+        {:noreply, socket}
     end
-    socket = assign(socket, :state, 1)
-    Presence.track(socket, user, meta)
-    {:noreply, socket}
   end
 
   def handle_in("new_msg", %{"body" => body}, socket) do
