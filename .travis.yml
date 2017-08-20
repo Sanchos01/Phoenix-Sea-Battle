@@ -4,4 +4,4 @@ elixir:
 otp_release:
   - 19.3
 script:
-  - "MIX_ENV=test mix do local.rebar --force, ecto.setup, coveralls.travis"
+  - "cd deps/idna && rebar compile && cd ../.. && mix do ecto.setup, coveralls.travis"
