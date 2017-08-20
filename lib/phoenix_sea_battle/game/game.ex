@@ -68,29 +68,26 @@ defmodule PhoenixSeaBattle.Game do
     Logger.error("timer on, but offline no one")
     PhoenixSeaBattle.Presence.list("game:" <> id)
       |> Map.keys()
-      |> Enum.reduce([admin, opponent], fn user, acc ->
-        cond do
-          admin == user || opponent == user -> acc -- [user]
-          true -> acc
-        end
-      end)
+      |> (fn users -> [admin, opponent] -- users end).()
       |> case do
         [] -> new_state(put_in(state.timer, nil))
         offline -> new_state(put_in(state.offline, offline))
       end
   end
-  defhandleinfo :timeout, state: state = %{timer: timer} do
-    if timestamp() > timer do
-      Enum.reject([state.admin, state.opponent], fn
-        nil -> true
-        user -> user in state.offline end)
-        |> Enum.reduce(%{}, fn user, acc ->
-          Map.put(acc, user, %{state: 3})
-        end)
-        |> cast_change_user_states()
-      stop_server(:normal)
-    else
-      noreply()
+  defhandleinfo :timeout, state: state = %{id: id, timer: timer} do
+    users = [state.admin, state.opponent]
+    cond do
+      users -- (PhoenixSeaBattle.Presence.list("game:" <> id) |> Map.keys()) == [] -> new_state(%{state | timer: nil})
+      timestamp() > timer ->
+        Enum.reject(users, fn
+          nil -> true
+          user -> user in state.offline end)
+          |> Enum.reduce(%{}, fn user, acc ->
+            Map.put(acc, user, %{state: 3})
+          end)
+          |> cast_change_user_states()
+        stop_server(:normal)
+      true -> noreply()
     end
   end
 
