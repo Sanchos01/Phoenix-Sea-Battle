@@ -100,8 +100,15 @@ defmodule PhoenixSeaBattle.Game do
     end
   end
 
-  def terminate(:normal, %{id: id}), do: (PhoenixSeaBattle.Endpoint.broadcast("game:" <> id, "all out", %{}); :ok)
-  def terminate(_, _), do: :ok
+  def terminate(:normal, %{id: id}) do
+    PhoenixSeaBattle.Endpoint.broadcast("game:" <> id, "all out", %{})
+    Logger.warn("game #{id} stopped")
+    :ok
+  end
+  def terminate(reason, state) do
+    Logger.error("Unusual stop game #{inspect state.id} with reason #{inspect reason}, state: #{inspect state}")
+    :ok
+  end
 
   defhandleinfo msg, do: (Logger.warn("uncatched message: #{inspect msg}"); noreply())
 
