@@ -47,7 +47,7 @@ defmodule PhoenixSeaBattle.Game do
   end
 
   defhandleinfo %Phoenix.Socket.Broadcast{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, state: state = %{id: id, offline: offline, timer: timer} do
-    Logger.warn("#{inspect id} --- checking diffs - joins: #{inspect joins}, leaves: #{inspect leaves}")
+    Logger.info("#{inspect id} --- checking diffs - joins: #{inspect joins}, leaves: #{inspect leaves}")
     {offline, timer} = if length(users = Map.keys(leaves)) > 0 do
       {offline ++ users, (timer || (timestamp() + @reconnect_time))}
     else

@@ -13,8 +13,10 @@ use Mix.Config
 # which you typically run after static files are built.
 config :phoenix_sea_battle, PhoenixSeaBattle.Endpoint,
   http: [port: {:system, "PORT"}],
-  url: [host: "example.com", port: 80],
-  cache_static_manifest: "priv/static/manifest.json"
+  url: [host: "localhost", port: {:system, "PORT"}],
+  cache_static_manifest: "priv/static/manifest.json",
+  server: true,
+  root: "."
 
 # Do not print debug messages in production
 config :logger, level: :info

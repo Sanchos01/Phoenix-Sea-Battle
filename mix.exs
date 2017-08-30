@@ -42,7 +42,8 @@ defmodule PhoenixSeaBattle.Mixfile do
      {:cowboy, "~> 1.0"},
      {:comeonin, "~> 3.2"},
      {:excoveralls, "~> 0.6", only: :test},
-     {:exactor, "~> 2.2.3", warn_missing: false}]
+     {:exactor, "~> 2.2.3", warn_missing: false},
+     {:distillery, "~> 1.5", runtime: false}]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
