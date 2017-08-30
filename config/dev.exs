@@ -33,6 +33,9 @@ config :logger, :console, format: "[$level] $message\n"
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
 
+# Switch off filtering passwords in logs
+config :phoenix, :filter_parameters, []
+
 # Configure your database
 config :phoenix_sea_battle, PhoenixSeaBattle.Repo,
   adapter: Ecto.Adapters.Postgres,
