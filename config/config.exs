@@ -7,7 +7,8 @@ use Mix.Config
 
 # General application configuration
 config :phoenix_sea_battle,
-  ecto_repos: [PhoenixSeaBattle.Repo]
+  ecto_repos: [PhoenixSeaBattle.Repo],
+  msg_count: 20
 
 # Configures the endpoint
 config :phoenix_sea_battle, PhoenixSeaBattle.Endpoint,

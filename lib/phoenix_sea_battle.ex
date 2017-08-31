@@ -17,6 +17,7 @@ defmodule PhoenixSeaBattle do
       supervisor(PhoenixSeaBattle.Presence, []),
       supervisor(PhoenixSeaBattle.Game.Supervisor, []),
       supervisor(Registry, [:unique, PhoenixSeaBattle.Game.Registry]),
+      worker(PhoenixSeaBattle.LobbyArchiver, []),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

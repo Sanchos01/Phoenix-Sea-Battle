@@ -2,7 +2,7 @@ defmodule PhoenixSeaBattle.SessionController do
   alias PhoenixSeaBattle.Auth
   use PhoenixSeaBattle.Web, :controller
 
-  def new(conn, _) do
+  def new(conn, _params) do
     render conn, "new.html"
   end
 
@@ -20,7 +20,7 @@ defmodule PhoenixSeaBattle.SessionController do
     end
   end
 
-  def delete(conn, _) do
+  def delete(conn, _params) do
     conn
     |> Auth.logout()
     |> redirect(to: page_path(conn, :index))

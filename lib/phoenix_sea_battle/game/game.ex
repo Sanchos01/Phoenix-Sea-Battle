@@ -61,6 +61,7 @@ defmodule PhoenixSeaBattle.Game do
     end
     new_state(%{%{state | timer: timer} | offline: offline})
   end
+  defhandleinfo %Phoenix.Socket.Broadcast{event: "new_msg"}, do: noreply()
   defhandleinfo msg = %Phoenix.Socket.Broadcast{}, state: _state, do: (Logger.info("nothing intresting, msg - #{inspect msg}"); noreply())
 
   defhandleinfo :timeout, state: %{timer: nil}, do: noreply()
