@@ -21,7 +21,7 @@ defmodule PhoenixSeaBattle.UserControllerTest do
   @tag login_as: "max123"
   test "GOT /users/:id", %{conn: conn} do
     id = conn.assigns[:current_user] |> Map.get(:id)
-    conn = get conn, "/users/#{inspect id}"
+    conn = get conn, "/users/#{id}"
     assert html_response(conn, 200) =~ "max123"
   end
 

@@ -23,7 +23,7 @@ defmodule PhoenixSeaBattle.SessionControllerTest do
   @tag exist_user: "max123"
   test "DELETE sessions/:id", %{conn: conn, user: user} do
     conn = conn |> post(session_path(conn, :create), %{"session" => %{"username" => Map.get(user, :username), "password" => "secret"}})
-                |> delete("sessions/#{inspect Map.get(user, :id)}")
+                |> delete("sessions/#{Map.get(user, :id)}")
     assert html_response(conn, 302)
   end
 
