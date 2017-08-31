@@ -10,6 +10,10 @@ config :phoenix_sea_battle,
   ecto_repos: [PhoenixSeaBattle.Repo],
   msg_count: 20
 
+config :kernel,
+  inet_dist_listen_min: 41014,
+  inet_dist_listen_max: 41024
+
 # Configures the endpoint
 config :phoenix_sea_battle, PhoenixSeaBattle.Endpoint,
   url: [host: "localhost"],

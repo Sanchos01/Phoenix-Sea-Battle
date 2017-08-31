@@ -38,6 +38,7 @@ environment :prod do
   set include_erts: true
   set include_src: false
   set cookie: :"W&!H*`!({!(q46b?ud:F?QSjq(vz3bcaq/y9;/b$L;Fg!H,dcl8EB`h:d|Yr{lc("
+  set vm_args: "rel/vm.args"
 end
 
 # You may define one or more releases in this file.

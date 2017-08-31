@@ -59,7 +59,7 @@ defmodule PhoenixSeaBattle.Game do
     else
       {offline, timer}
     end
-    new_state(%{%{state | timer: timer} | offline: offline})
+    new_state(%{state | timer: timer, offline: offline})
   end
   defhandleinfo %Phoenix.Socket.Broadcast{event: "new_msg"}, do: noreply()
   defhandleinfo msg = %Phoenix.Socket.Broadcast{}, state: _state, do: (Logger.info("nothing intresting, msg - #{inspect msg}"); noreply())

@@ -1,0 +1,22 @@
+## Name of the node
+-sname phoenix_sea_battle@localhost
+
+## Cookie for distributed erlang
+-setcookie W&!H*`!({!(q46b?ud:F?QSjq(vz3bcaq/y9;/b$L;Fg!H,dcl8EB`h:d|Yr{lc(
+
+## Heartbeat management; auto-restarts VM if it dies or becomes unresponsive
+## (Disabled by default..use with caution!)
+##-heart
+
+## Enable kernel poll and a few async threads
++K true
++A 10
+
+## Increase number of concurrent ports/sockets
+##-env ERL_MAX_PORTS 4096
+
+## Tweak GC to run more often
+##-env ERL_FULLSWEEP_AFTER 10
+
+# Enable SMP automatically based on availability
+-smp auto
