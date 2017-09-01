@@ -1,6 +1,5 @@
 defmodule PhoenixSeaBattle.GameChannelTest do
   use PhoenixSeaBattle.ChannelCase
-
   alias PhoenixSeaBattle.GameChannel
 
   setup do
