@@ -20,7 +20,7 @@ import "phoenix_html"
 
 import socket from "./socket"
 import Lobby from "./lobby"
-import GameSocket from "./game_socket"
+import Game from "./game"
 
 Lobby.init(socket, document.querySelector("#chat"))
-GameSocket.init(socket, document.querySelector("#game"), window.gameId)
+Game.init(socket, document.querySelector("#game"), window.gameId)

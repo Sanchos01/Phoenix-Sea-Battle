@@ -1,4 +1,4 @@
-<div id="game" class="game container">
+<div id="game-container" class="game container">
   <div class="col-md-9">
     <div class="panel panel-default game-panel">
       <div class="panel-heading state-bar">
