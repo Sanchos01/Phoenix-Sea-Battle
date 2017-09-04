@@ -19,7 +19,7 @@ defmodule PhoenixSeaBattle.RoomChannel do
       state: 0
     })
     push socket, "presence_state", Presence.list(socket)
-    pre_messages = GenServer.call(LobbyArchiver, {:get_messages, ts})
+    pre_messages = LobbyArchiver.get_messages(LobbyArchiver, ts)
     push socket, "pre_messages", %{"body" => pre_messages}
     {:noreply, socket}
   end

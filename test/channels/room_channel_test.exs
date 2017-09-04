@@ -1,9 +1,10 @@
 defmodule PhoenixSeaBattle.RoomChannelTest do
   use PhoenixSeaBattle.ChannelCase
   alias PhoenixSeaBattle.RoomChannel
+  @valid_id "12345678"
 
   setup_all do
-    PhoenixSeaBattle.Game.Supervisor.new_game("12345678")
+    PhoenixSeaBattle.Game.Supervisor.new_game(@valid_id)
     :ok
   end
 
@@ -15,7 +16,7 @@ defmodule PhoenixSeaBattle.RoomChannelTest do
         |> subscribe_and_join(RoomChannel, "room:lobby")
       {:ok, _, in_game_socket} =
         socket("user_id", %{user_id: Map.get(user, :id), user: Map.get(user, :username)})
-        |> subscribe_and_join(RoomChannel, "room:lobby", %{"game" => "12345678"})
+        |> subscribe_and_join(RoomChannel, "room:lobby", %{"game" => @valid_id})
       {:ok, in_game_socket: in_game_socket, in_lobby_socket: in_lobby_socket, user: Map.get(user, :username)}
     else
       :ok

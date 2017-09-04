@@ -22,9 +22,7 @@ defmodule PhoenixSeaBattle.Game do
     initial_state(%PhoenixSeaBattle.Game{id: id})
   end
 
-  defcall get(), state: state do
-    reply({:ok, state})
-  end
+  defcall get(), state: state, do: reply({:ok, state})
 
   defcall add_user(user), state: state = %{id: id, admin: nil} do
     cast_change_user_states(%{user => %{state: 1, gameId: id}})
@@ -49,7 +47,7 @@ defmodule PhoenixSeaBattle.Game do
   defhandleinfo %Phoenix.Socket.Broadcast{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, state: state = %{id: id, offline: offline, timer: timer} do
     Logger.info("#{inspect id} --- checking diffs - joins: #{inspect joins}, leaves: #{inspect leaves}")
     {offline, timer} = if length(users = Map.keys(leaves)) > 0 do
-      {offline ++ users, (timer || (timestamp() + @reconnect_time))}
+      {Enum.uniq(offline ++ users), (timer || (timestamp() + @reconnect_time))}
     else
       {offline, timer}
     end
@@ -89,6 +87,14 @@ defmodule PhoenixSeaBattle.Game do
           |> cast_change_user_states()
         stop_server(:normal)
       true -> noreply()
+    end
+  end
+
+  defcall get_state(_), state: state do
+    cond do
+      !state.playing -> reply(%{state: "initial"})
+      state.ended -> reply(%{state: "game_ended"})
+      true -> reply(%{state: "play"})
     end
   end
 

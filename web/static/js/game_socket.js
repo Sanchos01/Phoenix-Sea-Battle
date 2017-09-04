@@ -53,5 +53,7 @@ let GameSocket = {
     let date = new Date(Ts)
     return date.toLocaleTimeString()
   },
+
+  game_push(game_channel, event, body){ game_channel.push(event, {body: body}) }
 }
 export default GameSocket
