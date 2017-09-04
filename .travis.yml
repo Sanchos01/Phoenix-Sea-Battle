@@ -6,6 +6,6 @@ otp_release:
 script:
   - "mix do ecto.setup, coveralls.travis"
 cache:
-directories:
-  - _build
-  - deps
+  directories:
+    - _build
+    - deps
