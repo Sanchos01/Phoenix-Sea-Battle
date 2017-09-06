@@ -1,38 +1,18 @@
-export function run(app) {
-  var grid = [];
-  // board container
-  var board_container = new PIXI.Container();
-  app.stage.addChild(board_container)
-  var offsetL = (app._options.width/2 - 200)/2;
-  var letters = ['a','b','c','d','e','f','g','h','i','j'];
-  for (let i = 0; i < 100; i++) {
-    let rect = new PIXI.Graphics();
-    rect.lineStyle(0, 0xFFFFFF, 1);
-    rect.beginFill(0x0022b4, 0.25);
-    let x = offsetL + (i % 10) * 20;
-    let y = 20 + Math.floor(i / 10) * 20;
-    rect.drawRect(x, y, 18, 18);
-    rect.interactive = true;
-    rect.column = `${letters[i % 10]}`;
-    rect.line = 9 - Math.floor(i / 10);
-    // rect.name = `${letters[i % 10]}:${9 - Math.floor(i / 10)}`;
-    grid.push(new PIXI.Point(x + 9, y + 44));
-    rect.endFill();
-    board_container.addChild(rect);
-  };
-  letters.forEach(function(item, i, arr) {
-    let text = new PIXI.Text(item, {fontSize: 18});
-    text.anchor.set(0.5, 0.1);
-    text.position = new PIXI.Point(offsetL * 1.5 + i * 20, 0);
-    board_container.addChild(text);
+import GameChannel from "./../game_channel"
+import * as board from "./board"
+
+export function run(app, game_channel) {
+  var bar = document.getElementById("state-bar");
+  bar.innerText = 'Preparing';
+  board.create_board(app, 0, 35);
+
+  game_channel.on("board_ok", resp => {
+    bar.innerText = 'All OK, wait another player';
   });
-  for (let i = 0; i < 10; i++) {
-    let text = new PIXI.Text(`${i}`, {fontSize: 18});
-    text.anchor.set(0.5, 0.1);
-    text.position = new PIXI.Point(offsetL/2, 200 - i * 20);
-    board_container.addChild(text);
-  };
-  board_container.position = new PIXI.Point(0, 35);
+
+  game_channel.on("bad_position", resp => {
+    bar.innerText = 'Something wrong with your board';
+  });
 
   // ships container
   var ships_container = new PIXI.Container();
@@ -90,7 +70,19 @@ export function run(app) {
   ready.endFill();
   ready.interactive = true;
   ready.position.set(300, 200);
-  ready.click = function(e) { checking() };
+  ready.click = function(e) {
+    let res_arr = checking();
+    // console.log(res_arr);
+    if(res_arr.reduce((prev, curr, index, arr) => {
+      if(prev == false) {return prev}
+      if(curr.length == 0) {return false} else {return prev}
+    }, true) == false) {
+      bar.innerText = 'Bad ships position'
+    } else {
+      bar.innerText = 'Wait answer from server'
+      GameChannel.game_push(game_channel, "ready", res_arr);
+    }
+  };
   app.stage.addChild(ready);
 
   function onDragStart(event) {
@@ -102,21 +94,23 @@ export function run(app) {
   }
 
   function onDragEnd() {
-    this.alpha = 1;
-    this.dragging = false;
-    let arr = hitTest(this);
-    if(arr.length == parseInt(this.length)) {
-      if(this.rotation == 0) {
-        this.x = arr[0].x
-        this.y = arr[0].y
+    if(this.dragging) {
+      this.alpha = 1;
+      this.dragging = false;
+      let arr = hitTest(this);
+      if(arr.length == parseInt(this.length)) {
+        if(this.rotation == 0) {
+          this.x = arr[0].x
+          this.y = arr[0].y
+        } else {
+          this.x = arr[arr.length - 1].x
+          this.y = arr[arr.length - 1].y
+        }
       } else {
-        this.x = arr[arr.length - 1].x
-        this.y = arr[arr.length - 1].y
+        this.x = this.data.startX;
+        this.y = this.data.startY;
+        this.data = null;
       }
-    } else {
-      this.x = this.data.startX;
-      this.y = this.data.startY;
-      this.data = null;
     }
   }
 
@@ -130,7 +124,7 @@ export function run(app) {
   }
 
   function hitTest(ship) {
-    let grid_arr = grid.filter((value) => {return ship.containsPoint(value)});
+    let grid_arr = board.grid.filter((value) => {return ship.containsPoint(value)});
     if(grid_arr.length == 0) {return grid_arr};
     return ships_container.children.reduce((prev, curr, index, array) => {
       if(prev.length == 0) {return prev};
@@ -142,15 +136,13 @@ export function run(app) {
   }
 
   function checking() {
-    let ships = ships_container.children;
-    console.log(ships.map((ship) => {
-      return grid.filter((value) => {return ship.containsPoint(value)})
-                 .map((value) => {
-                   let column = letters[Math.floor((value.x - offsetL - 9)/20)];
-                   let line = 9 - Math.floor((value.y - 64)/20);
-                   return `${column}:${line}`
-                 })
+    return (ships_container.children.map((ship) => {
+      return board.grid.filter((point) => {return ship.containsPoint(point)})
+                       .map((point) => {
+                         let column = board.letters[Math.floor((point.x - 27)/20)];
+                         let line = Math.floor((point.y - 64)/20);
+                         return `${column}:${line}`
+                       })
     }))
-    console.log(offsetL);
   }
 }

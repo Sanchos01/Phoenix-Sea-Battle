@@ -2,12 +2,15 @@ defmodule PhoenixSeaBattle.Game do
   use ExActor.GenServer
   require Logger
   import PhoenixSeaBattle.Utils, only: [timestamp: 0]
+  alias PhoenixSeaBattle.Game.Board
   @reconnect_time 30_000
 
   defstruct [
     id: nil,
     admin: nil,
     opponent: nil,
+    admin_board: nil,
+    opponent_board: nil,
     playing: false,
     ended: false,
     winner: nil,
@@ -15,7 +18,7 @@ defmodule PhoenixSeaBattle.Game do
     offline: []
   ]
 
-  defstart start_link(name, opts), links: true, gen_server_opts: [name: name] do
+  defstart start_link(name, opts), gen_server_opts: [name: name] do
     id = opts[:id]
     :ok = PhoenixSeaBattle.Endpoint.subscribe("game:" <> id)
     timeout_after(1_000)
@@ -26,12 +29,14 @@ defmodule PhoenixSeaBattle.Game do
 
   defcall add_user(user), state: state = %{id: id, admin: nil} do
     cast_change_user_states(%{user => %{state: 1, gameId: id}})
-    set_and_reply(%{state | admin: user}, {:ok, :admin})
+    {:ok, pid} = Board.start_link(Board, [id: id])
+    set_and_reply(%{state | admin: user, admin_board: pid}, {:ok, :admin})
   end
-  defcall add_user(user), state: state = %{admin: admin, opponent: nil} do
+  defcall add_user(user), state: state = %{id: id, admin: admin, opponent: nil} do
     if user != admin do
       cast_change_user_states(%{admin => %{state: 2, with: user}, user => %{state: 2, with: admin}})
-      set_and_reply(%{state | opponent: user}, {:ok, :opponent})
+      {:ok, pid} = Board.start_link(Board, [id: id])
+      set_and_reply(%{state | opponent: user, opponent_board: pid}, {:ok, :opponent})
     else
       reply({:ok, :admin})
     end
@@ -98,6 +103,16 @@ defmodule PhoenixSeaBattle.Game do
     end
   end
 
+  defcall readiness(user, body), state: state do
+    with true <- validate_board(body)
+    do
+      case state.admin do
+        ^user -> reply(Board.ready(state.admin_board, body))
+        _ -> reply(Board.ready(state.opponent_board, body))
+      end
+    end
+  end
+
   defhandleinfo {:terminate, %PhoenixSeaBattle.User{username: user}}, state: state = %{id: id, admin: admin, opponent: opponent} do
     case user do
       ^admin -> if opponent, do: cast_change_user_states(%{opponent => %{state: 3}})
@@ -120,4 +135,13 @@ defmodule PhoenixSeaBattle.Game do
   defhandleinfo msg, do: (Logger.warn("uncatched message: #{inspect msg}"); noreply())
 
   defp cast_change_user_states(meta), do: PhoenixSeaBattle.Endpoint.broadcast("room:lobby", "change_state", %{"users" => meta})
+
+  defp validate_board(board) when length(board) == 10 do
+    board
+    |> List.flatten()
+    |> Enum.uniq()
+    |> length()
+    |> Kernel.==(20)
+  end
+  defp validate_board(_), do: false
 end

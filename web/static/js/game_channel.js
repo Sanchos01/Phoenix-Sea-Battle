@@ -1,6 +1,6 @@
 import {Presence} from "phoenix"
 
-let GameSocket = {
+let GameChannel = {
 
   init(socket, element, gameId){
     if(!element) { return }
@@ -56,4 +56,4 @@ let GameSocket = {
 
   game_push(game_channel, event, body){ game_channel.push(event, {body: body}) }
 }
-export default GameSocket
+export default GameChannel
