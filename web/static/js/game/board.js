@@ -1,4 +1,4 @@
-export let grid = [];
+export let grid    = [];
 export let letters = ['a','b','c','d','e','f','g','h','i','j'];
 
 export function create_board(app, offsetL, offsetT) {

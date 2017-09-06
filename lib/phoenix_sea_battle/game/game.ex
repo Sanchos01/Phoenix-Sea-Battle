@@ -3,7 +3,7 @@ defmodule PhoenixSeaBattle.Game do
   require Logger
   import PhoenixSeaBattle.Utils, only: [timestamp: 0]
   alias PhoenixSeaBattle.Game.Board
-  @reconnect_time 30_000
+  @reconnect_time Application.get_env(:phoenix_sea_battle, :reconnect_time, 30_000)
 
   defstruct [
     id: nil,
@@ -107,8 +107,15 @@ defmodule PhoenixSeaBattle.Game do
     with true <- validate_board(body)
     do
       case state.admin do
-        ^user -> reply(Board.ready(state.admin_board, body))
-        _ -> reply(Board.ready(state.opponent_board, body))
+        ^user -> Board.new(state.admin_board, body)
+        _ -> Board.new(state.opponent_board, body)
+      end
+      if (state.admin_board && state.opponent_board &&
+         Board.valid?(state.admin_board) && Board.valid?(state.opponent_board)) do
+        Logger.warn("start game #{inspect state.id}")
+        reply(:start)
+      else
+        reply(:ok)
       end
     end
   end

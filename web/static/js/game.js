@@ -1,5 +1,6 @@
 import GameChannel from "./game_channel"
-import * as PIXI from "pixi.js"
+const PIXI = require('pixi.js');
+// import * as PIXI from "pixi.js"
 import * as init from "./game/initial"
 import * as main from "./game/main"
 
@@ -10,8 +11,8 @@ var Game = {
     socket.onOpen( ev => console.log("OPEN", ev) )
     socket.onError( ev => console.log("ERROR", ev) )
     socket.onClose( e => console.log("CLOSE", e) )
-    let lobby = socket.channel("room:lobby", {game: `${gameId}`})
-    let game_channel = socket.channel(`game:${ gameId }`)
+    var lobby = socket.channel("room:lobby", {game: `${gameId}`})
+    var game_channel = socket.channel(`game:${ gameId }`)
     GameChannel.onReady(game_channel, lobby, gameId);
 
     let size = [element.offsetWidth-30, element.offsetHeight-30];

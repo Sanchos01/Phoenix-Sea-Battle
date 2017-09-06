@@ -33,11 +33,11 @@ defmodule PhoenixSeaBattle.GameChannel do
   end
 
   def handle_in("ready", %{"body" => body}, socket) do
-    if res = Game.readiness(via_tuple(socket.assigns[:game_id]), socket.assigns[:user], body) do
-      push socket, "board_ok", %{}
-    else
-      Logger.error("something wrong with ships position: #{inspect res}")
-      push socket, "bad_position", %{}
+    case Game.readiness(via_tuple(socket.assigns[:game_id]), socket.assigns[:user], body) do
+      :ok -> push socket, "board_ok", %{}
+      :start -> broadcast! socket, "start_game", %{}
+      some -> Logger.error("something wrong with ships position: #{inspect some}")
+              push socket, "bad_position", %{}
     end
     {:noreply, socket}
   end

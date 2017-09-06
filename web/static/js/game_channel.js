@@ -2,17 +2,6 @@ import {Presence} from "phoenix"
 
 let GameChannel = {
 
-  init(socket, element, gameId){
-    if(!element) { return }
-    socket.connect()
-    socket.onOpen( ev => console.log("OPEN", ev) )
-    socket.onError( ev => console.log("ERROR", ev) )
-    socket.onClose( e => console.log("CLOSE", e) )
-    let lobby = socket.channel("room:lobby", {game: `${gameId}`})
-    let game_channel = socket.channel(`game:${ gameId }`)
-    this.onReady(game_channel, lobby, gameId)
-  },
-
   onReady(game_channel, lobby, gameId){
     let chatInput         = document.querySelector("#chat-input")
     let messagesContainer = document.querySelector("#messages")
@@ -34,9 +23,8 @@ let GameChannel = {
       messagesContainer.scrollTop = messagesContainer.scrollHeight
     })
 
-    lobby.join()
-    .receive("ok", resp => { console.log("Joined successfully", resp) })
-    .receive("error", resp => { console.log("Unable to join", resp) })
+    lobby.join().receive("ok", resp => { console.log("Joined successfully", resp) })
+                .receive("error", resp => { console.log("Unable to join", resp) })
 
     lobby.onError(e => console.log("something went wrong", e))
     lobby.onClose(e => console.log("channel closed", e))

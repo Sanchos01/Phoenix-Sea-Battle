@@ -69,3 +69,6 @@ config :phoenix_sea_battle, PhoenixSeaBattle.Repo,
   password: "postgres",
   database: "phoenix_sea_battle_prod",
   pool_size: 20
+
+config :phoenix_sea_battle,
+  reconnect_time: 60_000

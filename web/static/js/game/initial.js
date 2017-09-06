@@ -3,11 +3,11 @@ import * as board from "./board"
 
 export function run(app, game_channel) {
   var bar = document.getElementById("state-bar");
-  bar.innerText = 'Preparing';
+  bar.innerText = 'Place your ships';
   board.create_board(app, 0, 35);
 
   game_channel.on("board_ok", resp => {
-    bar.innerText = 'All OK, wait another player';
+    bar.innerText = 'All OK, wait another player'
   });
 
   game_channel.on("bad_position", resp => {
@@ -63,14 +63,14 @@ export function run(app, game_channel) {
   shipsText.position = new PIXI.Point(app._options.width/2, 5);
   app.stage.addChild(shipsText);
 
-  var ready = new PIXI.Graphics();
-  ready.lineStyle(1, 0x000000, 1);
-  ready.beginFill(0x992242, 0.5);
-  ready.drawRect(0, 0, 50, 20);
-  ready.endFill();
-  ready.interactive = true;
-  ready.position.set(300, 200);
-  ready.click = function(e) {
+  var ready_button = new PIXI.Graphics();
+  ready_button.lineStyle(1, 0x000000, 1);
+  ready_button.beginFill(0x992242, 0.5);
+  ready_button.drawRect(0, 0, 50, 20);
+  ready_button.endFill();
+  ready_button.interactive = true;
+  ready_button.position.set(300, 200);
+  ready_button.click = function(e) {
     let res_arr = checking();
     // console.log(res_arr);
     if(res_arr.reduce((prev, curr, index, arr) => {
@@ -83,7 +83,7 @@ export function run(app, game_channel) {
       GameChannel.game_push(game_channel, "ready", res_arr);
     }
   };
-  app.stage.addChild(ready);
+  app.stage.addChild(ready_button);
 
   function onDragStart(event) {
     this.data = event.data;
