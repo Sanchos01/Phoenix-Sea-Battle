@@ -1,6 +1,5 @@
 defmodule PhoenixSeaBattle.SessionControllerTest do
   use PhoenixSeaBattle.ConnCase
-  require Logger
 
   setup %{conn: conn} = config do
     conn =

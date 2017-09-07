@@ -3,7 +3,7 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   require Logger
   @msg_count Application.get_env(:phoenix_sea_battle, :msg_count)
 
-  defstart start_link, links: true, gen_server_opts: [name: __MODULE__] do
+  defstart start_link, gen_server_opts: [name: __MODULE__] do
     PhoenixSeaBattle.Endpoint.subscribe("room:lobby")
     timeout_after(1_000)
     initial_state([])
@@ -21,9 +21,9 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
 
   defhandleinfo msg, do: (Logger.warn("some msg for archiver: #{inspect msg}"); noreply())
 
-  defp filter_messages(messages, ts, acc \\ [])
-  defp filter_messages([], _ts, acc), do: acc
-  defp filter_messages([msg|rest], ts, acc) do
+  def filter_messages(messages, ts, acc \\ [])
+  def filter_messages([], _ts, acc), do: acc
+  def filter_messages([msg|rest], ts, acc) do
     case msg.timestamp > ts do
       true -> filter_messages(rest, ts, [msg|acc])
       _ -> acc
