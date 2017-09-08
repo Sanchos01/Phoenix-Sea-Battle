@@ -1,6 +1,5 @@
 defmodule PhoenixSeaBattle.Game.Board do
   use ExActor.GenServer
-  alias __MODULE__
   require Logger
 
   defstruct [
@@ -17,7 +16,7 @@ defmodule PhoenixSeaBattle.Game.Board do
   ]
 
   defstart start_link(_, opts) do
-    initial_state(%{board: %Board{}, id: opts[:id]})
+    initial_state(%{board: %__MODULE__{}, id: opts[:id]})
   end
 
   defcall new(board), state: state do
@@ -25,7 +24,7 @@ defmodule PhoenixSeaBattle.Game.Board do
     set_and_reply(%{state | board: new_board}, :ok)
   end
 
-  defp board_in_struct(board), do: board_in_struct(board, 1, %Board{})
+  defp board_in_struct(board), do: board_in_struct(board, 1, %__MODULE__{})
   defp board_in_struct([], _num, struct), do: struct
   defp board_in_struct([ship|rest], num, struct) do
     board_in_struct(rest, num + 1, ship_in_struct(ship, num, struct))

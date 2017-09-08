@@ -1,6 +1,5 @@
 import GameChannel from "./game_channel"
-const PIXI = require('pixi.js');
-// import * as PIXI from "pixi.js"
+import * as PIXI from "pixi.js"
 import * as init from "./game/initial"
 import * as main from "./game/main"
 
