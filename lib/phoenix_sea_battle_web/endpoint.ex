@@ -1,7 +1,7 @@
-defmodule PhoenixSeaBattle.Endpoint do
+defmodule PhoenixSeaBattleWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :phoenix_sea_battle
 
-  socket "/socket", PhoenixSeaBattle.UserSocket
+  socket "/socket", PhoenixSeaBattleWeb.UserSocket
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -38,5 +38,5 @@ defmodule PhoenixSeaBattle.Endpoint do
     key: "_phoenix_sea_battle_key",
     signing_salt: "qke9F44U"
 
-  plug PhoenixSeaBattle.Router
+  plug PhoenixSeaBattleWeb.Router
 end

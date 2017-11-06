@@ -1,6 +1,6 @@
 defmodule PhoenixSeaBattle.RoomChannelTest do
-  use PhoenixSeaBattle.ChannelCase
-  alias PhoenixSeaBattle.RoomChannel
+  use PhoenixSeaBattleWeb.ChannelCase
+  alias PhoenixSeaBattleWeb.RoomChannel
   @valid_id "12345678"
 
   setup_all do

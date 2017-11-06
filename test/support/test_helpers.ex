@@ -1,4 +1,4 @@
-defmodule PhoenixSeaBattle.TestHelpers do
+defmodule PhoenixSeaBattleWeb.TestHelpers do
   alias PhoenixSeaBattle.Repo
 
   def insert_user(attrs \\ %{}) do
@@ -8,8 +8,8 @@ defmodule PhoenixSeaBattle.TestHelpers do
       password: "supersecret",
     }, attrs)
 
-    %PhoenixSeaBattle.User{}
-    |> PhoenixSeaBattle.User.registration_changeset(changes)
+    %PhoenixSeaBattleWeb.User{}
+    |> PhoenixSeaBattleWeb.User.registration_changeset(changes)
     |> Repo.insert!()
   end
 end

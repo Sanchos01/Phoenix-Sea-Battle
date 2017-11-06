@@ -1,6 +1,6 @@
 defmodule PhoenixSeaBattle.UserTest do
-  use PhoenixSeaBattle.ModelCase, async: true
-  alias PhoenixSeaBattle.User
+  use PhoenixSeaBattleWeb.ModelCase, async: true
+  alias PhoenixSeaBattleWeb.User
 
   @valid_attrs %{name: "A User", username: "eva", password: "secret"}
   @invalid_attrs %{}

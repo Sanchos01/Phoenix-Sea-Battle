@@ -1,4 +1,4 @@
-defmodule PhoenixSeaBattle.Presence do
+defmodule PhoenixSeaBattleWeb.Presence do
   @moduledoc """
   Provides presence tracking to channels and processes.
 
@@ -9,9 +9,9 @@ defmodule PhoenixSeaBattle.Presence do
 
   Presences can be tracked in your channel after joining:
 
-      defmodule PhoenixSeaBattle.MyChannel do
-        use PhoenixSeaBattle.Web, :channel
-        alias PhoenixSeaBattle.Presence
+      defmodule PhoenixSeaBattleWeb.MyChannel do
+        use PhoenixSeaBattleWeb, :channel
+        alias PhoenixSeaBattleWeb.Presence
 
         def join("some:topic", _params, socket) do
           send(self, :after_join)

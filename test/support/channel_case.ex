@@ -1,4 +1,4 @@
-defmodule PhoenixSeaBattle.ChannelCase do
+defmodule PhoenixSeaBattleWeb.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -24,11 +24,11 @@ defmodule PhoenixSeaBattle.ChannelCase do
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import PhoenixSeaBattle.TestHelpers
+      import PhoenixSeaBattleWeb.TestHelpers
 
 
       # The default endpoint for testing
-      @endpoint PhoenixSeaBattle.Endpoint
+      @endpoint PhoenixSeaBattleWeb.Endpoint
     end
   end
 

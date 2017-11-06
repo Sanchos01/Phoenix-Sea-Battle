@@ -1,6 +1,6 @@
 defmodule PhoenixSeaBattle.UserViewTest do
-  alias PhoenixSeaBattle.UserView
-  use PhoenixSeaBattle.ConnCase, async: true
+  alias PhoenixSeaBattleWeb.UserView
+  use PhoenixSeaBattleWeb.ConnCase, async: true
   # import Phoenix.View
 
   setup config do

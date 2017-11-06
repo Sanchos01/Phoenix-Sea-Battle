@@ -1,6 +1,6 @@
 defmodule PhoenixSeaBattle.GameChannelTest do
-  use PhoenixSeaBattle.ChannelCase
-  alias PhoenixSeaBattle.GameChannel
+  use PhoenixSeaBattleWeb.ChannelCase
+  alias PhoenixSeaBattleWeb.GameChannel
 
   setup do
     {:ok, _, socket} =

@@ -1,4 +1,4 @@
-defmodule PhoenixSeaBattle.ErrorHelpers do
+defmodule PhoenixSeaBattleWeb.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.
   """
@@ -32,9 +32,9 @@ defmodule PhoenixSeaBattle.ErrorHelpers do
     #     dgettext "errors", "is invalid"
     #
     if count = opts[:count] do
-      Gettext.dngettext(PhoenixSeaBattle.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(PhoenixSeaBattleWeb.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(PhoenixSeaBattle.Gettext, "errors", msg, opts)
+      Gettext.dgettext(PhoenixSeaBattleWeb.Gettext, "errors", msg, opts)
     end
   end
 end

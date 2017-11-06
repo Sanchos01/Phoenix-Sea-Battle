@@ -1,6 +1,6 @@
 defmodule PhoenixSeaBattle.Channels.UserSocketTest do
-  use PhoenixSeaBattle.ChannelCase, async: true
-  alias PhoenixSeaBattle.UserSocket
+  use PhoenixSeaBattleWeb.ChannelCase, async: true
+  alias PhoenixSeaBattleWeb.UserSocket
 
   setup config do
     if username = config[:login_as] do

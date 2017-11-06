@@ -3,6 +3,7 @@ defmodule PhoenixSeaBattle.Game do
   require Logger
   import PhoenixSeaBattle.Utils, only: [timestamp: 0]
   alias PhoenixSeaBattle.Game.Board
+  alias PhoenixSeaBattleWeb.{Endpoint, User, Presence}
   @reconnect_time Application.get_env(:phoenix_sea_battle, :reconnect_time, 30_000)
 
   defstruct [
@@ -20,7 +21,7 @@ defmodule PhoenixSeaBattle.Game do
 
   defstart start_link(name, opts), gen_server_opts: [name: name] do
     id = opts[:id]
-    :ok = PhoenixSeaBattle.Endpoint.subscribe("game:" <> id)
+    :ok = Endpoint.subscribe("game:" <> id)
     timeout_after(1_000)
     initial_state(%PhoenixSeaBattle.Game{id: id})
   end
@@ -70,7 +71,7 @@ defmodule PhoenixSeaBattle.Game do
   defhandleinfo :timeout, state: %{timer: nil}, do: noreply()
   defhandleinfo :timeout, state: state = %{admin: admin, id: id, opponent: opponent, timer: timer, offline: []}, when: timer do
     Logger.error("timer on, but offline no one")
-    PhoenixSeaBattle.Presence.list("game:" <> id)
+    Presence.list("game:" <> id)
       |> Map.keys()
       |> (fn users -> [admin, opponent] -- users end).()
       |> case do
@@ -81,7 +82,7 @@ defmodule PhoenixSeaBattle.Game do
   defhandleinfo :timeout, state: state = %{id: id, timer: timer} do
     users = [state.admin, state.opponent]
     cond do
-      users -- (PhoenixSeaBattle.Presence.list("game:" <> id) |> Map.keys()) == [] -> new_state(%{state | timer: nil})
+      users -- (Presence.list("game:" <> id) |> Map.keys()) == [] -> new_state(%{state | timer: nil})
       timestamp() > timer ->
         Enum.reject(users, fn
           nil -> true
@@ -120,7 +121,7 @@ defmodule PhoenixSeaBattle.Game do
     end
   end
 
-  defhandleinfo {:terminate, %PhoenixSeaBattle.User{username: user}}, state: state = %{id: id, admin: admin, opponent: opponent} do
+  defhandleinfo {:terminate, %User{username: user}}, state: state = %{id: id, admin: admin, opponent: opponent} do
     case user do
       ^admin -> if opponent, do: cast_change_user_states(%{opponent => %{state: 3}})
                 stop_server(:normal)
@@ -130,7 +131,7 @@ defmodule PhoenixSeaBattle.Game do
   end
 
   def terminate(:normal, %{id: id}) do
-    PhoenixSeaBattle.Endpoint.broadcast("game:" <> id, "all out", %{})
+    Endpoint.broadcast("game:" <> id, "all out", %{})
     Logger.warn("game #{id} stopped")
     :ok
   end
@@ -141,7 +142,7 @@ defmodule PhoenixSeaBattle.Game do
 
   defhandleinfo msg, do: (Logger.warn("uncatched message: #{inspect msg}"); noreply())
 
-  defp cast_change_user_states(meta), do: PhoenixSeaBattle.Endpoint.broadcast("room:lobby", "change_state", %{"users" => meta})
+  defp cast_change_user_states(meta), do: Endpoint.broadcast("room:lobby", "change_state", %{"users" => meta})
 
   defp validate_board(board) when length(board) == 10 do
     board

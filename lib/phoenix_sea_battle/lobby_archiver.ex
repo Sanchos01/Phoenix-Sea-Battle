@@ -4,7 +4,7 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   @msg_count Application.get_env(:phoenix_sea_battle, :msg_count)
 
   defstart start_link, gen_server_opts: [name: __MODULE__] do
-    PhoenixSeaBattle.Endpoint.subscribe("room:lobby")
+    PhoenixSeaBattleWeb.Endpoint.subscribe("room:lobby")
     timeout_after(1_000)
     initial_state([])
   end

@@ -1,7 +1,7 @@
-defmodule PhoenixSeaBattle.GameController do
+defmodule PhoenixSeaBattleWeb.GameController do
   require Logger
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
-  use PhoenixSeaBattle.Web, :controller
+  use PhoenixSeaBattleWeb, :controller
   plug :authenticate_user
 
   def show(conn, %{"id" => id}) do

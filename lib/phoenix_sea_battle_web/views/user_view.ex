@@ -1,6 +1,6 @@
-defmodule PhoenixSeaBattle.UserView do
-  use PhoenixSeaBattle.Web, :view
-  alias PhoenixSeaBattle.User
+defmodule PhoenixSeaBattleWeb.UserView do
+  use PhoenixSeaBattleWeb, :view
+  alias PhoenixSeaBattleWeb.User
 
   def first_name(%User{name: name}) do
     name

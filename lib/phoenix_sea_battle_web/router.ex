@@ -1,5 +1,5 @@
-defmodule PhoenixSeaBattle.Router do
-  use PhoenixSeaBattle.Web, :router
+defmodule PhoenixSeaBattleWeb.Router do
+  use PhoenixSeaBattleWeb, :router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -7,7 +7,7 @@ defmodule PhoenixSeaBattle.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug PhoenixSeaBattle.Auth, repo: PhoenixSeaBattle.Repo
+    plug PhoenixSeaBattleWeb.Auth, repo: PhoenixSeaBattle.Repo
     plug :put_user_token
   end
 
@@ -15,11 +15,11 @@ defmodule PhoenixSeaBattle.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", PhoenixSeaBattle do
+  scope "/", PhoenixSeaBattleWeb do
     pipe_through :browser # Use the default browser stack
-    resources "/users", UserController, only: [:index, :show, :new, :create]
-    resources "/sessions", SessionController, only: [:new, :create, :delete]
-    resources "/game", GameController, only: [:index, :delete, :show]
+    resources "/users",    UserController,    only: ~w(index show new create)a
+    resources "/sessions", SessionController, only: ~w(new create delete)a
+    resources "/game",     GameController,    only: ~w(index delete show)a
 
     get "/", PageController, :index
   end

@@ -15,10 +15,10 @@ config :kernel,
   inet_dist_listen_max: 41024
 
 # Configures the endpoint
-config :phoenix_sea_battle, PhoenixSeaBattle.Endpoint,
+config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "GdMl3er/H5562PpEcWuZhDELgZhen1bufkuMrTMeVpBVM8GS4U3h5t93kq0gpEUj",
-  render_errors: [view: PhoenixSeaBattle.ErrorView, accepts: ~w(html json)],
+  render_errors: [view: PhoenixSeaBattleWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: PhoenixSeaBattle.PubSub,
            adapter: Phoenix.PubSub.PG2]
 

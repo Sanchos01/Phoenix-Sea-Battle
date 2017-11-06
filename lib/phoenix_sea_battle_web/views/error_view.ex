@@ -1,5 +1,5 @@
-defmodule PhoenixSeaBattle.ErrorView do
-  use PhoenixSeaBattle.Web, :view
+defmodule PhoenixSeaBattleWeb.ErrorView do
+  use PhoenixSeaBattleWeb, :view
 
   def render("404.html", _assigns) do
     "Page not found"

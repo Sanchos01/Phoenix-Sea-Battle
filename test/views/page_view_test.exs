@@ -1,3 +1,3 @@
 defmodule PhoenixSeaBattle.PageViewTest do
-  use PhoenixSeaBattle.ConnCase, async: true
+  use PhoenixSeaBattleWeb.ConnCase, async: true
 end

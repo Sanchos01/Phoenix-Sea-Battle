@@ -6,23 +6,25 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
-config :phoenix_sea_battle, PhoenixSeaBattle.Endpoint,
+config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
   http: [port: 4000],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  watchers: [node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
-                    cd: Path.expand("../", __DIR__)]]
+  watchers: [node: ["node_modules/webpack/bin/webpack.js",  "--watch", "--colors",
+                    cd: Path.expand("../assets/", __DIR__)]]
+  # watchers: [node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
+  #                   cd: Path.expand("../assets/", __DIR__)]]
 
 
 # Watch static and templates for browser reloading.
-config :phoenix_sea_battle, PhoenixSeaBattle.Endpoint,
+config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
-      ~r{web/views/.*(ex)$},
-      ~r{web/templates/.*(eex)$}
+      ~r{lib/phoenix_sea_battle_web/views/.*(ex)$},
+      ~r{lib/phoenix_sea_battle_web/templates/.*(eex)$}
     ]
   ]
 

@@ -1,11 +1,11 @@
-defmodule PhoenixSeaBattle.UserSocket do
+defmodule PhoenixSeaBattleWeb.UserSocket do
   require Logger
   use Phoenix.Socket
   alias PhoenixSeaBattle.Repo
 
   ## Channels
-  channel "room:lobby", PhoenixSeaBattle.RoomChannel
-  channel "game:*", PhoenixSeaBattle.GameChannel
+  channel "room:lobby", PhoenixSeaBattleWeb.RoomChannel
+  channel "game:*", PhoenixSeaBattleWeb.GameChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket,
@@ -28,7 +28,7 @@ defmodule PhoenixSeaBattle.UserSocket do
   def connect(%{"token" => token}, socket) do
     case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
       {:ok, user_id} ->
-        username = Repo.get(PhoenixSeaBattle.User, user_id).username
+        username = Repo.get(PhoenixSeaBattleWeb.User, user_id).username
         {:ok, socket |> assign(:user_id, user_id) |> assign(:user, username)}
       {:error, reason} -> (Logger.warn("user unauthorized #{inspect reason}"); :error)
     end

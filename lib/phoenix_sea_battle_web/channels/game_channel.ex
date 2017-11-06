@@ -1,7 +1,8 @@
-defmodule PhoenixSeaBattle.GameChannel do
+defmodule PhoenixSeaBattleWeb.GameChannel do
   require Logger
-  use PhoenixSeaBattle.Web, :channel
-  alias PhoenixSeaBattle.{Presence, Game}
+  use PhoenixSeaBattleWeb, :channel
+  alias PhoenixSeaBattleWeb.Presence
+  alias PhoenixSeaBattle.Game
   import PhoenixSeaBattle.Game.Supervisor, only: [via_tuple: 1]
 
   def join("game:" <> id, _message, socket) do

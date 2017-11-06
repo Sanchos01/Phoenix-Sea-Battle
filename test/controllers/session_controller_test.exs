@@ -1,10 +1,10 @@
 defmodule PhoenixSeaBattle.SessionControllerTest do
-  use PhoenixSeaBattle.ConnCase
+  use PhoenixSeaBattleWeb.ConnCase
 
   setup %{conn: conn} = config do
     conn =
       conn
-      |> bypass_through(PhoenixSeaBattle.Router, :browser)
+      |> bypass_through(PhoenixSeaBattleWeb.Router, :browser)
       |> get("/")
     if username = config[:exist_user] do
       user = insert_user(%{username: username, password: "secret"})

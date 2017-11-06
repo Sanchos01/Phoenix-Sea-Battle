@@ -1,7 +1,8 @@
-defmodule PhoenixSeaBattle.RoomChannel do
+defmodule PhoenixSeaBattleWeb.RoomChannel do
   require Logger
-  use PhoenixSeaBattle.Web, :channel
-  alias PhoenixSeaBattle.{Presence, Game, LobbyArchiver}
+  use PhoenixSeaBattleWeb, :channel
+  alias PhoenixSeaBattleWeb.Presence
+  alias PhoenixSeaBattle.{Game, LobbyArchiver}
   import PhoenixSeaBattle.Game.Supervisor, only: [via_tuple: 1]
 
   # states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended

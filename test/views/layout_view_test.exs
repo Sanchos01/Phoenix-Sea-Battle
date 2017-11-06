@@ -1,3 +1,3 @@
 defmodule PhoenixSeaBattle.LayoutViewTest do
-  use PhoenixSeaBattle.ConnCase, async: true
+  use PhoenixSeaBattleWeb.ConnCase, async: true
 end

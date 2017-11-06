@@ -1,4 +1,4 @@
-defmodule PhoenixSeaBattle.ConnCase do
+defmodule PhoenixSeaBattleWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -25,11 +25,11 @@ defmodule PhoenixSeaBattle.ConnCase do
       import Ecto.Changeset
       import Ecto.Query
 
-      import PhoenixSeaBattle.Router.Helpers
-      import PhoenixSeaBattle.TestHelpers
+      import PhoenixSeaBattleWeb.Router.Helpers
+      import PhoenixSeaBattleWeb.TestHelpers
 
       # The default endpoint for testing
-      @endpoint PhoenixSeaBattle.Endpoint
+      @endpoint PhoenixSeaBattleWeb.Endpoint
     end
   end
 

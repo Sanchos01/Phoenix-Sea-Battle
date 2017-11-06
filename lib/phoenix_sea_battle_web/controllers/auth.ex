@@ -1,8 +1,9 @@
-defmodule PhoenixSeaBattle.Auth do
+defmodule PhoenixSeaBattleWeb.Auth do
   import Plug.Conn
   import Comeonin.Bcrypt, only: [checkpw: 2, dummy_checkpw: 0]
   import Phoenix.Controller
-  alias PhoenixSeaBattle.Router.Helpers
+  alias PhoenixSeaBattleWeb.Router.Helpers
+  alias PhoenixSeaBattleWeb.User
 
   def authenticate_user(conn, _opts) do
     if conn.assigns.current_user do
@@ -17,7 +18,7 @@ defmodule PhoenixSeaBattle.Auth do
 
   def login_by_username_and_pass(conn, username, given_pass, opts) do
     repo = init(opts)
-    user = repo.get_by(PhoenixSeaBattle.User, username: username)
+    user = repo.get_by(User, username: username)
 
     cond do
       user ->
@@ -36,7 +37,7 @@ defmodule PhoenixSeaBattle.Auth do
 
   def call(conn, repo) do
     user_id = get_session(conn, :user_id)
-    user = user_id && repo.get(PhoenixSeaBattle.User, user_id)
+    user = user_id && repo.get(User, user_id)
     assign(conn, :current_user, user)
   end
 
