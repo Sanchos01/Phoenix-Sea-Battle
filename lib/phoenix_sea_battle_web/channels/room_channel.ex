@@ -20,7 +20,7 @@ defmodule PhoenixSeaBattleWeb.RoomChannel do
       state: 0
     })
     push socket, "presence_state", Presence.list(socket)
-    pre_messages = LobbyArchiver.get_messages(LobbyArchiver, ts)
+    pre_messages = LobbyArchiver.get_messages(ts)
     push socket, "pre_messages", %{"body" => pre_messages}
     {:noreply, socket}
   end

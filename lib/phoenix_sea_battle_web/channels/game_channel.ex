@@ -28,7 +28,7 @@ defmodule PhoenixSeaBattleWeb.GameChannel do
   end
 
   def handle_in("get_state", %{}, socket) do
-    msg = Game.get_state(via_tuple(socket.assigns[:game_id]), socket.assigns[:user])
+    msg = Game.get_state(via_tuple(socket.assigns[:game_id]))
     push socket, "get_state", %{"state" => msg.state, "body" => msg[:body]}
     {:noreply, socket}
   end

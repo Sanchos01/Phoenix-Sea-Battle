@@ -61,7 +61,7 @@ ENV LANG=en_US.UTF-8 \
     HOME=/app/ \
     TERM=xterm
 
-ENV VERSION=0.0.1
+ENV VERSION=0.1.0
 
 RUN apk add --no-cache bash ncurses-libs openssl
 

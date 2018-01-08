@@ -1,10 +1,12 @@
 defmodule PhoenixSeaBattle.Game do
-  use ExActor.GenServer
+  use GenServer
   require Logger
   import PhoenixSeaBattle.Utils, only: [timestamp: 0]
   alias PhoenixSeaBattle.Game.Board
   alias PhoenixSeaBattleWeb.{Endpoint, User, Presence}
+  alias Phoenix.Socket.Broadcast
   @reconnect_time Application.get_env(:phoenix_sea_battle, :reconnect_time, 30_000)
+  @timeout 1_000
 
   defstruct [
     id: nil,
@@ -19,38 +21,78 @@ defmodule PhoenixSeaBattle.Game do
     offline: []
   ]
 
-  defstart start_link(name, opts), gen_server_opts: [name: name] do
-    id = opts[:id]
+  def start_link(name, opts) do
+    GenServer.start_link(__MODULE__, opts, name: name)
+  end
+
+  def init([id: id]) do
     :ok = Endpoint.subscribe("game:" <> id)
-    timeout_after(1_000)
-    initial_state(%PhoenixSeaBattle.Game{id: id})
+    Process.send_after(self(), :timeout, @timeout)
+    {:ok, %__MODULE__{id: id}}
   end
+  def init(_), do: {:stop, "No id"}
 
-  defcall get(), state: state, do: reply({:ok, state})
+  def get(pid), do: GenServer.call(pid, :get)
+  def get_state(pid), do: GenServer.call(pid, :get_state)
+  def add_user(pid, user), do: GenServer.call(pid, {:add_user, user})
+  def readiness(pid, user, body), do: GenServer.call(pid, {:readiness, user, body})
 
-  defcall add_user(user), state: state = %{id: id, admin: nil} do
+  # Calls
+  # get
+  def handle_call(:get, _from, state), do: {:reply, {:ok, state}, state}
+
+  # add_user
+  def handle_call({:add_user, user}, _from, state = %{id: id, admin: nil}) do
     cast_change_user_states(%{user => %{state: 1, gameId: id}})
-    {:ok, pid} = Board.start_link(Board, [id: id])
-    set_and_reply(%{state | admin: user, admin_board: pid}, {:ok, :admin})
+    {:ok, pid} = Board.start_link([id: id])
+    {:reply, {:ok, :admin}, %{state | admin: user, admin_board: pid}}
   end
-  defcall add_user(user), state: state = %{id: id, admin: admin, opponent: nil} do
+  def handle_call({:add_user, user}, _from, state = %{id: id, admin: admin, opponent: nil}) do
     if user != admin do
       cast_change_user_states(%{admin => %{state: 2, with: user}, user => %{state: 2, with: admin}})
-      {:ok, pid} = Board.start_link(Board, [id: id])
-      set_and_reply(%{state | opponent: user, opponent_board: pid}, {:ok, :opponent})
+      {:ok, pid} = Board.start_link([id: id])
+      {:reply, {:ok, :opponent}, %{state | opponent: user, opponent_board: pid}}
     else
-      reply({:ok, :admin})
+      {:reply, {:ok, :admin}, state}
     end
   end
-  defcall add_user(user), state: %{admin: admin, opponent: opponent} do
+  def handle_call({:add_user, user}, _from, state = %{admin: admin, opponent: opponent}) do
     cond do
-      user == admin -> reply({:ok, :admin})
-      user == opponent -> reply({:ok, :opponent})
-      true -> reply({:error, "game already full"})
+      user == admin -> {:reply, {:ok, :admin}, state}
+      user == opponent -> {:reply, {:ok, :opponent}, state}
+      true -> {:reply, {:error, "game already full"}, state}
     end
   end
 
-  defhandleinfo %Phoenix.Socket.Broadcast{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, state: state = %{id: id, offline: offline, timer: timer} do
+  # get_state
+  def handle_call(:get_state, _from, state) do
+    cond do
+      !state.playing -> {:reply, %{state: "initial"}, state}
+      state.ended -> {:reply, %{state: "game_ended"}, state}
+      true -> {:reply, %{state: "play"}, state}
+    end
+  end
+
+  # readiness
+  def handle_call({:readiness, user, body}, _from, state) do
+    with true <- validate_board(body)
+    do
+      case state.admin do
+        ^user -> Board.new(state.admin_board, body)
+        _ -> Board.new(state.opponent_board, body)
+      end
+      if (state.admin_board && state.opponent_board &&
+         Board.valid?(state.admin_board) && Board.valid?(state.opponent_board)) do
+        Logger.warn("start game #{inspect state.id}")
+        {:reply, :start, state}
+      else
+        {:reply, :ok, state}
+      end
+    end
+  end
+
+  # Infos
+  def handle_info %Broadcast{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, state = %{id: id, offline: offline, timer: timer} do
     Logger.info("#{inspect id} --- checking diffs - joins: #{inspect joins}, leaves: #{inspect leaves}")
     {offline, timer} = if length(users = Map.keys(leaves)) > 0 do
       {Enum.uniq(offline ++ users), (timer || (timestamp() + @reconnect_time))}
@@ -63,26 +105,26 @@ defmodule PhoenixSeaBattle.Game do
     else
       {offline, timer}
     end
-    new_state(%{state | timer: timer, offline: offline})
+    {:noreply, %{state | timer: timer, offline: offline}}
   end
-  defhandleinfo %Phoenix.Socket.Broadcast{event: "new_msg"}, do: noreply()
-  defhandleinfo msg = %Phoenix.Socket.Broadcast{}, state: _state, do: (Logger.info("nothing intresting, msg - #{inspect msg}"); noreply())
+  def handle_info(%Broadcast{event: "new_msg"}, state), do: {:noreply, state}
+  def handle_info(msg = %Broadcast{}, state), do: (Logger.info("nothing intresting, msg - #{inspect msg}"); {:noreply, state})
 
-  defhandleinfo :timeout, state: %{timer: nil}, do: noreply()
-  defhandleinfo :timeout, state: state = %{admin: admin, id: id, opponent: opponent, timer: timer, offline: []}, when: timer do
+  def handle_info(:timeout, state = %{timer: nil}), do: {:noreply, state}
+  def handle_info(:timeout, state = %{admin: admin, id: id, opponent: opponent, timer: timer, offline: []}) when timer != nil do
     Logger.error("timer on, but offline no one")
     Presence.list("game:" <> id)
       |> Map.keys()
       |> (fn users -> [admin, opponent] -- users end).()
       |> case do
-        [] -> new_state(put_in(state.timer, nil))
-        offline -> new_state(put_in(state.offline, offline))
+        [] -> {:noreply, put_in(state.timer, nil)}
+        offline -> {:noreply, put_in(state.offline, offline)}
       end
   end
-  defhandleinfo :timeout, state: state = %{id: id, timer: timer} do
+  def handle_info :timeout, state = %{id: id, timer: timer} do
     users = [state.admin, state.opponent]
     cond do
-      users -- (Presence.list("game:" <> id) |> Map.keys()) == [] -> new_state(%{state | timer: nil})
+      users -- (Presence.list("game:" <> id) |> Map.keys()) == [] -> {:noreply, %{state | timer: nil}}
       timestamp() > timer ->
         Enum.reject(users, fn
           nil -> true
@@ -91,44 +133,21 @@ defmodule PhoenixSeaBattle.Game do
             Map.put(acc, user, %{state: 3})
           end)
           |> cast_change_user_states()
-        stop_server(:normal)
-      true -> noreply()
+        {:stop, :normal, state}
+      true -> {:noreply, state}
     end
   end
 
-  defcall get_state(_), state: state do
-    cond do
-      !state.playing -> reply(%{state: "initial"})
-      state.ended -> reply(%{state: "game_ended"})
-      true -> reply(%{state: "play"})
-    end
-  end
-
-  defcall readiness(user, body), state: state do
-    with true <- validate_board(body)
-    do
-      case state.admin do
-        ^user -> Board.new(state.admin_board, body)
-        _ -> Board.new(state.opponent_board, body)
-      end
-      if (state.admin_board && state.opponent_board &&
-         Board.valid?(state.admin_board) && Board.valid?(state.opponent_board)) do
-        Logger.warn("start game #{inspect state.id}")
-        reply(:start)
-      else
-        reply(:ok)
-      end
-    end
-  end
-
-  defhandleinfo {:terminate, %User{username: user}}, state: state = %{id: id, admin: admin, opponent: opponent} do
+  def handle_info {:terminate, %User{username: user}}, state = %{id: id, admin: admin, opponent: opponent} do
     case user do
       ^admin -> if opponent, do: cast_change_user_states(%{opponent => %{state: 3}})
-                stop_server(:normal)
+                {:stop, :normal, state}
       _ -> cast_change_user_states(%{admin => %{state: 1, gameId: id}})
-           new_state(%{state | opponent: nil})
+           {:noreply, %{state | opponent: nil}}
     end
   end
+
+  def handle_info(msg, state), do: (Logger.warn("uncatched message: #{inspect msg}"); {:noreply, state})
 
   def terminate(:normal, %{id: id}) do
     Endpoint.broadcast("game:" <> id, "all out", %{})
@@ -139,8 +158,6 @@ defmodule PhoenixSeaBattle.Game do
     Logger.error("Unusual stop game #{inspect state.id} with reason #{inspect reason}, state: #{inspect state}")
     :ok
   end
-
-  defhandleinfo msg, do: (Logger.warn("uncatched message: #{inspect msg}"); noreply())
 
   defp cast_change_user_states(meta), do: Endpoint.broadcast("room:lobby", "change_state", %{"users" => meta})
 

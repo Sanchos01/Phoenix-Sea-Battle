@@ -1,25 +1,35 @@
 defmodule PhoenixSeaBattle.LobbyArchiver do
-  use ExActor.GenServer
+  use GenServer
   require Logger
+  alias Phoenix.Socket.Broadcast
   @msg_count Application.get_env(:phoenix_sea_battle, :msg_count)
+  @timeout 1_000
 
-  defstart start_link, gen_server_opts: [name: __MODULE__] do
+  def start_link() do
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  end
+
+  def init(_) do
     PhoenixSeaBattleWeb.Endpoint.subscribe("room:lobby")
-    timeout_after(1_000)
-    initial_state([])
+    Process.send_after(self(), :timeout, @timeout)
+    {:ok, []}
   end
 
-  defcall get_messages(ts), state: state do
+  def get_messages(ts), do: GenServer.call(__MODULE__, {:get, ts})
+  def handle_call({:get, ts}, _from, state) do
     new_state = Enum.take(state, @msg_count)
-    set_and_reply(new_state, filter_messages(new_state, ts))
+    {:reply, filter_messages(new_state, ts), new_state}
   end
 
-  defhandleinfo :timeout, state: state, do: new_state(Enum.take(state, @msg_count))
+  def handle_info(:timeout, state) do
+    Process.send_after(self(), :timeout, @timeout)
+    {:noreply, Enum.take(state, @msg_count)}
+  end
 
-  defhandleinfo %Phoenix.Socket.Broadcast{event: "new_msg", payload: msg = %{}}, state: state, do: new_state([msg | state])
-  defhandleinfo %Phoenix.Socket.Broadcast{}, do: noreply()
+  def handle_info(%Broadcast{event: "new_msg", payload: msg = %{}}, state), do: {:noreply, [msg | state]}
+  def handle_info(%Broadcast{}, state), do: {:noreply, state}
 
-  defhandleinfo msg, do: (Logger.warn("some msg for archiver: #{inspect msg}"); noreply())
+  def handle_info(msg, state), do: (Logger.warn("some msg for archiver: #{inspect msg}"); {:noreply, state})
 
   def filter_messages(messages, ts, acc \\ [])
   def filter_messages([], _ts, acc), do: acc
