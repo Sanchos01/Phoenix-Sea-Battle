@@ -21,8 +21,9 @@ WORKDIR $HOME
 COPY --from=asset-builder-mix-getter $HOME/deps $HOME/deps
 COPY ./ ./
 
-RUN npm install
-RUN ./node_modules/.bin/webpack -p
+RUN cd assets && \
+    npm install && \
+    ./node_modules/.bin/brunch build
 
 ########################################################################
 FROM elixir:1.5-alpine as releaser
@@ -49,7 +50,7 @@ COPY . $HOME/
 COPY --from=asset-builder $HOME/priv/static/ $HOME/priv/static/
 
 WORKDIR $HOME
-RUN mix phoenix.digest
+RUN mix phx.digest
 
 # Release
 RUN mix release --env=$MIX_ENV --verbose
