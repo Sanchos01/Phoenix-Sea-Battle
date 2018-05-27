@@ -28,13 +28,13 @@ defmodule PhoenixSeaBattleWeb.UserSocket do
   def connect(%{"token" => token}, socket) do
     case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
       {:ok, user_id} ->
-        username = Repo.get(PhoenixSeaBattleWeb.User, user_id).username
+        %{username: username} = Repo.get(PhoenixSeaBattleWeb.User, user_id)
         {:ok, socket |> assign(:user_id, user_id) |> assign(:user, username)}
       {:error, reason} -> (Logger.warn("user unauthorized #{inspect reason}"); :error)
     end
   end
   def connect(_params, _socket), do: :error
-  def id(socket), do: "users_socket:#{socket.assigns[:user_id]}"
+  def id(%{assigns: %{user_id: user_id}}), do: "users_socket:#{user_id}"
 
   # Socket id's are topics that allow you to identify all sockets for a given user:
   #

@@ -4,7 +4,7 @@ defmodule PhoenixSeaBattle.GameChannelTest do
 
   setup do
     {:ok, _, socket} =
-      socket("user_id", %{some: :assign})
+      socket("user_id", %{user: "abc", user_id: 777})
       |> subscribe_and_join(GameChannel, "game:12345678")
 
     {:ok, socket: socket}

@@ -3,7 +3,7 @@ defmodule PhoenixSeaBattle.Game do
   require Logger
   import PhoenixSeaBattle.Utils, only: [timestamp: 0]
   alias PhoenixSeaBattle.Game.Board
-  alias PhoenixSeaBattleWeb.{Endpoint, User, Presence}
+  alias PhoenixSeaBattleWeb.{Endpoint, Presence}
   alias Phoenix.Socket.Broadcast
   @reconnect_time Application.get_env(:phoenix_sea_battle, :reconnect_time, 30_000)
   @timeout 1_000
@@ -58,9 +58,9 @@ defmodule PhoenixSeaBattle.Game do
   end
   def handle_call({:add_user, user}, _from, state = %{admin: admin, opponent: opponent}) do
     cond do
-      user == admin -> {:reply, {:ok, :admin}, state}
+      user == admin    -> {:reply, {:ok, :admin}, state}
       user == opponent -> {:reply, {:ok, :opponent}, state}
-      true -> {:reply, {:error, "game already full"}, state}
+      true             -> {:reply, {:error, "game already full"}, state}
     end
   end
 
@@ -68,21 +68,21 @@ defmodule PhoenixSeaBattle.Game do
   def handle_call(:get_state, _from, state) do
     cond do
       !state.playing -> {:reply, %{state: "initial"}, state}
-      state.ended -> {:reply, %{state: "game_ended"}, state}
-      true -> {:reply, %{state: "play"}, state}
+      state.ended    -> {:reply, %{state: "game_ended"}, state}
+      true           -> {:reply, %{state: "play"}, state}
     end
   end
 
   # readiness
-  def handle_call({:readiness, user, body}, _from, state) do
-    with true <- validate_board(body)
-    do
+  def handle_call({:readiness, user, body}, _from, state) do # TODO rework this func
+    with true <- validate_board(body) do
+      admin_board = state.admin_board
+      opponent_board = state.opponent_board
       case state.admin do
-        ^user -> Board.new(state.admin_board, body)
-        _ -> Board.new(state.opponent_board, body)
+        ^user -> Board.new(admin_board, body)
+        _ -> Board.new(opponent_board, body)
       end
-      if (state.admin_board && state.opponent_board &&
-         Board.valid?(state.admin_board) && Board.valid?(state.opponent_board)) do
+      if (admin_board && opponent_board && Board.valid?(admin_board) && Board.valid?(opponent_board)) do
         Logger.warn("start game #{inspect state.id}")
         {:reply, :start, state}
       else
@@ -117,17 +117,17 @@ defmodule PhoenixSeaBattle.Game do
       |> Map.keys()
       |> (fn users -> [admin, opponent] -- users end).()
       |> case do
-        [] -> {:noreply, put_in(state.timer, nil)}
+        []      -> {:noreply, put_in(state.timer, nil)}
         offline -> {:noreply, put_in(state.offline, offline)}
       end
   end
-  def handle_info :timeout, state = %{id: id, timer: timer} do
+  def handle_info(:timeout, state = %{id: id, timer: timer}) do
     users = [state.admin, state.opponent]
     cond do
       users -- (Presence.list("game:" <> id) |> Map.keys()) == [] -> {:noreply, %{state | timer: nil}}
       timestamp() > timer ->
         Enum.reject(users, fn
-          nil -> true
+          nil  -> true
           user -> user in state.offline end)
           |> Enum.reduce(%{}, fn user, acc ->
             Map.put(acc, user, %{state: 3})
@@ -138,7 +138,7 @@ defmodule PhoenixSeaBattle.Game do
     end
   end
 
-  def handle_info {:terminate, %User{username: user}}, state = %{id: id, admin: admin, opponent: opponent} do
+  def handle_info({:terminate, user}, state = %{id: id, admin: admin, opponent: opponent}) do
     case user do
       ^admin -> if opponent, do: cast_change_user_states(%{opponent => %{state: 3}})
                 {:stop, :normal, state}

@@ -14,19 +14,16 @@ defmodule PhoenixSeaBattleWeb.RoomChannel do
     {:ok, socket}
   end
 
-  def handle_info({:after_join, ts: ts}, socket) do
+  def handle_info({:after_join, ts: ts}, socket = %{assigns: %{user: user}}) do
     socket = assign(socket, :state, 0)
-    Presence.track(socket, socket.assigns[:user], %{
-      state: 0
-    })
+    Presence.track(socket, user, %{state: 0})
     push socket, "presence_state", Presence.list(socket)
     pre_messages = LobbyArchiver.get_messages(ts)
     push socket, "pre_messages", %{"body" => pre_messages}
     {:noreply, socket}
   end
 
-  def handle_info({:after_join, gameId}, socket) do
-    user = socket.assigns[:user]
+  def handle_info({:after_join, gameId}, socket = %{assigns: %{user: user}}) do
     case GenServer.whereis(via_tuple(gameId)) do
       nil ->
         socket = assign(socket, :state, 3)
@@ -44,32 +41,24 @@ defmodule PhoenixSeaBattleWeb.RoomChannel do
     end
   end
 
-  def handle_in("new_msg", %{"body" => body}, socket) do
+  def handle_in("new_msg", %{"body" => body}, socket = %{assigns: %{user: user}}) do
     broadcast! socket, "new_msg", %{body: body,
-                                    user: socket.assigns[:user],
+                                    user: user,
                                     timestamp: System.system_time(:milliseconds)}
     {:noreply, socket}
   end
 
   intercept ["presence_diff", "new_msg", "change_state"]
 
-  def handle_out("new_msg", message, socket) do
-    if socket.assigns[:state] == 0 do
-      push socket, "new_msg", message
-    end
+  def handle_out(cmd, message, socket = %{assigns: %{state: 0}}) when cmd in ~w(new_msg presence_diff) do
+    push socket, cmd, message
     {:noreply, socket}
   end
+  def handle_out(cmd, _message, socket) when cmd in ~w(new_msg presence_diff), do: {:noreply, socket}
 
-  def handle_out("presence_diff", message, socket) do
-    if socket.assigns[:state] == 0 do
-      push socket, "presence_diff", message
-    end
-    {:noreply, socket}
-  end
-
-  def handle_out("change_state", %{"users" => users}, socket) do
-    if meta = Map.get(users, socket.assigns[:user]) do
-      Presence.update(socket, socket.assigns[:user], meta)
+  def handle_out("change_state", %{"users" => users}, socket = %{assigns: %{user: user}}) do
+    if meta = Map.get(users, user) do
+      Presence.update(socket, user, meta)
     end
     {:noreply, socket}
   end

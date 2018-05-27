@@ -4,13 +4,12 @@ defmodule PhoenixSeaBattleWeb.GameController do
   use PhoenixSeaBattleWeb, :controller
   plug :authenticate_user
 
-  def show(conn, %{"id" => id}) do
+  def show(conn = %{assigns: %{current_user: %{username: username}}}, %{"id" => id}) do
     case GenServer.whereis(GameSupervisor.via_tuple(id)) do
       nil -> conn
               |> put_flash(:error, "Such game not exist")
               |> redirect(to: page_path(conn, :index))
-      pid -> username = conn.assigns[:current_user].username
-             case PhoenixSeaBattle.Game.add_user(pid, username) do
+      pid -> case PhoenixSeaBattle.Game.add_user(pid, username) do
                {:ok, :admin} -> render(conn, "index.html", [id: id, admin: true])
                {:ok, :opponent} -> render(conn, "index.html", [id: id, admin: false])
                {:error, reason} -> conn
@@ -29,10 +28,10 @@ defmodule PhoenixSeaBattleWeb.GameController do
     end
   end
 
-  def delete(conn, %{"id" => id}) do
+  def delete(conn = %{assigns: %{current_user: %{username: user}}}, %{"id" => id}) do
     case GenServer.whereis(GameSupervisor.via_tuple(id)) do
       nil -> :ok
-      pid -> send(pid, {:terminate, conn.assigns[:current_user]})
+      pid -> send(pid, {:terminate, user})
     end
     conn
       |> redirect(to: page_path(conn, :index))

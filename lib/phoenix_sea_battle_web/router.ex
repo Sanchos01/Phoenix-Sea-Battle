@@ -24,15 +24,12 @@ defmodule PhoenixSeaBattleWeb.Router do
     get "/", PageController, :index
   end
 
-  defp put_user_token(conn, _) do
-    if current_user = conn.assigns[:current_user] do
-      token = Phoenix.Token.sign(conn, "user socket", current_user.id)
-      assign(conn, :user_token, token)
-    else
-      conn
-    end
+  defp put_user_token(conn = %{assigns: %{current_user: %{id: id}}}, _) do
+    token = Phoenix.Token.sign(conn, "user socket", id)
+    assign(conn, :user_token, token)
   end
-  
+  defp put_user_token(conn, _), do: conn
+
   # Other scopes may use custom stacks.
   # scope "/api", PhoenixSeaBattle do
   #   pipe_through :api

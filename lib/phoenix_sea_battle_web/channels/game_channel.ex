@@ -16,29 +16,29 @@ defmodule PhoenixSeaBattleWeb.GameChannel do
     end
   end
 
-  def handle_info(:after_join, socket) do
-    Presence.track(socket, socket.assigns[:user], %{})
+  def handle_info(:after_join, socket = %{assigns: %{user: user}}) do
+    Presence.track(socket, user, %{})
     {:noreply, socket}
   end
 
-  def handle_in("new_msg", %{"body" => body}, socket) do
+  def handle_in("new_msg", %{"body" => body}, socket = %{assigns: %{user: user}}) do
     broadcast! socket, "new_msg", %{body: body,
-                                    user: socket.assigns[:user]}
+                                    user: user}
     {:noreply, socket}
   end
 
-  def handle_in("get_state", %{}, socket) do
-    msg = Game.get_state(via_tuple(socket.assigns[:game_id]))
-    push socket, "get_state", %{"state" => msg.state, "body" => msg[:body]}
+  def handle_in("get_state", %{}, socket = %{assigns: %{game_id: game_id}}) do
+    msg = %{state: state} = Game.get_state(via_tuple(game_id))
+    push socket, "get_state", %{"state" => state, "body" => msg[:body]}
     {:noreply, socket}
   end
 
-  def handle_in("ready", %{"body" => body}, socket) do
-    case Game.readiness(via_tuple(socket.assigns[:game_id]), socket.assigns[:user], body) do
-      :ok -> push socket, "board_ok", %{}
+  def handle_in("ready", %{"body" => body}, socket = %{assigns: %{user: user, game_id: game_id}}) do
+    case Game.readiness(via_tuple(game_id), user, body) do
+      :ok    -> push socket, "board_ok", %{}
       :start -> broadcast! socket, "start_game", %{}
-      some -> Logger.error("something wrong with ships position: #{inspect some}")
-              push socket, "bad_position", %{}
+      some   -> Logger.error("something wrong with ships position: #{inspect some}")
+                push socket, "bad_position", %{}
     end
     {:noreply, socket}
   end
