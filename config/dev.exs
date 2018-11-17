@@ -11,10 +11,16 @@ config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  # watchers: [node: ["node_modules/webpack/bin/webpack.js", "--watch", "--colors",
-  #                   cd: Path.expand("../assets/", __DIR__)]]
-  watchers: [node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
-                    cd: Path.expand("../assets/", __DIR__)]]
+  watchers: [
+    node: [
+      "node_modules/webpack/bin/webpack.js",
+      "--mode",
+      "development",
+      "--watch-stdin",
+      "--colors",
+      cd: Path.expand("../assets", __DIR__)
+    ]
+  ]
 
 
 # Watch static and templates for browser reloading.
@@ -38,9 +44,11 @@ config :phoenix, :stacktrace_depth, 20
 # Switch off filtering passwords in logs
 config :phoenix, :filter_parameters, []
 
+# Initialize plugs at runtime for faster development compilation
+config :phoenix, :plug_init_mode, :runtime
+
 # Configure your database
 config :phoenix_sea_battle, PhoenixSeaBattle.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "phoenix_sea_battle_dev",

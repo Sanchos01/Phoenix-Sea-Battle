@@ -12,7 +12,7 @@ defmodule PhoenixSeaBattle.Mixfile do
      aliases: aliases(),
      deps: deps(),
      test_coverage: [tool: ExCoveralls],
-     preferred_cli_env: ["coveralls":        :test,
+     preferred_cli_env: [coveralls:          :test,
                          "coveralls.detail": :test,
                          "coveralls.post":   :test,
                          "coveralls.html":   :test]]
@@ -22,9 +22,10 @@ defmodule PhoenixSeaBattle.Mixfile do
   #
   # Type `mix help compile.app` for more information.
   def application do
-    [mod: {PhoenixSeaBattle, []},
-     applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :postgrex, :comeonin, :runtime_tools]]
+    [
+      mod: {PhoenixSeaBattle, []},
+      extra_applications: [:logger, :runtime_tools]
+    ]
   end
 
   # Specifies which paths to compile per environment.
@@ -35,18 +36,22 @@ defmodule PhoenixSeaBattle.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:phoenix, "~> 1.3"},
-     {:phoenix_pubsub, "~> 1.0"},
-     {:phoenix_ecto, "~> 3.0"},
-     {:postgrex, ">= 0.0.0"},
-     {:phoenix_html, "~> 2.10"},
-     {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:gettext, "~> 0.11"},
-     {:cowboy, "~> 1.0"},
-     {:comeonin, "~> 3.2"},
-     {:excoveralls, "~> 0.6", only: :test},
-     {:distillery, "~> 1.5", runtime: false},
-     {:mock, "~> 0.2.0", only: :test}]
+    [
+      {:phoenix, "~> 1.4.0-rc"},
+      {:phoenix_pubsub, "~> 1.1"},
+      {:ecto_sql, "~> 3.0"},
+      {:phoenix_ecto, "~> 4.0"},
+      {:postgrex, ">= 0.0.0"},
+      {:phoenix_html, "~> 2.11"},
+      {:phoenix_live_reload, "~> 1.2-rc", only: :dev},
+      {:gettext, "~> 0.11"},
+      {:plug_cowboy, "~> 2.0"},
+      {:comeonin, "~> 3.2"},
+      {:jason, "~> 1.0"},
+      {:excoveralls, "~> 0.6", only: :test},
+      {:distillery, "~> 1.5", runtime: false},
+      {:mock, "~> 0.2.0", only: :test}
+    ]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
@@ -58,6 +63,6 @@ defmodule PhoenixSeaBattle.Mixfile do
   defp aliases do
     ["ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
      "ecto.reset": ["ecto.drop", "ecto.setup"],
-     "test": ["ecto.create --quiet", "ecto.migrate", "test"]]
+     test: ["ecto.create --quiet", "ecto.migrate", "test"]]
   end
 end

@@ -1,10 +1,10 @@
 defmodule PhoenixSeaBattle.GameChannelTest do
   use PhoenixSeaBattleWeb.ChannelCase
-  alias PhoenixSeaBattleWeb.GameChannel
+  alias PhoenixSeaBattleWeb.{UserSocket, GameChannel}
 
   setup do
     {:ok, _, socket} =
-      socket("user_id", %{user: "abc", user_id: 777})
+      socket(UserSocket, "user_id", %{user: "abc", user_id: 777})
       |> subscribe_and_join(GameChannel, "game:12345678")
 
     {:ok, socket: socket}

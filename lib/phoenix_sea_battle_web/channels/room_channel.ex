@@ -42,9 +42,8 @@ defmodule PhoenixSeaBattleWeb.RoomChannel do
   end
 
   def handle_in("new_msg", %{"body" => body}, socket = %{assigns: %{user: user}}) do
-    broadcast! socket, "new_msg", %{body: body,
-                                    user: user,
-                                    timestamp: System.system_time(:milliseconds)}
+    msg = %{body: body, user: user, timestamp: System.system_time(:milliseconds)}
+    broadcast! socket, "new_msg", msg
     {:noreply, socket}
   end
 

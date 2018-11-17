@@ -1,4 +1,4 @@
-defmodule PhoenixSeaBattleWeb.User do
+defmodule PhoenixSeaBattle.User do
   use PhoenixSeaBattleWeb, :model
 
   schema "users" do

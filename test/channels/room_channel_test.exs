@@ -1,6 +1,6 @@
 defmodule PhoenixSeaBattle.RoomChannelTest do
   use PhoenixSeaBattleWeb.ChannelCase
-  alias PhoenixSeaBattleWeb.RoomChannel
+  alias PhoenixSeaBattleWeb.{UserSocket, RoomChannel}
   @valid_id "12345678"
 
   setup_all do
@@ -10,14 +10,14 @@ defmodule PhoenixSeaBattle.RoomChannelTest do
 
   setup config do
     if username = config[:login_as] do
-      user = insert_user(%{username: username, password: "secret"})
+      %{id: user_id} = insert_user(%{username: username, password: "secret"})
       {:ok, _, in_lobby_socket} =
-        socket("user_id", %{user_id: Map.get(user, :id), user: Map.get(user, :username)})
+        socket(UserSocket, "user_id", %{user_id: user_id, user: username})
         |> subscribe_and_join(RoomChannel, "room:lobby")
       {:ok, _, in_game_socket} =
-        socket("user_id", %{user_id: Map.get(user, :id), user: Map.get(user, :username)})
+        socket(UserSocket, "user_id", %{user_id: user_id, user: username})
         |> subscribe_and_join(RoomChannel, "room:lobby", %{"game" => @valid_id})
-      {:ok, in_game_socket: in_game_socket, in_lobby_socket: in_lobby_socket, user: Map.get(user, :username)}
+      {:ok, in_game_socket: in_game_socket, in_lobby_socket: in_lobby_socket, user: username}
     else
       :ok
     end

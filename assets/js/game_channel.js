@@ -1,8 +1,8 @@
-import {Presence} from "phoenix"
+// import {Presence} from "phoenix"
 
 let GameChannel = {
 
-  onReady(game_channel, lobby, gameId){
+  onReady(game_channel, lobby, _gameId){
     let chatInput         = document.querySelector("#chat-input")
     let messagesContainer = document.querySelector("#messages")
     let adminButton       = document.querySelector("#game-control")

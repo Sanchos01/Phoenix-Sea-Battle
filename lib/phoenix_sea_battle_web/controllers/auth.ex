@@ -3,7 +3,7 @@ defmodule PhoenixSeaBattleWeb.Auth do
   import Comeonin.Bcrypt, only: [checkpw: 2, dummy_checkpw: 0]
   import Phoenix.Controller
   alias PhoenixSeaBattleWeb.Router.Helpers
-  alias PhoenixSeaBattleWeb.User
+  alias PhoenixSeaBattle.User
 
   def authenticate_user(conn, _opts) do
     if conn.assigns.current_user do

@@ -1,6 +1,6 @@
 defmodule PhoenixSeaBattle.UserRepoTest do
   use PhoenixSeaBattleWeb.ModelCase, async: false
-  alias PhoenixSeaBattleWeb.User
+  alias PhoenixSeaBattle.User
 
   @valid_attrs %{name: "A User", username: "eva"}
 

@@ -11,7 +11,6 @@ config :logger, level: :warn
 
 # Configure your database
 config :phoenix_sea_battle, PhoenixSeaBattle.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "phoenix_sea_battle_test",

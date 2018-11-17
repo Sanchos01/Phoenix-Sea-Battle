@@ -1,7 +1,8 @@
 defmodule PhoenixSeaBattleWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :phoenix_sea_battle
 
-  socket "/socket", PhoenixSeaBattleWeb.UserSocket
+  socket "/socket", PhoenixSeaBattleWeb.UserSocket,
+    websocket: true # or list of options
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -25,7 +26,7 @@ defmodule PhoenixSeaBattleWeb.Endpoint do
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
-    json_decoder: Poison
+    json_decoder: Jason
 
   plug Plug.MethodOverride
   plug Plug.Head

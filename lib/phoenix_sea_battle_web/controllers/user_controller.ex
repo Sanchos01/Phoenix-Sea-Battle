@@ -1,7 +1,7 @@
 defmodule PhoenixSeaBattleWeb.UserController do
   use PhoenixSeaBattleWeb, :controller
   plug :authenticate_user when action in [:index, :show]
-  alias PhoenixSeaBattleWeb.User
+  alias PhoenixSeaBattle.User
 
   def index(conn, _params) do
     users = Repo.all(User)

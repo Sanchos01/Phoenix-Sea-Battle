@@ -1,6 +1,7 @@
 defmodule PhoenixSeaBattle.AuthTest do
   use PhoenixSeaBattleWeb.ConnCase
   alias PhoenixSeaBattleWeb.Auth
+  alias PhoenixSeaBattle.User
 
   setup %{conn: conn} do
     conn =
@@ -21,7 +22,7 @@ defmodule PhoenixSeaBattle.AuthTest do
     %{conn: conn} do
       conn =
         conn
-        |> assign(:current_user, %PhoenixSeaBattleWeb.User{})
+        |> assign(:current_user, %User{})
         |> Auth.authenticate_user([])
 
       refute conn.halted
@@ -30,7 +31,7 @@ defmodule PhoenixSeaBattle.AuthTest do
   test "login puts the user in the session", %{conn: conn} do
     login_conn =
       conn
-      |> Auth.login(%PhoenixSeaBattleWeb.User{id: 123})
+      |> Auth.login(%User{id: 123})
       |> send_resp(:ok, "")
 
     next_conn = get(login_conn, "/")

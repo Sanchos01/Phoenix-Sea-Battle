@@ -10,7 +10,7 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 alias PhoenixSeaBattle.Repo
-alias PhoenixSeaBattleWeb.User
+alias PhoenixSeaBattle.User
 
 for user <- ~w(foo bar baz) do
   with nil <- Repo.get_by(User, username: user <> "123"),

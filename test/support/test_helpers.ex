@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattleWeb.TestHelpers do
-  alias PhoenixSeaBattle.Repo
+  alias PhoenixSeaBattle.{User, Repo}
 
   def insert_user(attrs \\ %{}) do
     changes = Map.merge(%{
@@ -8,8 +8,8 @@ defmodule PhoenixSeaBattleWeb.TestHelpers do
       password: "supersecret",
     }, attrs)
 
-    %PhoenixSeaBattleWeb.User{}
-    |> PhoenixSeaBattleWeb.User.registration_changeset(changes)
+    %User{}
+    |> User.registration_changeset(changes)
     |> Repo.insert!()
   end
 end
