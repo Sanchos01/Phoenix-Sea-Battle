@@ -15,10 +15,12 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
     {:ok, []}
   end
 
-  def get_messages(ts), do: GenServer.call(__MODULE__, {:get, ts})
+  def get_messages(ts) when is_integer(ts), do: GenServer.call(__MODULE__, {:get, ts})
+
   def handle_call({:get, ts}, _from, state) do
     new_state = Enum.take(state, @msg_count)
-    {:reply, filter_messages(new_state, ts), new_state}
+    msgs = for msg <- new_state, msg.timestamp > ts, do: msg
+    {:reply, msgs, new_state}
   end
 
   def handle_info(:timeout, state) do
@@ -30,13 +32,4 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   def handle_info(%Broadcast{}, state), do: {:noreply, state}
 
   def handle_info(msg, state), do: (Logger.warn("some msg for archiver: #{inspect msg}"); {:noreply, state})
-
-  def filter_messages(messages, ts, acc \\ [])
-  def filter_messages([], _ts, acc), do: acc
-  def filter_messages([msg|rest], ts, acc) do
-    case msg.timestamp > ts do
-      true -> filter_messages(rest, ts, [msg|acc])
-      _ -> acc
-    end
-  end
 end

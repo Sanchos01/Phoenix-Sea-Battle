@@ -26,7 +26,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
   end
 
   def index(conn, _params) do
-    <<id::binary-size(8), _rest::binary>> = Ecto.UUID.generate()
+    id = :crypto.strong_rand_bytes(4) |> Base.encode16(case: :lower)
     case GenServer.whereis(GameSupervisor.via_tuple(id)) do
       nil ->
         GameSupervisor.new_game(id)

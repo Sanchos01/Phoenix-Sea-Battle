@@ -27,7 +27,7 @@ defmodule PhoenixSeaBattle.Game do
 
   def init([id: id]) do
     :ok = Endpoint.subscribe("game:" <> id)
-    Process.send_after(self(), :timeout, @timeout)
+    Process.send_after(self(), :timeout, @timeout) # TODO check timeout
     {:ok, %__MODULE__{id: id}}
   end
   def init(_), do: {:stop, "No id"}
@@ -83,7 +83,7 @@ defmodule PhoenixSeaBattle.Game do
         _ -> Board.new(opponent_board, body)
       end
       if (admin_board && opponent_board && Board.valid?(admin_board) && Board.valid?(opponent_board)) do
-        Logger.warn("start game #{inspect state.id}")
+        Logger.info "start game #{inspect state.id}"
         {:reply, :start, state}
       else
         {:reply, :ok, state}
@@ -93,7 +93,7 @@ defmodule PhoenixSeaBattle.Game do
 
   # Infos
   def handle_info %Broadcast{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, state = %{id: id, offline: offline, timer: timer} do
-    Logger.info("#{inspect id} --- checking diffs - joins: #{inspect joins}, leaves: #{inspect leaves}")
+    Logger.debug "#{inspect id} --- checking diffs - joins: #{inspect joins}, leaves: #{inspect leaves}"
     {offline, timer} = if length(users = Map.keys(leaves)) > 0 do
       {Enum.uniq(offline ++ users), (timer || (timestamp() + @reconnect_time))}
     else

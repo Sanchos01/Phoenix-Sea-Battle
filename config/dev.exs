@@ -17,7 +17,7 @@ config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
       "--mode",
       "development",
       "--watch-stdin",
-      "--colors",
+      "--color",
       cd: Path.expand("../assets", __DIR__)
     ]
   ]
