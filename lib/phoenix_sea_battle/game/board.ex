@@ -2,18 +2,9 @@ defmodule PhoenixSeaBattle.Game.Board do
   use GenServer
   require Logger
 
-  defstruct [
-    a: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    b: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    c: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    d: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    e: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    f: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    g: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    h: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    i: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    j: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  ]
+  @columns for x <- ?a..?j, do: :"#{<<x>>}"
+
+  defstruct Enum.map(@columns, & {&1, Enum.take(Stream.cycle([0]), 10)})
 
   def start_link([id: id]) do
     GenServer.start_link(__MODULE__, [id: id])
@@ -54,7 +45,7 @@ defmodule PhoenixSeaBattle.Game.Board do
   defp ship_in_struct([], _num, struct), do: struct
   defp ship_in_struct([point|rest], num, struct) do
     <<column::binary-size(1), ":", line::binary>> = point
-    column = String.to_atom(column)
+    column = String.to_existing_atom(column)
     line = String.to_integer(line)
     new_struct = Map.update!(struct, column, &(List.update_at(&1, line, fn _ -> num end)))
     ship_in_struct(rest, num, new_struct)
