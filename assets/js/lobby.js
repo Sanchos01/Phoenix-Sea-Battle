@@ -59,6 +59,8 @@ let Lobby = {
   renderMsg(messagesContainer, msg){
     let messageItem = document.createElement("div");
     messageItem.innerText = `[${this.formatedTimestamp(msg.timestamp)}] (${msg.user}): ${msg.body}`
+    Array.from(messagesContainer.children).slice(0, -19)
+      .map(elem => messagesContainer.removeChild(elem))
     messagesContainer.appendChild(messageItem)
     messagesContainer.scrollTop = messagesContainer.scrollHeight
   },

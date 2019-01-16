@@ -8,7 +8,7 @@ defmodule PhoenixSeaBattleWeb.RoomChannel do
   # states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   def join("room:lobby", message, socket) do
     case message["game"] do
-      nil -> send self(), {:after_join, ts: (message["last_seen_ts"] || 0)}
+      nil    -> send self(), {:after_join, ts: (message["last_seen_ts"] || 0)}
       gameId -> send self(), {:after_join, gameId}
     end
     {:ok, socket}

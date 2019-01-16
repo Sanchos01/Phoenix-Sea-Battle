@@ -20,7 +20,7 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   def handle_call({:get, ts}, _from, state) do
     new_state = Enum.take(state, @msg_count)
     msgs = for msg <- new_state, msg.timestamp > ts, do: msg
-    {:reply, msgs, new_state}
+    {:reply, Enum.reverse(msgs), new_state}
   end
 
   def handle_info(:timeout, state) do
