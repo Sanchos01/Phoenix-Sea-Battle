@@ -1,6 +1,8 @@
 defmodule PhoenixSeaBattleWeb.UserSocket do
   require Logger
   use Phoenix.Socket
+  import Ecto.Query, warn: false
+  alias Phoenix.Token
   alias PhoenixSeaBattle.{User, Repo}
 
   ## Channels
@@ -21,11 +23,13 @@ defmodule PhoenixSeaBattleWeb.UserSocket do
   @max_age 2 * 7 * 24 * 60 * 60
 
   def connect(%{"token" => token}, socket) do
-    case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
-      {:ok, user_id} ->
-        %{username: username} = Repo.get(User, user_id)
-        {:ok, socket |> assign(:user_id, user_id) |> assign(:user, username)}
-      {:error, reason} -> (Logger.warn("user unauthorized #{inspect reason}"); :error)
+    with {:ok, user_id} <- Token.verify(socket, "user socket", token, max_age: @max_age),
+         q = (from u in User, where: u.id == ^user_id, select: u.username),
+         username when is_binary(username) <- Repo.one(q)
+    do
+      {:ok, socket |> assign(:user_id, user_id) |> assign(:user, username)}
+    else
+      _ -> :error
     end
   end
   def connect(_params, _socket), do: :error

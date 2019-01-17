@@ -18,16 +18,14 @@ defmodule PhoenixSeaBattleWeb.Auth do
 
   def login_by_username_and_pass(conn, username, given_pass, opts) do
     repo = init(opts)
-    user = repo.get_by(User, username: username)
-
-    cond do
-      user ->
-        cond do
-          !is_nil(user.password_hash) && checkpw(given_pass, user.password_hash) ->
-            {:ok, login(conn, user)}
-          true -> {:error, :unauthorized, conn}
-        end
-      true ->
+    with user = %User{password_hash: hash} when is_binary(hash) <- repo.get_by(User, username: username),
+         true <- checkpw(given_pass, hash)
+    do
+      {:ok, login(conn, user)}
+    else
+      %User{} ->
+        {:error, :unauthorized, conn}
+      _ ->
         dummy_checkpw()
         {:error, :not_found, conn}
     end
