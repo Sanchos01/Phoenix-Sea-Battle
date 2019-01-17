@@ -3,8 +3,8 @@
     <p>You should logging for using this web-service</p>
   </div>
 <% end %>
-<div id="chat" class="chat container">
-  <div class="col-md-9">
+<div id="chat" class="row chat container">
+  <div class="column column-75">
     <div class="panel panel-default chat-room">
       <div class="panel-heading">
         Messages:
@@ -15,7 +15,7 @@
     <input id="chat-input" type="text" class="form-control" placeholder="Type a message..."></input>
   </div>
 
-  <div class="col-md-3">
+  <div class="column">
     <div class="panel panel-default chat-room">
       <div class="panel-heading">
         Users Online:
@@ -25,7 +25,7 @@
     </div>
     <td class="text-right">
       <%= link "Start game", to: game_path(@conn, :index),
-            class: "btn btn-default" %>
+            class: "button button-default" %>
     </td>
   </div>
 </div>

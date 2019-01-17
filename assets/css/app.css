@@ -1,4 +1,7 @@
 /* This file is for your main application css. */
+
+@import "./phoenix.css";
+
 #messages {
   overflow: auto;
   margin-top: 0em;
@@ -10,12 +13,25 @@
 .chat-room, .game-panel {
   margin-top: 1em;
 }
+.panel {
+  margin-bottom: 1em;
+  background: #eee;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  -webkit-box-shadow: 0 1px 1px rgba(0,0,0,.05);
+  box-shadow: 0 1px 1px rgba(0,0,0,.05);
+  padding-left: 0.5em;
+  padding-top: 0.5em;
+}
+.panel-default{
+  border-color: #ddd
+}
 .panel-messages, .panel-users, .panel-game {
   height: 300px;
 }
 .users{
   padding-bottom: 0.5em;
 }
-.btn-default{
+.button-default{
   width: 100%;
 }
