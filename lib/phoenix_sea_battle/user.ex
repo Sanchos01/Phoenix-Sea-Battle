@@ -1,5 +1,6 @@
 defmodule PhoenixSeaBattle.User do
   use PhoenixSeaBattleWeb, :model
+  alias Comeonin.Bcrypt
 
   schema "users" do
     field :name, :string
@@ -30,7 +31,7 @@ defmodule PhoenixSeaBattle.User do
   defp put_pass_hash(changeset) do
     case changeset do
       %Ecto.Changeset{valid?: true, changes: %{password: pass}} ->
-        put_change(changeset, :password_hash, Comeonin.Bcrypt.hashpwsalt(pass))
+        put_change(changeset, :password_hash, Bcrypt.hashpwsalt(pass))
       _ -> changeset
     end
   end

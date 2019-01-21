@@ -50,7 +50,8 @@ defmodule PhoenixSeaBattle.Mixfile do
       {:jason, "~> 1.0"},
       {:excoveralls, "~> 0.6", only: :test},
       {:distillery, "~> 1.5", runtime: false},
-      {:mock, "~> 0.2.0", only: :test}
+      {:mock, "~> 0.2.0", only: :test},
+      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
     ]
   end
 

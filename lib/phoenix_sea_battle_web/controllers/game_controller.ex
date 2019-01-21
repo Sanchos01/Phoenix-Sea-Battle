@@ -2,6 +2,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
   require Logger
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
   alias PhoenixSeaBattle.Game
+  alias Ecto.UUID
   use PhoenixSeaBattleWeb, :controller
   plug :authenticate_user
 
@@ -26,7 +27,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
   end
 
   def index(conn, _params) do
-    <<id::binary-size(8), _rest::binary>> = Ecto.UUID.generate()
+    <<id::binary-size(8), _rest::binary>> = UUID.generate()
     case GenServer.whereis(GameSupervisor.via_tuple(id)) do
       nil ->
         GameSupervisor.new_game(id)

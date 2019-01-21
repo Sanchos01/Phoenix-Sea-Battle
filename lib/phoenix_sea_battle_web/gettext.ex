@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattleWeb.Gettext do
-  @moduledoc """
+  @moduledoc ~S"""
   A module providing Internationalization with a gettext-based API.
 
   By using [Gettext](https://hexdocs.pm/gettext),

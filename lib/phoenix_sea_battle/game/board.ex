@@ -26,10 +26,12 @@ defmodule PhoenixSeaBattle.Game.Board do
   # valid?
   def handle_call(:valid?, _from, state = %{board: board}) do
     board = Map.drop(board, [:__struct__])
-    uniqs = Map.values(board)
+    uniqs = board
+            |> Map.values()
             |> List.flatten()
             |> Enum.uniq()
-    only_ships = Map.values(board)
+    only_ships = board
+                  |> Map.values()
                   |> List.flatten
                   |> Enum.reduce([], fn 0, acc -> acc
                                      some, acc -> [some|acc] end)

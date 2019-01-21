@@ -6,13 +6,12 @@ defmodule PhoenixSeaBattleWeb.GameChannel do
   import PhoenixSeaBattle.Game.Supervisor, only: [via_tuple: 1]
 
   def join("game:" <> id, _message, socket) do
-    list_users = Presence.list(socket) |> Map.keys()
-    cond do
-      length(list_users) > 1 ->
-        {:error, "this room is full"}
-      true ->
-        send self(), :after_join
-        {:ok, assign(socket, :game_id, id)}
+    list_users = socket |> Presence.list() |> Map.keys()
+    if length(list_users) == 2 do
+      {:error, "this room is full"}
+    else
+      send self(), :after_join
+      {:ok, assign(socket, :game_id, id)}
     end
   end
 

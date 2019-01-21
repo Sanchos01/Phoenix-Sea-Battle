@@ -16,7 +16,8 @@ defmodule PhoenixSeaBattle.GameControllerTest do
   setup %{conn: conn} = config do
     if username = config[:login_as] do
       user = insert_user(%{username: username, password: "secret"})
-      conn = assign(conn, :current_user, user)
+      conn = conn
+        |> assign(:current_user, user)
         |> post(session_path(conn, :create), %{"session" => %{"username" => username, "password" => "secret"}})
       if game_id = config[:game_id] do
         GameSupervisor.new_game(game_id)
@@ -61,7 +62,7 @@ defmodule PhoenixSeaBattle.GameControllerTest do
 
   @tag login_as: "alex123", game_id: "11223344"
   test "DELETE sessions/:id", %{conn: conn, game_id: game_id} do
-    pid = GameSupervisor.via_tuple("#{game_id}") |> GenServer.whereis()
+    pid = "#{game_id}" |> GameSupervisor.via_tuple() |> GenServer.whereis()
     ref = Process.monitor(pid)
     conn = conn |> delete("game/#{game_id}")
     assert html_response(conn, 302)
@@ -71,8 +72,11 @@ defmodule PhoenixSeaBattle.GameControllerTest do
   @tag login_as: "john123"
   test "Got /game (generated exist game_id)", %{conn: conn} do
     GameSupervisor.new_game("17342072")
-    :rand.seed(:exs64, {1, 1, 1}) # next :rand.uniform(10000000) == 7342072
-    with_mock Ecto.UUID, [generate: fn() -> (:rand.uniform(10000000) + 10000000) |> Integer.to_string() end] do
+    :rand.seed(:exs64, {1, 1, 1}) # next :rand.uniform(10_000_000) == 7_342_072
+    with_mock Ecto.UUID, [
+        generate: fn() -> Integer.to_string(:rand.uniform(10_000_000) + 10_000_000) end
+      ] do
+
       conn = get conn, "/game"
       assert html_response(conn, 302)
     end

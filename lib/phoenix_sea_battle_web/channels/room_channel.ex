@@ -1,15 +1,16 @@
 defmodule PhoenixSeaBattleWeb.RoomChannel do
-  require Logger
+  @moduledoc false
   use PhoenixSeaBattleWeb, :channel
+  require Logger
+  import PhoenixSeaBattle.Game.Supervisor, only: [via_tuple: 1]
   alias PhoenixSeaBattleWeb.Presence
   alias PhoenixSeaBattle.{Game, LobbyArchiver}
-  import PhoenixSeaBattle.Game.Supervisor, only: [via_tuple: 1]
 
   # states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   def join("room:lobby", message, socket) do
     case message["game"] do
-      nil    -> send self(), {:after_join, ts: (message["last_seen_ts"] || 0)}
-      gameId -> send self(), {:after_join, gameId}
+      nil     -> send self(), {:after_join, ts: (message["last_seen_ts"] || 0)}
+      game_id -> send self(), {:after_join, game_id}
     end
     {:ok, socket}
   end
@@ -23,18 +24,15 @@ defmodule PhoenixSeaBattleWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:after_join, gameId}, socket = %{assigns: %{user: user}}) do
-    case GenServer.whereis(via_tuple(gameId)) do
+  def handle_info({:after_join, game_id}, socket = %{assigns: %{user: user}}) do
+    case GenServer.whereis(via_tuple(game_id)) do
       nil ->
         socket = assign(socket, :state, 3)
         Presence.track(socket, user, %{state: 3})
         {:noreply, socket}
       pid ->
         {:ok, %Game{admin: admin, opponent: opponent}} = Game.get(pid)
-        {meta, state} = cond do
-          admin && opponent -> if user == admin, do: {%{state: 2, with: opponent}, 2}, else: {%{state: 2, with: admin}, 2}
-          true -> {%{state: 1, gameId: gameId}, 1}
-        end
+        {meta, state} = get_state_and_meta(user, admin, opponent)
         socket = assign(socket, :state, state)
         Presence.track(socket, user, meta)
         {:noreply, socket}
@@ -56,9 +54,18 @@ defmodule PhoenixSeaBattleWeb.RoomChannel do
   def handle_out(cmd, _message, socket) when cmd in ~w(new_msg presence_diff), do: {:noreply, socket}
 
   def handle_out("change_state", %{"users" => users}, socket = %{assigns: %{user: user}}) do
-    if meta = Map.get(users, user) do
-      Presence.update(socket, user, meta)
-    end
+    if meta = Map.get(users, user), do: Presence.update(socket, user, meta)
     {:noreply, socket}
+  end
+
+  defp get_state_and_meta(user, admin, opponent)
+  defp get_state_and_meta(user, admin, user) when not is_nil(admin) do
+    {%{state: 2, with: admin}, 2}
+  end
+  defp get_state_and_meta(user, user, opponent) when not is_nil(opponent) do
+    {%{state: 2, with: opponent}, 2}
+  end
+  defp get_state_and_meta(_, _, _) do
+    {%{state: 1}, 1}
   end
 end

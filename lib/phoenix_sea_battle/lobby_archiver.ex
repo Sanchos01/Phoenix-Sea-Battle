@@ -2,6 +2,7 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   use GenServer
   require Logger
   alias Phoenix.Socket.Broadcast
+  alias PhoenixSeaBattleWeb.Endpoint
   @msg_count Application.get_env(:phoenix_sea_battle, :msg_count)
   @timeout 1_000
 
@@ -10,7 +11,7 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   end
 
   def init(_) do
-    PhoenixSeaBattleWeb.Endpoint.subscribe("room:lobby")
+    Endpoint.subscribe("room:lobby")
     Process.send_after(self(), :timeout, @timeout)
     {:ok, []}
   end
@@ -31,5 +32,8 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   def handle_info(%Broadcast{event: "new_msg", payload: msg = %{}}, state), do: {:noreply, [msg | state]}
   def handle_info(%Broadcast{}, state), do: {:noreply, state}
 
-  def handle_info(msg, state), do: (Logger.warn("some msg for archiver: #{inspect msg}"); {:noreply, state})
+  def handle_info(msg, state) do
+    Logger.warn("some msg for archiver: #{inspect msg}")
+    {:noreply, state}
+  end
 end

@@ -1,5 +1,6 @@
 defmodule PhoenixSeaBattleWeb.Router do
   use PhoenixSeaBattleWeb, :router
+  alias Phoenix.Token
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -25,7 +26,7 @@ defmodule PhoenixSeaBattleWeb.Router do
   end
 
   defp put_user_token(conn = %{assigns: %{current_user: %{id: id}}}, _) do
-    token = Phoenix.Token.sign(conn, "user socket", id)
+    token = Token.sign(conn, "user socket", id)
     assign(conn, :user_token, token)
   end
   defp put_user_token(conn, _), do: conn

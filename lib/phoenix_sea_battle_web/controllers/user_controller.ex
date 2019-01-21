@@ -2,6 +2,7 @@ defmodule PhoenixSeaBattleWeb.UserController do
   use PhoenixSeaBattleWeb, :controller
   plug :authenticate_user when action in [:index, :show]
   alias PhoenixSeaBattle.User
+  alias PhoenixSeaBattleWeb.Auth
 
   def index(conn, _params) do
     users = Repo.all(User)
@@ -23,7 +24,7 @@ defmodule PhoenixSeaBattleWeb.UserController do
     case Repo.insert(changeset) do
       {:ok, user} ->
         conn
-        |> PhoenixSeaBattleWeb.Auth.login(user)
+        |> Auth.login(user)
         |> put_flash(:info, "#{user.name} created!")
         |> redirect(to: user_path(conn, :index))
       {:error, changeset} ->

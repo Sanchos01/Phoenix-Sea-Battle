@@ -1,10 +1,9 @@
 defmodule PhoenixSeaBattle.Game do
   use GenServer
   require Logger
-  import PhoenixSeaBattle.Utils, only: [timestamp: 0]
   alias PhoenixSeaBattle.Game.Board
-  alias PhoenixSeaBattleWeb.{Endpoint, Presence}
   alias Phoenix.Socket.Broadcast
+  alias PhoenixSeaBattleWeb.{Endpoint, Presence}
   @reconnect_time Application.get_env(:phoenix_sea_battle, :reconnect_time, 30_000)
   @timeout 1_000
 
@@ -49,7 +48,8 @@ defmodule PhoenixSeaBattle.Game do
   end
   def handle_call({:add_user, user}, _from, state = %{id: id, admin: admin, opponent: nil}) do
     if user != admin do
-      cast_change_user_states(%{admin => %{state: 2, with: user}, user => %{state: 2, with: admin}})
+      %{admin => %{state: 2, with: user}, user => %{state: 2, with: admin}}
+      |> cast_change_user_states()
       {:ok, pid} = Board.start_link([id: id])
       {:reply, {:ok, :opponent}, %{state | opponent: user, opponent_board: pid}}
     else
@@ -92,47 +92,60 @@ defmodule PhoenixSeaBattle.Game do
   end
 
   # Infos
-  def handle_info %Broadcast{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, state = %{id: id, offline: offline, timer: timer} do
+  def handle_info(%Broadcast{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, state = %{id: id, offline: offline, timer: timer}) do
     Logger.debug "#{inspect id} --- checking diffs - joins: #{inspect joins}, leaves: #{inspect leaves}"
-    {offline, timer} = if length(users = Map.keys(leaves)) > 0 do
-      {Enum.uniq(offline ++ users), (timer || (timestamp() + @reconnect_time))}
+
+    leaves_users = Map.keys(leaves)
+    {offline, timer} = if length(leaves_users) > 0 do
+      {Enum.uniq(offline ++ leaves_users), (timer || (System.system_time(:second) + @reconnect_time))}
     else
       {offline, timer}
     end
-    {offline, timer} = if length(users = Map.keys(joins)) > 0 do
-      offline = offline -- users
-      {offline, (if offline == [], do: nil, else: timer)}
+
+    join_users = Map.keys(joins)
+    {offline, timer} = if length(join_users) > 0 do
+      case offline -- join_users do
+        []      -> {[], nil}
+        offline -> {offline, timer}
+      end
     else
       {offline, timer}
     end
+
     {:noreply, %{state | timer: timer, offline: offline}}
   end
   def handle_info(%Broadcast{event: "new_msg"}, state), do: {:noreply, state}
-  def handle_info(msg = %Broadcast{}, state), do: (Logger.info("nothing intresting, msg - #{inspect msg}"); {:noreply, state})
+  def handle_info(msg = %Broadcast{}, state) do
+    Logger.info("nothing intresting, msg - #{inspect msg}")
+    {:noreply, state}
+  end
 
   def handle_info(:timeout, state = %{timer: nil}), do: {:noreply, state}
   def handle_info(:timeout, state = %{admin: admin, id: id, opponent: opponent, timer: timer, offline: []}) when timer != nil do
     Logger.error("timer on, but offline no one")
-    Presence.list("game:" <> id)
-      |> Map.keys()
-      |> (fn users -> [admin, opponent] -- users end).()
-      |> case do
-        []      -> {:noreply, put_in(state.timer, nil)}
-        offline -> {:noreply, put_in(state.offline, offline)}
-      end
+    ("game:" <> id)
+    |> Presence.list()
+    |> Map.keys()
+    |> (fn users -> [admin, opponent] -- users end).()
+    |> case do
+      []      -> {:noreply, put_in(state.timer, nil)}
+      offline -> {:noreply, put_in(state.offline, offline)}
+    end
   end
   def handle_info(:timeout, state = %{id: id, timer: timer}) do
     users = [state.admin, state.opponent]
     cond do
-      users -- (Presence.list("game:" <> id) |> Map.keys()) == [] -> {:noreply, %{state | timer: nil}}
-      timestamp() > timer ->
-        Enum.reject(users, fn
+      users -- (("game:" <> id) |> Presence.list() |> Map.keys()) == [] -> {:noreply, %{state | timer: nil}}
+      System.system_time(:second) > timer ->
+        users
+        |> Enum.reject(fn
           nil  -> true
-          user -> user in state.offline end)
-          |> Enum.reduce(%{}, fn user, acc ->
-            Map.put(acc, user, %{state: 3})
-          end)
-          |> cast_change_user_states()
+          user -> user in state.offline
+        end)
+        |> Enum.reduce(%{}, fn user, acc ->
+          Map.put(acc, user, %{state: 3})
+        end)
+        |> cast_change_user_states()
         {:stop, :normal, state}
       true -> {:noreply, state}
     end
@@ -147,7 +160,10 @@ defmodule PhoenixSeaBattle.Game do
     end
   end
 
-  def handle_info(msg, state), do: (Logger.warn("uncatched message: #{inspect msg}"); {:noreply, state})
+  def handle_info(msg, state) do
+    Logger.warn("uncatched message: #{inspect msg}")
+    {:noreply, state}
+  end
 
   def terminate(:normal, %{id: id}) do
     Endpoint.broadcast("game:" <> id, "all out", %{})

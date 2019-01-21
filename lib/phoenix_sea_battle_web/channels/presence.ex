@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattleWeb.Presence do
-  @moduledoc """
+  @moduledoc ~S"""
   Provides presence tracking to channels and processes.
 
   See the [`Phoenix.Presence`](http://hexdocs.pm/phoenix/Phoenix.Presence.html)

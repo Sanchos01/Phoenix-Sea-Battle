@@ -11,11 +11,11 @@ defmodule PhoenixSeaBattle.RoomChannelTest do
   setup config do
     if username = config[:login_as] do
       %{id: user_id} = insert_user(%{username: username, password: "secret"})
-      {:ok, _, in_lobby_socket} =
-        socket(UserSocket, "user_id", %{user_id: user_id, user: username})
+      {:ok, _, in_lobby_socket} = UserSocket
+        |> socket("user_id", %{user_id: user_id, user: username})
         |> subscribe_and_join(RoomChannel, "room:lobby")
-      {:ok, _, in_game_socket} =
-        socket(UserSocket, "user_id", %{user_id: user_id, user: username})
+      {:ok, _, in_game_socket} = UserSocket
+        |> socket("user_id", %{user_id: user_id, user: username})
         |> subscribe_and_join(RoomChannel, "room:lobby", %{"game" => @valid_id})
       {:ok, in_game_socket: in_game_socket, in_lobby_socket: in_lobby_socket, user: username}
     else

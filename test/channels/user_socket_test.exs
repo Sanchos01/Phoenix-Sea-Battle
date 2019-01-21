@@ -1,6 +1,7 @@
 defmodule PhoenixSeaBattle.Channels.UserSocketTest do
   use PhoenixSeaBattleWeb.ChannelCase, async: true
   alias PhoenixSeaBattleWeb.UserSocket
+  alias Phoenix.Token
 
   setup config do
     if username = config[:login_as] do
@@ -13,7 +14,7 @@ defmodule PhoenixSeaBattle.Channels.UserSocketTest do
 
   @tag login_as: "max123"
   test "socket authentication with valid token", %{user: user} do
-    token = Phoenix.Token.sign(@endpoint, "user socket", user.id)
+    token = Token.sign(@endpoint, "user socket", user.id)
     assert {:ok, socket} = connect(UserSocket, %{"token" => token})
     assert socket.assigns.user == "max123"
   end

@@ -1,6 +1,6 @@
 defmodule PhoenixSeaBattleWeb.UserSocket do
-  require Logger
   use Phoenix.Socket
+  require Logger
   import Ecto.Query, warn: false
   alias Phoenix.Token
   alias PhoenixSeaBattle.{User, Repo}

@@ -1,7 +1,8 @@
 defmodule PhoenixSeaBattleWeb.Auth do
+  @moduledoc false
   import Plug.Conn
-  import Comeonin.Bcrypt, only: [checkpw: 2, dummy_checkpw: 0]
   import Phoenix.Controller
+  alias Comeonin.Bcrypt
   alias PhoenixSeaBattleWeb.Router.Helpers
   alias PhoenixSeaBattle.User
 
@@ -18,15 +19,15 @@ defmodule PhoenixSeaBattleWeb.Auth do
 
   def login_by_username_and_pass(conn, username, given_pass, opts) do
     repo = init(opts)
-    with user = %User{password_hash: hash} when is_binary(hash) <- repo.get_by(User, username: username),
-         true <- checkpw(given_pass, hash)
+    with user = %User{password_hash: "" <> hash} <- repo.get_by(User, username: username),
+         true <- Bcrypt.checkpw(given_pass, hash)
     do
       {:ok, login(conn, user)}
     else
       false ->
         {:error, :unauthorized, conn}
       _ ->
-        dummy_checkpw()
+        Bcrypt.dummy_checkpw()
         {:error, :not_found, conn}
     end
   end

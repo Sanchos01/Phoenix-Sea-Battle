@@ -4,7 +4,8 @@ defmodule PhoenixSeaBattle.UserControllerTest do
   setup %{conn: conn} = config do
     if username = config[:login_as] do
       user = insert_user(%{username: username, password: "secret"})
-      conn = assign(conn, :current_user, user)
+      conn = conn
+        |> assign(:current_user, user)
         |> post(session_path(conn, :create), %{"session" => %{"username" => username, "password" => "secret"}})
       {:ok, %{conn: conn, user: user}}
     else

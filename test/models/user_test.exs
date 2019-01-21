@@ -1,6 +1,7 @@
 defmodule PhoenixSeaBattle.UserTest do
   use PhoenixSeaBattleWeb.ModelCase, async: true
   alias PhoenixSeaBattle.User
+  alias Comeonin.Bcrypt
 
   @valid_attrs %{name: "A User", username: "eva", password: "secret"}
   @invalid_attrs %{}
@@ -35,6 +36,6 @@ defmodule PhoenixSeaBattle.UserTest do
 
     assert changeset.valid?
     assert pass_hash
-    assert Comeonin.Bcrypt.checkpw(pass, pass_hash)
+    assert Bcrypt.checkpw(pass, pass_hash)
   end
 end
