@@ -31,9 +31,9 @@ defmodule PhoenixSeaBattle.Game do
   end
   def init(_), do: {:stop, "No id"}
 
-  def get(pid), do: GenServer.call(pid, :get)
-  def get_state(pid), do: GenServer.call(pid, :get_state)
-  def add_user(pid, user), do: GenServer.call(pid, {:add_user, user})
+  def get(pid),                   do: GenServer.call(pid, :get)
+  def get_state(pid),             do: GenServer.call(pid, :get_state)
+  def add_user(pid, user),        do: GenServer.call(pid, {:add_user, user})
   def readiness(pid, user, body), do: GenServer.call(pid, {:readiness, user, body})
 
   # Calls
@@ -43,24 +43,22 @@ defmodule PhoenixSeaBattle.Game do
   # add_user
   def handle_call({:add_user, user}, _from, state = %{id: id, admin: nil}) do
     cast_change_user_states(%{user => %{state: 1, gameId: id}})
-    {:ok, pid} = Board.start_link([id: id])
-    {:reply, {:ok, :admin}, %{state | admin: user, admin_board: pid}}
+    {:reply, {:ok, :admin}, %{state | admin: user, admin_board: %Board{}}}
   end
-  def handle_call({:add_user, user}, _from, state = %{id: id, admin: admin, opponent: nil}) do
+  def handle_call({:add_user, user}, _from, state = %{admin: admin, opponent: nil}) do
     if user != admin do
       %{admin => %{state: 2, with: user}, user => %{state: 2, with: admin}}
       |> cast_change_user_states()
-      {:ok, pid} = Board.start_link([id: id])
-      {:reply, {:ok, :opponent}, %{state | opponent: user, opponent_board: pid}}
+      {:reply, {:ok, :opponent}, %{state | opponent: user, opponent_board: %Board{}}}
     else
       {:reply, {:ok, :admin}, state}
     end
   end
   def handle_call({:add_user, user}, _from, state = %{admin: admin, opponent: opponent}) do
-    cond do
-      user == admin    -> {:reply, {:ok, :admin}, state}
-      user == opponent -> {:reply, {:ok, :opponent}, state}
-      true             -> {:reply, {:error, "game already full"}, state}
+    case user do
+      ^admin    -> {:reply, {:ok, :admin}, state}
+      ^opponent -> {:reply, {:ok, :opponent}, state}
+      _         -> {:reply, {:error, "game already full"}, state}
     end
   end
 
@@ -74,20 +72,20 @@ defmodule PhoenixSeaBattle.Game do
   end
 
   # readiness
-  def handle_call({:readiness, user, body}, _from, state) do # TODO rework this func
-    with true <- validate_board(body) do
-      admin_board = state.admin_board
-      opponent_board = state.opponent_board
-      case state.admin do
-        ^user -> Board.new(admin_board, body)
-        _ -> Board.new(opponent_board, body)
+  def handle_call({:readiness, user, body}, _from, state) do # TODO rework this func, especially await liveView
+    with board = %Board{} <- Board.new(body) do
+      new_state = case state.admin do
+        ^user -> %{state | admin_board: board}
+        _     -> %{state | opponent_board: board}
       end
-      if (admin_board && opponent_board && Board.valid?(admin_board) && Board.valid?(opponent_board)) do
+      if ready_to_start(new_state) do
         Logger.info "start game #{inspect state.id}"
-        {:reply, :start, state}
+        {:reply, :start, new_state}
       else
-        {:reply, :ok, state}
+        {:reply, :ok, new_state}
       end
+    else
+      error -> {:reply, error, state}
     end
   end
 
@@ -177,12 +175,9 @@ defmodule PhoenixSeaBattle.Game do
 
   defp cast_change_user_states(meta), do: Endpoint.broadcast("room:lobby", "change_state", %{"users" => meta})
 
-  defp validate_board(board) when length(board) == 10 do
-    board
-    |> List.flatten()
-    |> Enum.uniq()
-    |> length()
-    |> Kernel.==(20)
+  defp ready_to_start(%{admin_board: nil}), do: false
+  defp ready_to_start(%{opponent_board: nil}), do: false
+  defp ready_to_start(%{admin_board: admin_board, opponent_board: opponent_board}) do
+    Board.valid?(admin_board) && Board.valid?(opponent_board)
   end
-  defp validate_board(_), do: false
 end

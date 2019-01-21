@@ -1,4 +1,4 @@
-FROM elixir:1.5-alpine as asset-builder-mix-getter
+FROM elixir:1.7-alpine as asset-builder-mix-getter
 
 ENV HOME=/app
 
@@ -26,7 +26,7 @@ RUN cd assets && \
     ./node_modules/.bin/brunch build
 
 ########################################################################
-FROM elixir:1.5-alpine as releaser
+FROM elixir:1.7-alpine as releaser
 
 ENV HOME=/app
 
@@ -60,19 +60,18 @@ FROM alpine:3.6
 
 ENV LANG=en_US.UTF-8 \
     HOME=/app/ \
-    TERM=xterm
-
-ENV VERSION=0.1.0
+    TERM=xterm \
+    VERSION=0.1.0 \
+    MIX_ENV=prod \
+    REPLACE_OS_VARS=true \
+    SHELL=/bin/sh \
+    APP=phoenix_sea_battle
 
 RUN apk add --no-cache bash ncurses-libs openssl
 
-ENV MIX_ENV=prod \
-    REPLACE_OS_VARS=true \
-    SHELL=/bin/sh
-
-COPY --from=releaser $HOME/rel/phoenix_sea_battle/releases/$VERSION/phoenix_sea_battle.tar.gz $HOME
+COPY --from=releaser $HOME/rel/$APP/releases/$VERSION/$APP.tar.gz $HOME
 WORKDIR $HOME
-RUN tar -xzf phoenix_sea_battle.tar.gz
+RUN tar -xzf $APP.tar.gz && rm $APP.tar.gz
 
 ENTRYPOINT ["/app/bin/phoenix_sea_battle"]
 CMD ["foreground"]

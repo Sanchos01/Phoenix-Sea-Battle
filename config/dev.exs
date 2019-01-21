@@ -27,6 +27,9 @@ config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
     ]
   ]
 
+config :kernel,
+  inet_dist_listen_min: 41014,
+  inet_dist_listen_max: 41024
 
 # Watch static and templates for browser reloading.
 config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
