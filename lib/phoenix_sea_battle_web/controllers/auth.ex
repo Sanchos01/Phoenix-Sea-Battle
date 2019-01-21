@@ -23,7 +23,7 @@ defmodule PhoenixSeaBattleWeb.Auth do
     do
       {:ok, login(conn, user)}
     else
-      %User{} ->
+      false ->
         {:error, :unauthorized, conn}
       _ ->
         dummy_checkpw()
