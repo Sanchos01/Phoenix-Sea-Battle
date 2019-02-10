@@ -13,7 +13,7 @@ defmodule PhoenixSeaBattleWeb.RoomChannel do
         ts = message["last_seen_ts"] || 0
         send self(), {:after_join, ts: ts}
       game_id ->
-        send self(), {:after_join, game_id}
+        send self(), {:after_join, game_id: game_id}
     end
     {:ok, socket}
   end
@@ -27,7 +27,7 @@ defmodule PhoenixSeaBattleWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:after_join, game_id}, socket = %{assigns: %{user: user}}) do
+  def handle_info({:after_join, game_id: game_id}, socket = %{assigns: %{user: user}}) do
     case GenServer.whereis(via_tuple(game_id)) do
       nil ->
         socket = assign(socket, :state, 3)
@@ -48,7 +48,7 @@ defmodule PhoenixSeaBattleWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  intercept ["presence_diff", "new_msg", "change_state"]
+  intercept ~w(presence_diff new_msg change_state)
 
   def handle_out(cmd, message, socket = %{assigns: %{state: 0}}) when cmd in ~w(new_msg presence_diff) do
     push socket, cmd, message
