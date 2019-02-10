@@ -4,7 +4,7 @@ defmodule PhoenixSeaBattleWeb.Auth do
   import Phoenix.Controller
   alias Comeonin.Bcrypt
   alias PhoenixSeaBattleWeb.Router.Helpers
-  alias PhoenixSeaBattle.User
+  alias PhoenixSeaBattle.{Repo, User}
 
   def authenticate_user(conn, _opts) do
     if conn.assigns.current_user do
@@ -17,9 +17,8 @@ defmodule PhoenixSeaBattleWeb.Auth do
     end
   end
 
-  def login_by_username_and_pass(conn, username, given_pass, opts) do
-    repo = init(opts)
-    with user = %User{password_hash: "" <> hash} <- repo.get_by(User, username: username),
+  def login_by_username_and_pass(conn, username, given_pass) do
+    with user = %User{password_hash: "" <> hash} <- Repo.get_by(User, username: username),
          true <- Bcrypt.checkpw(given_pass, hash)
     do
       {:ok, login(conn, user)}
@@ -32,11 +31,11 @@ defmodule PhoenixSeaBattleWeb.Auth do
     end
   end
 
-  def init(opts), do: Keyword.fetch!(opts, :repo)
+  def init(opts), do: opts
 
-  def call(conn, repo) do
+  def call(conn, _opts) do
     user_id = get_session(conn, :user_id)
-    user = user_id && repo.get(User, user_id)
+    user = user_id && Repo.get(User, user_id)
     assign(conn, :current_user, user)
   end
 

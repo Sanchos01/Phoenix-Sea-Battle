@@ -7,7 +7,7 @@ defmodule PhoenixSeaBattleWeb.SessionController do
   end
 
   def create(conn, %{"session" => %{"username" => user, "password" => pass}}) do
-    case Auth.login_by_username_and_pass(conn, user, pass, repo: Repo) do
+    case Auth.login_by_username_and_pass(conn, user, pass) do
       {:ok, conn} ->
         conn
         |> put_flash(:info, "Welcome back, #{user}!")
