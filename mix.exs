@@ -2,20 +2,22 @@ defmodule PhoenixSeaBattle.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :phoenix_sea_battle,
-     version: "0.1.0",
-     elixir: "~> 1.5",
-     elixirc_paths: elixirc_paths(Mix.env),
-     compilers: [:phoenix, :gettext] ++ Mix.compilers,
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     aliases: aliases(),
-     deps: deps(),
-     test_coverage: [tool: ExCoveralls],
-     preferred_cli_env: [coveralls:          :test,
-                         "coveralls.detail": :test,
-                         "coveralls.post":   :test,
-                         "coveralls.html":   :test]]
+    [
+      app: :phoenix_sea_battle,
+      version: "0.2.0",
+      elixir: "~> 1.8",
+      elixirc_paths: elixirc_paths(Mix.env),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers,
+      build_embedded: Mix.env == :prod,
+      start_permanent: Mix.env == :prod,
+      aliases: aliases(),
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [coveralls:          :test,
+                          "coveralls.detail": :test,
+                          "coveralls.post":   :test,
+                          "coveralls.html":   :test]
+    ]
   end
 
   # Configuration for the OTP application.
@@ -52,6 +54,8 @@ defmodule PhoenixSeaBattle.Mixfile do
       {:distillery, "~> 1.5", runtime: false},
       {:mock, "~> 0.2.0", only: :test},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
+      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view"},
+      {:calendar, "~> 0.17.4"}
     ]
   end
 

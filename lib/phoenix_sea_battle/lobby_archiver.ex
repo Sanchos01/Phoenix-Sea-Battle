@@ -1,8 +1,6 @@
 defmodule PhoenixSeaBattle.LobbyArchiver do
   use GenServer
   require Logger
-  alias Phoenix.Socket.Broadcast
-  alias PhoenixSeaBattleWeb.Endpoint
   @msg_count Application.get_env(:phoenix_sea_battle, :msg_count)
   @timeout 1_000
 
@@ -11,29 +9,42 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   end
 
   def init(_) do
-    Endpoint.subscribe("room:lobby")
     Process.send_after(self(), :timeout, @timeout)
-    {:ok, []}
+    {:ok, %{msg: [], subs: []}}
   end
 
-  def get_messages(ts) when is_integer(ts), do: GenServer.call(__MODULE__, {:get, ts})
+  def get_messages(ts \\ 0) when is_integer(ts), do: GenServer.call(__MODULE__, {:get, ts})
+  def subs(), do: GenServer.call(__MODULE__, :subs)
+  def new_msg(msg, user), do: GenServer.cast(__MODULE__, {:new_msg, msg, user})
+
+  def handle_cast({:new_msg, body, user}, state) do
+    new_msg = %{body: body, user: user, timestamp: :os.system_time(:second)}
+    new_msgs = [new_msg | Enum.take(state.msg, @msg_count)]
+    Enum.each(state.subs, fn pid -> send pid, {:update, Enum.reverse(new_msgs)} end)
+    {:noreply, %{state | msg: new_msgs}}
+  end
 
   def handle_call({:get, ts}, _from, state) do
-    new_state = Enum.take(state, @msg_count)
-    msgs = for msg <- new_state, msg.timestamp > ts, do: msg
-    {:reply, Enum.reverse(msgs), new_state}
+    reply = get_msgs(state, ts)
+    {:reply, reply, state}
+  end
+
+  def handle_call(:subs, {pid, _ref}, state) do
+    Process.monitor(pid)
+    msgs = get_msgs(state)
+    {:reply, {:ok, msgs}, update_in(state.subs, & [pid | &1])}
   end
 
   def handle_info(:timeout, state) do
     Process.send_after(self(), :timeout, @timeout)
-    {:noreply, Enum.take(state, @msg_count)}
+    {:noreply, update_in(state.msg, & Enum.take(&1, @msg_count))}
+  end
+  
+  def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
+    {:noreply, update_in(state.subs, & Enum.reject(&1, fn x -> x == pid end))}
   end
 
-  def handle_info(%Broadcast{event: "new_msg", payload: msg = %{}}, state), do: {:noreply, [msg | state]}
-  def handle_info(%Broadcast{}, state), do: {:noreply, state}
-
-  def handle_info(msg, state) do
-    Logger.warn("some msg for archiver: #{inspect msg}")
-    {:noreply, state}
+  defp get_msgs(state, ts \\ 0) do
+    Enum.reduce(state.msg, [], & (if &1.timestamp > ts, do: [&1 | &2], else: &2))
   end
 end

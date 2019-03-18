@@ -3,9 +3,10 @@
 @import "./phoenix.css";
 
 #messages {
-  overflow: auto;
+  overflow-y: auto;
   margin-top: 0em;
   min-height: 200px;
+  word-wrap: break-word;
 }
 .chat, .game {
   margin-top: 0em;

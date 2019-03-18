@@ -14,10 +14,8 @@ defmodule PhoenixSeaBattleWeb.GameController do
         |> redirect(to: page_path(conn, :index))
       pid ->
         case Game.add_user(pid, username) do
-          {:ok, :admin} ->
-            render(conn, "index.html", [id: id, admin: true])
-          {:ok, :opponent} ->
-            render(conn, "index.html", [id: id, admin: false])
+          {:ok, status} when status in ~w(admin opponent)a ->
+            render(conn, "index.html", id: id, admin: status == :admin)
           {:error, reason} ->
             conn
             |> put_flash(:error, reason)
@@ -33,7 +31,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
         GameSupervisor.new_game(id)
         redirect(conn, to: game_path(conn, :show, id))
       _ ->
-        index(conn, %{})
+        index(conn, nil)
     end
   end
 

@@ -3,29 +3,4 @@
     <p>You should logging for using this web-service</p>
   </div>
 <% end %>
-<div id="chat" class="row chat container">
-  <div class="column column-75">
-    <div class="panel panel-default chat-room">
-      <div class="panel-heading">
-        Messages:
-      </div>
-      <div id="messages" class="panel-body panel-messages">
-      </div>
-    </div>
-    <input id="chat-input" type="text" class="form-control" placeholder="Type a message..."></input>
-  </div>
-
-  <div class="column">
-    <div class="panel panel-default chat-room">
-      <div class="panel-heading">
-        Users Online:
-      </div>
-      <div id="userList" class="panel-body panel-users">
-      </div>
-    </div>
-    <td class="text-right">
-      <%= link "Start game", to: game_path(@conn, :index),
-            class: "button button-default" %>
-    </td>
-  </div>
-</div>
+<%= live_render(@conn, PhoenixSeaBattleWeb.Lobby, session: %{user: @current_user}) %>

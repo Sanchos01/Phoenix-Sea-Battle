@@ -56,6 +56,7 @@ defmodule PhoenixSeaBattleWeb do
       import PhoenixSeaBattleWeb.Router.Helpers
       import PhoenixSeaBattleWeb.ErrorHelpers
       import PhoenixSeaBattleWeb.Gettext
+      import Phoenix.LiveView, only: [live_render: 2, live_render: 3]
     end
   end
 
@@ -65,6 +66,7 @@ defmodule PhoenixSeaBattleWeb do
       import Plug.Conn
       import Phoenix.Controller
       import PhoenixSeaBattleWeb.Auth, only: [authenticate_user: 2]
+      import Phoenix.LiveView.Router
     end
   end
 

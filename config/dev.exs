@@ -23,6 +23,8 @@ config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
       "development",
       "--watch-stdin",
       "--color",
+      "--display",
+      "minimal",
       cd: Path.expand("../assets", __DIR__)
     ]
   ]
@@ -38,7 +40,8 @@ config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
       ~r{lib/phoenix_sea_battle_web/views/.*(ex)$},
-      ~r{lib/phoenix_sea_battle_web/templates/.*(eex)$}
+      ~r{lib/phoenix_sea_battle_web/templates/.*(eex)$},
+      ~r{lib/phoenix_sea_battle_web/live/.*(ex)$}s
     ]
   ]
 

@@ -9,14 +9,12 @@ let Lobby = {
     socket.onError( ev => console.log("ERROR", ev) )
     socket.onClose( e => console.log("CLOSE", e) )
     let lobby = socket.channel("room:lobby")
-    this.onReady(lobby)
+    // this.onReady(lobby)
   },
 
   onReady(lobby){
     let chatInput         = document.querySelector("#chat-input")
     let messagesContainer = document.querySelector("#messages")
-    let userList          = document.querySelector("#userList")
-    let presences         = {}
 
     chatInput.addEventListener("keypress", event => {
       if(event.keyCode === 13 && chatInput.value != ""){
@@ -24,16 +22,6 @@ let Lobby = {
           .receive("error", e => console.log(e))
         chatInput.value = ""
       }
-    })
-
-    lobby.on("presence_state", state => {
-      presences = Presence.syncState(presences, state)
-      this.render(presences)
-    })
-
-    lobby.on("presence_diff", diff => {
-      presences = Presence.syncDiff(presences, diff)
-      this.render(presences)
     })
 
     lobby.on("new_msg", payload => {
@@ -68,87 +56,6 @@ let Lobby = {
   formatedTimestamp(Ts){
     let date = new Date(Ts)
     return date.toLocaleTimeString()
-  },
-
-  listBy(user, {metas: metas}){
-    return {
-      user: user,
-      state: metas[0].state,
-      gameId: metas[0].gameId,
-      with: metas[0].with
-    }
-  },
-
-  // states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
-  render(presences){
-    userList.innerHTML = Presence.list(presences, Lobby.listBy)
-      .sort(function (a, b) {
-        if(a.gameId == null && b.gameId != null) {
-          return 1;
-        }
-        if(a.gameId != null && b.gameId == null) {
-          return -1;
-        }
-        if(a.state > b.state) {
-          return 1;
-        }
-        if(a.state < b.state) {
-          return -1;
-        }
-        if(a.user > b.user) {
-          return 1;
-        }
-        if(a.user < b.user) {
-          return -1;
-        }
-        return 0;
-      })
-      .map(function (presence) {
-        switch (presence.state) {
-          case 0:
-          return `
-            <li class="users">
-              ${presence.user}
-              <br>
-              <small>in lobby</small>
-            </li>
-          `
-          case 1:
-          return `
-            <li class="users">
-              ${presence.user}
-              <br>
-              <small>in game</small>
-              <a class="btn btn-default btn-xs" href="/game/${presence.gameId}">Join</a>
-            </li>
-          `
-          case 2:
-          return `
-            <li class="users">
-              ${presence.user}
-              <br>
-              <small>in game with ${presence.with}</small>
-            </li>
-          `
-          case 3:
-          return `
-            <li class="users">
-              ${presence.user}
-              <br>
-              <small>game ended</small>
-            </li>
-          `
-          default:
-          return `
-            <li class="users">
-              ${presence.user}
-              <br>
-              <small>Unknown state</small>
-            </li>
-          `
-        }
-      })
-      .join("")
   },
 }
 export default Lobby

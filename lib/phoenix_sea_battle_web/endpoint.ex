@@ -1,6 +1,7 @@
 defmodule PhoenixSeaBattleWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :phoenix_sea_battle
 
+  socket "/live", Phoenix.LiveView.Socket
   socket "/socket", PhoenixSeaBattleWeb.UserSocket,
     websocket: true # or list of options
 

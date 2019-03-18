@@ -11,6 +11,7 @@ config :phoenix_sea_battle,
   msg_count: 20
 
 config :phoenix, :json_library, Jason
+config :phoenix, template_engines: [leex: Phoenix.LiveView.Engine]
 
 # Configures the endpoint
 config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
@@ -18,7 +19,8 @@ config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
   secret_key_base: "GdMl3er/H5562PpEcWuZhDELgZhen1bufkuMrTMeVpBVM8GS4U3h5t93kq0gpEUj",
   render_errors: [view: PhoenixSeaBattleWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: PhoenixSeaBattle.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+           adapter: Phoenix.PubSub.PG2],
+  live_view: [signing_salt: "T7tp90J9XJ3qpScUicyq/af1qvT/I2Ca"]
 
 # Configures Elixir's Logger
 config :logger, :console,
