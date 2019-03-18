@@ -1,8 +1,8 @@
 language: elixir
 elixir:
-  - 1.8.2
+  - 1.8.1
 otp_release:
-  - 21.0
+  - 21.2
 script:
   - "mix do ecto.setup, coveralls.travis"
 cache:
