@@ -6,6 +6,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   alias PhoenixSeaBattleWeb.{Endpoint, Presence}
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
   alias PhoenixSeaBattle.Game
+  alias PhoenixSeaBattle.Game.Board
   alias Phoenix.Socket.Broadcast
 
   # states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
@@ -26,11 +27,10 @@ defmodule PhoenixSeaBattleWeb.Game do
       <div class="column column-67">
         <div class="panel panel-default game-panel">
           <div id="state-bar" class="panel-heading state-bar">
-            State bar
-            <div id="game-control">
-            </div>
+            <%= message(@game_state) %>
           </div>
           <div id="game" class="panel-body panel-game">
+            <%= game(@game_state, @user) %>
           </div>
         </div>
         <form phx-submit="insert_message">
@@ -80,4 +80,34 @@ defmodule PhoenixSeaBattleWeb.Game do
   defp get_state(user, %{admin: admin, opponent: user}) when not is_nil(admin), do: 2
   defp get_state(user, %{admin: user, opponent: opponent}) when not is_nil(opponent), do: 2
   defp get_state(_, _), do: 1
+
+  defp message(%{playing: false, ended: false}) do
+    ~E"""
+    Place your ships
+    """
+  end
+
+  defp game(%{playing: false, ended: false, admin: user, admin_board: board} = state, %{username: user}) do
+    render_preparing_board(board)
+  end
+
+  defp game(%{playing: false, ended: false, opponent: user, opponent_board: board} = state, %{username: user}) do
+    render_preparing_board(board)
+  end
+
+  defp render_preparing_board(board) do
+    case Board.prepare(board) do
+      :ok -> render_ready_board(board)
+      l when l in 1..4 -> render_not_ready_board(board, l)
+    end
+  end
+
+  defp render_ready_board(_) do
+    nil
+  end
+
+  defp render_not_ready_board(board, ship) do
+    ~E"""
+    """
+  end
 end

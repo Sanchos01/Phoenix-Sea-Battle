@@ -18,5 +18,3 @@ Array.from(document.getElementsByName("chat-input")).map(elem => {
     }
   })
 });
-
-// export default socket

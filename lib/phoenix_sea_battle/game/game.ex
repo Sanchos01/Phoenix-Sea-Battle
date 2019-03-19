@@ -58,11 +58,11 @@ defmodule PhoenixSeaBattle.Game do
 
   # add_user
   def handle_call({:add_user, user}, _from, state = %{admin: nil}) do
-    {:reply, {:ok, :admin}, %{state | admin: user, admin_board: %Board{}}}
+    {:reply, {:ok, :admin}, %{state | admin: user, admin_board: Board.new()}}
   end
   def handle_call({:add_user, user}, _from, state = %{admin: admin, opponent: nil}) do
     if user != admin do
-      {:reply, {:ok, :opponent}, %{state | opponent: user, opponent_board: %Board{}}}
+      {:reply, {:ok, :opponent}, %{state | opponent: user, opponent_board: Board.new()}}
     else
       {:reply, {:ok, :admin}, state}
     end
@@ -85,22 +85,22 @@ defmodule PhoenixSeaBattle.Game do
   end
 
   # readiness
-  def handle_call({:readiness, user, body}, _from, state) do # TODO rework this func, especially await liveView
-    with board = %Board{} <- Board.new(body) do
-      new_state = case state.admin do
-        ^user -> %{state | admin_board: board}
-        _     -> %{state | opponent_board: board}
-      end
-      if ready_to_start(new_state) do
-        Logger.info "start game #{inspect state.id}"
-        {:reply, :start, new_state}
-      else
-        {:reply, :ok, new_state}
-      end
-    else
-      error -> {:reply, error, state}
-    end
-  end
+  # def handle_call({:readiness, user, body}, _from, state) do # TODO rework this func, especially await liveView
+  #   with board = %Board{} <- Board.new(body) do
+  #     new_state = case state.admin do
+  #       ^user -> %{state | admin_board: board}
+  #       _     -> %{state | opponent_board: board}
+  #     end
+  #     if ready_to_start(new_state) do
+  #       Logger.info "start game #{inspect state.id}"
+  #       {:reply, :start, new_state}
+  #     else
+  #       {:reply, :ok, new_state}
+  #     end
+  #   else
+  #     error -> {:reply, error, state}
+  #   end
+  # end
 
   # Infos
   def handle_info(%Broadcast{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, state = %{id: id, offline: offline, timer: timer}) do

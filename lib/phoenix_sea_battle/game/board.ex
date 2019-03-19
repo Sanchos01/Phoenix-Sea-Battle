@@ -1,52 +1,84 @@
 defmodule PhoenixSeaBattle.Game.Board do
   @columns for x <- ?a..?j, do: "#{<<x>>}"
   @lines for x <- 0..9, do: "#{x}"
-  defstruct Enum.map(@columns, & {:"#{&1}", Enum.take(Stream.cycle([0]), 10)})
+  # 4 - battleship - bs0
+  # 3 - cruiser - c{0-1}
+  # 2 - destroyer - d{0-2}
+  # 1 - torpedo boat - tb{0-3}
+  @marks ~w(bs0 c0 c1 d0 d1 d2 tb0 tb1 tb2 tb3)a
+  @ships_length [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
+  @ships Enum.zip(@marks, @ships_length)
 
-  def new(body) do
-    with board = %__MODULE__{} <- board_in_struct(body),
-         true                  <- valid?(board)
-    do
-      board
-    else
-      _ -> {:error, :invalid_board}
-    end
+  def new(), do: :array.new(100, default: 0)
+
+  def prepare(board) do
+    ships = all_ships(board)
+    true = valid?(ships, board)
+    anyone_missed?(ships)
   end
 
-  def valid?(board) do
-    all_fields =
-      board
-      |> Map.from_struct()
-      |> Map.values()
-      |> List.flatten()
-    uniqs = Enum.uniq(all_fields)
-    only_ships = Enum.reduce(all_fields, [], fn
-      0, acc    -> acc
-      some, acc -> [some|acc]
+  defp all_ships(board) do
+    :array.foldr(fn
+      _index, 0, acc ->
+        acc
+      index, type, acc ->
+        indexes = acc[type] || []
+        Map.put(acc, type, [index | indexes])
+    end, %{}, board)
+  end
+
+  defp valid?(ships, board) do
+    Enum.reduce_while(ships, true, fn
+      {:bt0, [i1, i2, i3, i4] = indexes}, acc ->
+        with true <- vertical?(indexes) or horizontal?(indexes),
+             true <- all_nearest_empty?(indexes, board)
+        do
+          {:cont, acc}
+        else
+          _ -> {:halt, false}
+        end
+      _, _ ->
+        {:halt, false}
     end)
-    (length(uniqs) == 11) && (length(only_ships) == 20)
   end
 
-  defp board_in_struct(board), do: board_in_struct(board, 1, %__MODULE__{})
-  defp board_in_struct([], _num, struct), do: struct
-  defp board_in_struct([ship|rest], num, struct) do
-    with new_struct = %__MODULE__{} <- ship_in_struct(ship, num, struct) do
-      board_in_struct(rest, num + 1, new_struct)
-    end
+  defp vertical?([_]), do: true
+  defp vertical?([i1 | [i2 | _] = rest]) do
+    i1 + 10 == i2 and vertical?(rest)
   end
 
-  defp ship_in_struct([], _num, struct), do: struct
-  defp ship_in_struct([point|rest], num, struct) do
-    with <<column::binary-size(1), ":", line::binary>> <- point,
-         true <- column in @columns,
-         true <- line in @lines
-    do
-      column = String.to_existing_atom(column)
-      line = String.to_integer(line)
-      new_struct = Map.update!(struct, column, &(List.update_at(&1, line, fn _ -> num end)))
-      ship_in_struct(rest, num, new_struct)
-    else
-      _ -> {:error, :invalid_board}
-    end
+  defp horizontal?([_]), do: true
+  defp horizontal?([i1 | [i2 | _] = rest]) do
+    i1 + 1 == i2 and horizontal?(rest)
+  end
+
+  defp all_nearest_empty?(indexes, board) do
+    Enum.reduce_while(indexes, true, fn i, acc ->
+      if nearest_empty?(i, board, indexes), do: {:cont, acc}, else: {:halt, false}
+    end)
+  end
+
+  defp nearest_empty?(index, board, indexes) do
+    top? = index < 10
+    bottom? = index > 89
+    left? = rem(index, 10)
+    right? = rem(index + 1, 10)
+    (left? or top? or :array.get(index - 11, board) == 0) and
+    (top? or (index - 10 in indexes) or :array.get(index - 10, board) == 0) and
+    (right? or top? or :array.get(index - 9, board) == 0) and
+    (left? or (index - 1 in indexes) or :array.get(index - 1, board) == 0) and
+    (right? or (index + 1 in indexes) or :array.get(index + 1, board) == 0) and
+    (left? or bottom? or :array.get(index + 9, board) == 0) and
+    (bottom? or (index + 10 in indexes) or :array.get(index + 10, board) == 0) and
+    (right? or bottom? or :array.get(index + 11, board) == 0)
+  end
+
+  defp anyone_missed?(ships) do
+    Enum.reduce_while(@marks, :ok, fn mark, acc ->
+      case ships[mark] do
+        nil -> {:halt, @ships[mark]}
+        _ -> {:cont, acc}
+      end
+    end)
   end
 end
