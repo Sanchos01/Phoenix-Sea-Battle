@@ -36,3 +36,16 @@
 .button-default{
   width: 100%;
 }
+.block{
+  display: block;
+  position: absolute;
+  width: 1.3em;
+  height: 1.3em;
+  background-color: #6699ff;
+  border-color: black;
+  border-width: 0.1em;
+  border-style: solid;
+}
+.ghost_block{
+  background-color: rgb(240, 104, 70);
+}

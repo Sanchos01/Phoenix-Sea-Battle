@@ -35,13 +35,13 @@ defmodule PhoenixSeaBattleWeb.Game do
   def render(assigns) do
     ~L"""
     <div id="game-container" class="row game container">
-      <div class="column column-67">
+      <div class="column column-75">
         <div class="panel panel-default game-panel">
           <div id="state-bar" class="panel-heading state-bar">
             <%= message(@game_state) %>
           </div>
           <div id="game" class="panel-body panel-game">
-            <%= render_game(@game_state, @board, @render_opts) %>
+            <%= render_board(@game_state, @board, @render_opts) %>
           </div>
         </div>
         <form phx-submit="insert_message">
@@ -49,7 +49,7 @@ defmodule PhoenixSeaBattleWeb.Game do
         </form>
       </div>
 
-      <div class="column">
+      <div class="column column-25">
         <div class="panel panel-default chat-room">
           <div class="panel-heading">
             InGame Chat
@@ -84,6 +84,20 @@ defmodule PhoenixSeaBattleWeb.Game do
     {:noreply, socket}
   end
 
+  def handle_event("keydown", key, socket = %{assigns: %{game_state: :initial}}) do
+    IO.puts "render_opts: #{inspect socket.assigns.render_opts}"
+    __MODULE__.Initial.apply_key(key, socket)
+  end
+
+  def handle_event("keydown", p, socket) do
+    IO.puts "p: #{inspect p} ; #{inspect socket}"
+    {:noreply, socket}
+  end
+
+  # def handle_event("keydown", _, socket) do
+  #   {:noreply, socket}
+  # end
+
   def handle_info({:update_messages, messages}, socket) do
     {:noreply, socket |> assign(messages: messages)}
   end
@@ -112,7 +126,7 @@ defmodule PhoenixSeaBattleWeb.Game do
     |> __MODULE__.Initial.update_render_opts(board)
   end
 
-  defp render_game(:initial, board, render_opts) do
-    __MODULE__.Initial.render_game(board, render_opts)
+  defp render_board(:initial, board, render_opts) do
+    __MODULE__.Initial.render_board(board, render_opts)
   end
 end
