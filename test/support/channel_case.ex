@@ -26,7 +26,6 @@ defmodule PhoenixSeaBattleWeb.ChannelCase do
       import Ecto.Query
       import PhoenixSeaBattleWeb.TestHelpers
 
-
       # The default endpoint for testing
       @endpoint PhoenixSeaBattleWeb.Endpoint
     end

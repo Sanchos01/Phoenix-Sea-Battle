@@ -18,8 +18,7 @@ config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "GdMl3er/H5562PpEcWuZhDELgZhen1bufkuMrTMeVpBVM8GS4U3h5t93kq0gpEUj",
   render_errors: [view: PhoenixSeaBattleWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: PhoenixSeaBattle.PubSub,
-           adapter: Phoenix.PubSub.PG2],
+  pubsub: [name: PhoenixSeaBattle.PubSub, adapter: Phoenix.PubSub.PG2],
   live_view: [signing_salt: "T7tp90J9XJ3qpScUicyq/af1qvT/I2Ca"]
 
 # Configures Elixir's Logger
@@ -29,4 +28,4 @@ config :logger, :console,
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

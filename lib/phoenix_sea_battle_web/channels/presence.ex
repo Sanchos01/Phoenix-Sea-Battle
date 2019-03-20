@@ -72,6 +72,7 @@ defmodule PhoenixSeaBattleWeb.Presence do
   information, while maintaining the required `:metas` field from the
   original presence data.
   """
-  use Phoenix.Presence, otp_app: :phoenix_sea_battle,
-                        pubsub_server: PhoenixSeaBattle.PubSub
+  use Phoenix.Presence,
+    otp_app: :phoenix_sea_battle,
+    pubsub_server: PhoenixSeaBattle.PubSub
 end

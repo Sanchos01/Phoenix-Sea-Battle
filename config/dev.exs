@@ -11,7 +11,7 @@ config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
     port: 4000,
     transport_options: [
       num_acceptors: 5
-    ],
+    ]
   ],
   debug_errors: true,
   code_reloader: true,

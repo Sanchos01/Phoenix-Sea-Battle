@@ -3,7 +3,7 @@ defmodule PhoenixSeaBattleWeb.SessionController do
   use PhoenixSeaBattleWeb, :controller
 
   def new(conn, _params) do
-    render conn, "new.html"
+    render(conn, "new.html")
   end
 
   def create(conn, %{"session" => %{"username" => user, "password" => pass}}) do
@@ -12,6 +12,7 @@ defmodule PhoenixSeaBattleWeb.SessionController do
         conn
         |> put_flash(:info, "Welcome back, #{user}!")
         |> redirect(to: page_path(conn, :index))
+
       {:error, _reason, conn} ->
         conn
         |> put_flash(:error, "Invalid username/password combination")

@@ -20,7 +20,7 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   def handle_cast({:new_msg, body, user}, state) do
     new_msg = %{body: body, user: user, timestamp: :os.system_time(:second)}
     new_msgs = [new_msg | Enum.take(state.msg, @msg_count)]
-    Enum.each(state.subs, fn pid -> send pid, {:update, Enum.reverse(new_msgs)} end)
+    Enum.each(state.subs, fn pid -> send(pid, {:update, Enum.reverse(new_msgs)}) end)
     {:noreply, %{state | msg: new_msgs}}
   end
 
@@ -32,19 +32,19 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   def handle_call(:subs, {pid, _ref}, state) do
     Process.monitor(pid)
     msgs = get_msgs(state)
-    {:reply, {:ok, msgs}, update_in(state.subs, & [pid | &1])}
+    {:reply, {:ok, msgs}, update_in(state.subs, &[pid | &1])}
   end
 
   def handle_info(:timeout, state) do
     Process.send_after(self(), :timeout, @timeout)
-    {:noreply, update_in(state.msg, & Enum.take(&1, @msg_count))}
+    {:noreply, update_in(state.msg, &Enum.take(&1, @msg_count))}
   end
-  
+
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
-    {:noreply, update_in(state.subs, & Enum.reject(&1, fn x -> x == pid end))}
+    {:noreply, update_in(state.subs, &Enum.reject(&1, fn x -> x == pid end))}
   end
 
   defp get_msgs(state, ts \\ 0) do
-    Enum.reduce(state.msg, [], & (if &1.timestamp > ts, do: [&1 | &2], else: &2))
+    Enum.reduce(state.msg, [], &if(&1.timestamp > ts, do: [&1 | &2], else: &2))
   end
 end

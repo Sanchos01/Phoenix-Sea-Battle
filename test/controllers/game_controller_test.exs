@@ -16,14 +16,20 @@ defmodule PhoenixSeaBattle.GameControllerTest do
   setup %{conn: conn} = config do
     if username = config[:login_as] do
       user = insert_user(%{username: username, password: "secret"})
-      conn = conn
+
+      conn =
+        conn
         |> assign(:current_user, user)
-        |> post(session_path(conn, :create), %{"session" => %{"username" => username, "password" => "secret"}})
+        |> post(session_path(conn, :create), %{
+          "session" => %{"username" => username, "password" => "secret"}
+        })
+
       if game_id = config[:game_id] do
         GameSupervisor.new_game(game_id)
         {:ok, :admin} = Game.add_user(GameSupervisor.via_tuple(game_id), username)
         {:ok, %{conn: conn, game_id: game_id}}
       end
+
       {:ok, %{conn: conn}}
     else
       :ok
@@ -32,31 +38,31 @@ defmodule PhoenixSeaBattle.GameControllerTest do
 
   @tag login_as: "max123"
   test "GOT /game", %{conn: conn} do
-    conn = get conn, "/game"
+    conn = get(conn, "/game")
     assert html_response(conn, 302)
   end
 
   @tag login_as: "max123"
   test "GOT /game/#{@valid_game} (exist game, admin)", %{conn: conn} do
-    conn = get conn, "/game/#{@valid_game}"
+    conn = get(conn, "/game/#{@valid_game}")
     assert html_response(conn, 200)
   end
 
   @tag login_as: "alex123"
   test "GOT /game/#{@valid_game} (exist game, opponent)", %{conn: conn} do
-    conn = get conn, "/game/#{@valid_game}"
+    conn = get(conn, "/game/#{@valid_game}")
     assert html_response(conn, 200)
   end
 
   @tag login_as: "john123"
   test "GOT /game/#{@valid_game} (exist game, wrong user)", %{conn: conn} do
-    conn = get conn, "/game/#{@valid_game}"
+    conn = get(conn, "/game/#{@valid_game}")
     assert html_response(conn, 302)
   end
-  
+
   @tag login_as: "max123"
   test "GOT /game/#{@invalid_game} (game not exist)", %{conn: conn} do
-    conn = get conn, "/game/#{@invalid_game}"
+    conn = get(conn, "/game/#{@invalid_game}")
     assert html_response(conn, 302)
   end
 
@@ -72,12 +78,12 @@ defmodule PhoenixSeaBattle.GameControllerTest do
   @tag login_as: "john123"
   test "Got /game (generated exist game_id)", %{conn: conn} do
     GameSupervisor.new_game("17342072")
-    :rand.seed(:exs64, {1, 1, 1}) # next :rand.uniform(10_000_000) == 7_342_072
-    with_mock Ecto.UUID, [
-        generate: fn() -> Integer.to_string(:rand.uniform(10_000_000) + 10_000_000) end
-      ] do
+    # next :rand.uniform(10_000_000) == 7_342_072
+    :rand.seed(:exs64, {1, 1, 1})
 
-      conn = get conn, "/game"
+    with_mock Ecto.UUID,
+      generate: fn -> Integer.to_string(:rand.uniform(10_000_000) + 10_000_000) end do
+      conn = get(conn, "/game")
       assert html_response(conn, 302)
     end
   end

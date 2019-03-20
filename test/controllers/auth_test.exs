@@ -13,19 +13,19 @@ defmodule PhoenixSeaBattle.AuthTest do
   end
 
   test "authenticate_user when no current_user exists",
-    %{conn: conn} do
-      conn = Auth.authenticate_user(conn, [])
-      assert conn.halted
+       %{conn: conn} do
+    conn = Auth.authenticate_user(conn, [])
+    assert conn.halted
   end
 
   test "authenticate_user continues when the current_user exists",
-    %{conn: conn} do
-      conn =
-        conn
-        |> assign(:current_user, %User{})
-        |> Auth.authenticate_user([])
+       %{conn: conn} do
+    conn =
+      conn
+      |> assign(:current_user, %User{})
+      |> Auth.authenticate_user([])
 
-      refute conn.halted
+    refute conn.halted
   end
 
   test "login puts the user in the session", %{conn: conn} do
@@ -51,6 +51,7 @@ defmodule PhoenixSeaBattle.AuthTest do
 
   test "call places user from session into assigns", %{conn: conn} do
     user = insert_user()
+
     conn =
       conn
       |> put_session(:user_id, user.id)
@@ -66,20 +67,20 @@ defmodule PhoenixSeaBattle.AuthTest do
 
   test "login with a valid username and pass", %{conn: conn} do
     user = insert_user(%{username: "username", password: "secret"})
-    {:ok, conn} =
-      Auth.login_by_username_and_pass(conn, "username", "secret")
-  
+    {:ok, conn} = Auth.login_by_username_and_pass(conn, "username", "secret")
+
     assert conn.assigns.current_user.id == user.id
   end
 
   test "login with a not found user", %{conn: conn} do
     assert {:error, :not_found, _conn} =
-      Auth.login_by_username_and_pass(conn, "username", "secret")
+             Auth.login_by_username_and_pass(conn, "username", "secret")
   end
 
   test "login with password mismatch", %{conn: conn} do
     _ = insert_user(%{username: "username", password: "secret"})
+
     assert {:error, :unauthorized, _conn} =
-      Auth.login_by_username_and_pass(conn, "username", "wrong")
+             Auth.login_by_username_and_pass(conn, "username", "wrong")
   end
 end

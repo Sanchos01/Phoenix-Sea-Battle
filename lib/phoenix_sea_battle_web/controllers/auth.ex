@@ -19,12 +19,12 @@ defmodule PhoenixSeaBattleWeb.Auth do
 
   def login_by_username_and_pass(conn, username, given_pass) do
     with user = %User{password_hash: "" <> hash} <- Repo.get_by(User, username: username),
-         true <- Bcrypt.checkpw(given_pass, hash)
-    do
+         true <- Bcrypt.checkpw(given_pass, hash) do
       {:ok, login(conn, user)}
     else
       false ->
         {:error, :unauthorized, conn}
+
       _ ->
         Bcrypt.dummy_checkpw()
         {:error, :not_found, conn}
