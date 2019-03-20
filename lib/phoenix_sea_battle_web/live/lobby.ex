@@ -38,7 +38,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
         </div>
       </div>
       <form phx-submit="insert_message">
-        <input name="chat-input" type="text" class="form-control" value="<%= @msg %>" placeholder="Type a message...">
+        <input name="chat-input" type="text" class="form-control" value="<%= @msg %>" placeholder="Type a message..." autocomplete="off">
       </form>
     </div>
     <div class="column">
@@ -119,16 +119,16 @@ defmodule PhoenixSeaBattleWeb.Lobby do
     {:noreply, assign(socket, messages: messages, msg: nil)}
   end
 
+  def handle_info(%Broadcast{event: event}, socket) when event in ~w(presence_diff change_state) do
+    {:noreply, fetch(socket)}
+  end
+
   defp format_ts(ts) do
     ts |> DateTime.from_unix!() |> Calendar.Strftime.strftime!("%r")
   end
 
   defp fetch(socket) do
     assign(socket, online_users: Presence.list("lobby"))
-  end
-
-  def handle_info(%Broadcast{event: event}, socket) when event in ~w(presence_diff change_state) do
-    {:noreply, fetch(socket)}
   end
 
   defp sort_users(users) do

@@ -39,7 +39,7 @@ defmodule PhoenixSeaBattle.Game do
   def get_state(pid),             do: GenServer.call(pid, :get_state)
   def add_user(pid, user),        do: GenServer.call(pid, {:add_user, user})
   def readiness(pid, user, body), do: GenServer.call(pid, {:readiness, user, body})
-  def new_msg(pid, msg),          do: GenServer.cast(pid, {:new_msg, pid, msg})
+  def new_msg(pid, msg),          do: GenServer.cast(pid, {:new_msg, msg})
 
   # Calls
   # get
@@ -102,6 +102,15 @@ defmodule PhoenixSeaBattle.Game do
   #   end
   # end
 
+  # Casts
+  def handle_cast({:new_msg, %{user: user, body: body}}, state) do
+    msg = %{user: user, body: body, ts: :os.system_time(:second)}
+    messages = [msg | Enum.take(state.messages, 20)]
+    if p = state.admin_pid, do: send p, {:update_messages, messages}
+    if p = state.opponent_pid, do: send p, {:update_messages, messages}
+    {:noreply, %{state | messages: messages}}
+  end
+
   # Infos
   def handle_info(%Broadcast{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, state = %{id: id, offline: offline, timer: timer}) do
     Logger.debug "#{inspect id} --- checking diffs - joins: #{inspect joins}, leaves: #{inspect leaves}"
@@ -125,10 +134,10 @@ defmodule PhoenixSeaBattle.Game do
 
     {:noreply, %{state | timer: timer, offline: offline}}
   end
-  def handle_info(%Broadcast{event: "new_msg", payload: %{user: user, body: body}}, state) do
-    msg = %{user: user, body: body, ts: :os.system_time(:second)}
-    {:noreply, update_in(state.messages, & [msg | Enum.take(&1, 20)])}
-  end
+  # def handle_info(%Broadcast{event: "new_msg", payload: %{user: user, body: body}}, state) do
+  #   msg = %{user: user, body: body, ts: :os.system_time(:second)}
+  #   {:noreply, update_in(state.messages, & [msg | Enum.take(&1, 20)])}
+  # end
 
   def handle_info(msg = %Broadcast{}, state) do
     Logger.info("nothing intresting, msg - #{inspect msg}")
@@ -194,9 +203,9 @@ defmodule PhoenixSeaBattle.Game do
 
   defp cast_change_user_states(meta), do: Endpoint.broadcast("room:lobby", "change_state", %{"users" => meta})
 
-  defp ready_to_start(%{admin_board: nil}), do: false
-  defp ready_to_start(%{opponent_board: nil}), do: false
-  defp ready_to_start(%{admin_board: admin_board, opponent_board: opponent_board}) do
-    Board.valid?(admin_board) && Board.valid?(opponent_board)
-  end
+  # defp ready_to_start(%{admin_board: nil}), do: false
+  # defp ready_to_start(%{opponent_board: nil}), do: false
+  # defp ready_to_start(%{admin_board: admin_board, opponent_board: opponent_board}) do
+  #   Board.valid?(admin_board) && Board.valid?(opponent_board)
+  # end
 end

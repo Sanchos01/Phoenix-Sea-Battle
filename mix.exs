@@ -57,7 +57,8 @@ defmodule PhoenixSeaBattle.Mixfile do
       {:mock, "~> 0.2.0", only: :test},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:phoenix_live_view, github: "phoenixframework/phoenix_live_view"},
-      {:calendar, "~> 0.17.4"}
+      {:calendar, "~> 0.17.4"},
+      {:html_sanitize_ex, "~> 1.3"}
     ]
   end
 

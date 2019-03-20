@@ -1,6 +1,7 @@
 defmodule PhoenixSeaBattle.Game.Board do
-  @columns for x <- ?a..?j, do: "#{<<x>>}"
-  @lines for x <- 0..9, do: "#{x}"
+  # @columns for x <- ?a..?j, do: "#{<<x>>}"
+  # @lines for x <- 0..9, do: "#{x}"
+
   # 4 - battleship - bs0
   # 3 - cruiser - c{0-1}
   # 2 - destroyer - d{0-2}
@@ -34,17 +35,30 @@ defmodule PhoenixSeaBattle.Game.Board do
 
   defp valid?(ships, board) do
     Enum.reduce_while(ships, true, fn
-      {:bt0, [i1, i2, i3, i4] = indexes}, acc ->
-        with true <- vertical?(indexes) or horizontal?(indexes),
-             true <- all_nearest_empty?(indexes, board) do
-          {:cont, acc}
-        else
-          _ -> {:halt, false}
-        end
+      {:bt0, [_, _, _, _] = indexes}, acc ->
+        validate(indexes, acc, board)
+
+      {k, [_, _, _] = indexes}, acc when k in ~w(c0 c1)a ->
+        validate(indexes, acc, board)
+
+      {k, [_, _] = indexes}, acc when k in ~w(d0 d1 d2)a ->
+        validate(indexes, acc, board)
+
+      {k, [_] = indexes}, acc when k in ~w(tb0 tb1 tb2 tb3)a ->
+        validate(indexes, acc, board)
 
       _, _ ->
         {:halt, false}
     end)
+  end
+
+  defp validate(indexes, acc, board) do
+    with true <- vertical?(indexes) or horizontal?(indexes),
+         true <- all_nearest_empty?(indexes, board) do
+      {:cont, acc}
+    else
+      _ -> {:halt, false}
+    end
   end
 
   defp vertical?([_]), do: true
