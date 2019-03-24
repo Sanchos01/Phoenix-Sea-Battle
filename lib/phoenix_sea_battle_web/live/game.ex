@@ -13,19 +13,12 @@ defmodule PhoenixSeaBattleWeb.Game do
   # user states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   def mount(%{id: id, user: user}, socket) do
     with pid when is_pid(pid) <- GenServer.whereis(GameSupervisor.via_tuple(id)),
-         r when is_reference(r) <- Process.monitor(pid)
+         ref when is_reference(ref) <- Process.monitor(pid),
+         {:ok, socket} <- socket |> assign(id: id, user: user, pid: pid) |> update_state()
     do
-      # add presence tracking
-      # Endpoint.subscribe("game:" <> id)
-      username = user.username
-      {:ok, game_state} = Game.get(pid, username)
-      state = get_state(username, game_state)
-      {:ok, _} = Presence.track(self(), "lobby", username, %{state: state, game_id: id})
-      {:ok, _} = Presence.track(self(), "game:" <> id, username, %{})
-      board = get_board(game_state, username)
-      socket
-      |> assign(id: id, user: user, pid: pid, board: board, messages: game_state.messages)
-      |> append_render_opts(game_state, board)
+      messages = Game.get_messages(pid)
+      socket = assign(socket, messages: messages, error: nil)
+      {:ok, socket}
     else
       _ ->
         {:stop, socket |> redirect(to: Routes.game_path(socket, :show, id))}
@@ -38,10 +31,10 @@ defmodule PhoenixSeaBattleWeb.Game do
       <div class="column column-75">
         <div class="panel panel-default game-panel">
           <div id="state-bar" class="panel-heading state-bar">
-            <%= message(@game_state) %>
+            <%= message(@error, @game_state) %>
           </div>
           <div id="game" class="panel-body panel-game">
-            <%= render_board(@game_state, @board, @render_opts) %>
+            <%= render_board(@game_state, @board, @shots, @other_shots, @render_opts) %>
           </div>
         </div>
         <form phx-submit="insert_message">
@@ -85,12 +78,11 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   def handle_event("keydown", key, socket = %{assigns: %{game_state: :initial}}) do
-    IO.puts "render_opts: #{inspect socket.assigns.render_opts}"
     __MODULE__.Initial.apply_key(key, socket)
   end
 
-  def handle_event("keydown", p, socket) do
-    IO.puts "p: #{inspect p} ; #{inspect socket}"
+  def handle_event("keydown", key, socket) do
+    IO.puts "keydown: #{inspect key} ; #{inspect socket}"
     {:noreply, socket}
   end
 
@@ -102,31 +94,80 @@ defmodule PhoenixSeaBattleWeb.Game do
     {:noreply, socket |> assign(messages: messages)}
   end
 
+  def handle_info({:DOWN, _, _, pid, _}, socket = %{assigns: assigns = %{pid: pid}}) do
+    {:stop, socket |> redirect(to: Routes.game_path(socket, :show, assigns.id))}
+  end
+
+  def handle_info(:update_state, socket) do
+    {:ok, socket} = socket |> assign(render_opts: nil) |> update_state()
+    {:noreply, socket}
+  end
+
+  def handle_info({:render_error, error}, socket) do
+    ref = make_ref()
+    Process.send_after(self(), {:clean_error, ref}, 3_000)
+    {:noreply, socket |> assign(error: {error, ref})}
+  end
+
+  def handle_info({:clean_error, ref}, socket) do
+    case socket.assigns.error do
+      {_error, ^ref} -> {:noreply, socket |> assign(error: nil)}
+      _ -> {:noreply, socket}
+    end
+  end
+
   # def handle_info(%Broadcast{}, socket) do
   #   {:ok, game_state} = Game.get(socket.assigns.pid, socket.assigns.user.username)
   #   {:noreply, assign(socket, game_state: game_state)}
   # end
 
+  defp update_state(socket = %{assigns: %{pid: pid, user: %{name: username}}}) do
+    {:ok, game_state} = Game.get(pid, username)
+    {:ok, board, shots, other_shots} = Game.get_board_and_shots(pid, username)
+    state = get_state(username, game_state)
+    set_presence("lobby", username, %{state: state, game_id: socket.assigns.id})
+    set_presence("game:" <> socket.assigns.id, username, %{})
+    socket
+    |> assign(board: board, shots: shots, other_shots: other_shots)
+    |> append_render_opts(game_state, board)
+  end
+
   defp get_state(user, %{admin: admin, opponent: user}) when not is_nil(admin), do: 2
   defp get_state(user, %{admin: user, opponent: opponent}) when not is_nil(opponent), do: 2
   defp get_state(_, _), do: 1
 
-  defp message(:initial) do
+  defp message({:cross, _}, _) do
+    ~E"""
+    Ships can't crossing
+    """
+  end
+
+  defp message({:nearest, _}, _) do
+    ~E"""
+    Ships can't touching
+    """
+  end
+
+  defp message(nil, :initial) do
     ~E"""
     Place your ships
     """
   end
 
-  defp get_board(%{admin: username, admin_board: board}, username), do: board
-  defp get_board(%{opponent: username, opponent_board: board}, username), do: board
-
-  defp append_render_opts(socket, %{playing: false, ended: false}, board) do
+  defp append_render_opts(socket, %{playing: false, winner: nil}, board) do
     socket
     |> assign(game_state: :initial)
     |> __MODULE__.Initial.update_render_opts(board)
   end
 
-  defp render_board(:initial, board, render_opts) do
+  defp render_board(:initial, board, _shots, _other_shots, render_opts) do
     __MODULE__.Initial.render_board(board, render_opts)
+  end
+
+  defp set_presence(topic, username, meta) do
+    case Presence.track(self(), topic, username, meta) do
+      {:ok, _} -> :ok
+      _ -> {:ok, _} = Presence.update(self(), topic, username, meta)
+    end
   end
 end

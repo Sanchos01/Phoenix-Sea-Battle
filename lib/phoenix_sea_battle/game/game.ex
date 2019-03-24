@@ -6,18 +6,20 @@ defmodule PhoenixSeaBattle.Game do
   alias PhoenixSeaBattleWeb.{Endpoint, Presence}
   @reconnect_time Application.get_env(:phoenix_sea_battle, :reconnect_time, 30_000)
   @timeout 1_000
+  @get_keys ~w(admin opponent turn playing winner)a
 
   defstruct [
     id: nil,
     admin: nil,
     admin_pid: nil,
     admin_board: nil,
+    admin_shots: [],
     opponent: nil,
     opponent_pid: nil,
     opponent_board: nil,
+    opponent_shots: [],
     turn: nil,
     playing: false,
-    ended: false,
     winner: nil,
     timer: nil,
     offline: [],
@@ -31,15 +33,20 @@ defmodule PhoenixSeaBattle.Game do
   def init([id: id]) do
     :ok = Endpoint.subscribe("game:" <> id)
     Process.send_after(self(), :timeout, @timeout) # TODO check timeout
-    {:ok, %__MODULE__{id: id}}
+    case :ets.lookup(:saver, id) do
+      [{_id, state, _ttl}] -> {:ok, state}
+      _ -> {:ok, %__MODULE__{id: id}}
+    end
   end
   def init(_), do: {:stop, "No id"}
 
-  def get(pid, user \\ nil),      do: GenServer.call(pid, {:get, user})
-  def get_state(pid),             do: GenServer.call(pid, :get_state)
-  def add_user(pid, user),        do: GenServer.call(pid, {:add_user, user})
-  def readiness(pid, user, body), do: GenServer.call(pid, {:readiness, user, body})
-  def new_msg(pid, msg),          do: GenServer.cast(pid, {:new_msg, msg})
+  def get(pid, user \\ nil),            do: GenServer.call(pid, {:get, user})
+  def get_messages(pid),                do: GenServer.call(pid, :get_messages)
+  def get_board_and_shots(pid, user),   do: GenServer.call(pid, {:get_board_and_shots, user})
+  def apply_ship(pid, user, ship_opts), do: GenServer.cast(pid, {:apply_ship, user, ship_opts})
+  def add_user(pid, user),              do: GenServer.call(pid, {:add_user, user})
+  def readiness(pid, user, body),       do: GenServer.call(pid, {:readiness, user, body})
+  def new_msg(pid, msg),                do: GenServer.cast(pid, {:new_msg, msg})
 
   # Calls
   # get
@@ -53,7 +60,24 @@ defmodule PhoenixSeaBattle.Game do
       _ ->
         state
     end
-    {:reply, {:ok, new_state}, new_state}
+    reply = {:ok, Map.take(new_state, @get_keys)}
+    {:reply, reply, new_state}
+  end
+
+  def handle_call(:get_messages, _from, state = %{messages: messages}) do
+    {:reply, messages, state}
+  end
+
+  def handle_call({:get_board_and_shots, user}, _from, state = %{admin: user}) do
+    {:reply, {:ok, state.admin_board, state.admin_shots, state.opponent_shots}, state}
+  end
+
+  def handle_call({:get_board_and_shots, user}, _from, state = %{opponent: user}) do
+    {:reply, {:ok, state.opponent_board, state.opponent_shots, state.admin_shots}, state}
+  end
+
+  def handle_call({:get_board_and_shots, _}, _from, state) do
+    {:reply, :error, state}
   end
 
   # add_user
@@ -72,15 +96,6 @@ defmodule PhoenixSeaBattle.Game do
       ^admin    -> {:reply, {:ok, :admin}, state}
       ^opponent -> {:reply, {:ok, :opponent}, state}
       _         -> {:reply, {:error, "game already full"}, state}
-    end
-  end
-
-  # get_state
-  def handle_call(:get_state, _from, state) do
-    cond do
-      !state.playing -> {:reply, %{state: "initial"}, state}
-      state.ended    -> {:reply, %{state: "game_ended"}, state}
-      true           -> {:reply, %{state: "play"}, state}
     end
   end
 
@@ -111,9 +126,21 @@ defmodule PhoenixSeaBattle.Game do
     {:noreply, %{state | messages: messages}}
   end
 
+  def handle_cast({:apply_ship, user, ship_opts}, state = %{admin: user}) do
+    board = state.admin_board
+    case Board.apply_ship(board, ship_opts) do
+      {:ok, new_board} ->
+        send state.admin_pid, :update_state
+        {:noreply, %{state | admin_board: new_board}}
+      {:error, error} ->
+        send state.admin_pid, {:render_error, error}
+        {:noreply, state}
+    end
+  end
+
   # Infos
   def handle_info(%Broadcast{event: "presence_diff", payload: %{joins: joins, leaves: leaves}}, state = %{id: id, offline: offline, timer: timer}) do
-    Logger.debug "#{inspect id} --- checking diffs - joins: #{inspect joins}, leaves: #{inspect leaves}"
+    # Logger.debug "#{inspect id} --- checking diffs - joins: #{inspect joins}, leaves: #{inspect leaves}"
 
     leaves_users = Map.keys(leaves)
     {offline, timer} = if length(leaves_users) > 0 do
@@ -197,7 +224,8 @@ defmodule PhoenixSeaBattle.Game do
     :ok
   end
   def terminate(reason, state) do
-    Logger.error("Unusual stop game #{inspect state.id} with reason #{inspect reason}, state: #{inspect state}")
+    Logger.error("Unusual stop game #{state.id} with reason #{inspect reason}, state: #{inspect state}")
+    :ets.insert :saver, {state.id, state, :os.system_time(:second)}
     :ok
   end
 

@@ -6,7 +6,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
   use PhoenixSeaBattleWeb, :controller
   plug(:authenticate_user)
 
-  def show(conn = %{assigns: %{current_user: %{username: username}}}, %{"id" => id}) do
+  def show(conn = %{assigns: %{current_user: %{name: username}}}, %{"id" => id}) do
     case GenServer.whereis(GameSupervisor.via_tuple(id)) do
       nil ->
         conn

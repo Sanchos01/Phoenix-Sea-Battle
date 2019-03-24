@@ -3,10 +3,10 @@ defmodule PhoenixSeaBattleWeb.Endpoint do
 
   socket("/live", Phoenix.LiveView.Socket)
 
-  socket("/socket", PhoenixSeaBattleWeb.UserSocket,
-    # or list of options
-    websocket: true
-  )
+  # socket("/socket", PhoenixSeaBattleWeb.UserSocket,
+  #   # or list of options
+  #   websocket: true
+  # )
 
   # Serve at "/" the static files from "priv/static" directory.
   #

@@ -1,4 +1,5 @@
 defmodule PhoenixSeaBattle.Game.Board do
+  @default [0] |> Stream.cycle() |> Enum.take(100)
   # @columns for x <- ?a..?j, do: "#{<<x>>}"
   # @lines for x <- 0..9, do: "#{x}"
 
@@ -10,7 +11,7 @@ defmodule PhoenixSeaBattle.Game.Board do
   @ships_length [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
   @ships Enum.zip(@marks, @ships_length)
 
-  def new(), do: :array.new(100, default: 0)
+  def new(), do: @default
 
   def prepare(board) do
     ships = all_ships(board)
@@ -18,24 +19,52 @@ defmodule PhoenixSeaBattle.Game.Board do
     anyone_missed?(ships)
   end
 
-  defp all_ships(board) do
-    :array.foldr(
-      fn
-        _index, 0, acc ->
-          acc
+  def apply_ship(board, %{x: x, y: y, pos: p, l: l}) do
+    pre_ship_blocks = ship_opts_to_indexes(x, y, p, l)
+    with :ok <- check_cross(board, pre_ship_blocks),
+         true <- all_nearest_empty?(pre_ship_blocks, board) || {:error, :nearest}
+    do
+      apply_pre_blocks(board, pre_ship_blocks)
+    end
+  end
 
-        index, type, acc ->
-          indexes = acc[type] || []
-          Map.put(acc, type, [index | indexes])
-      end,
-      %{},
-      board
-    )
+  def ship_opts_to_indexes(x, y, :h, l) do
+    for add <- 0..l - 1 do
+      x + add + 10 * y
+    end
+  end
+
+  def ship_opts_to_indexes(x, y, :v, l) do
+    for add <- 0..l - 1 do
+      x + 10 * (y + add)
+    end
+  end
+
+  defp apply_pre_blocks(board, indexes) do
+    ships = all_ships(board)
+    {mark, _} = anyone_missed?(ships)
+    new_board = Enum.reduce(indexes, board, fn i, acc ->
+      List.replace_at(acc, i, mark)
+    end)
+    {:ok, new_board}
+  end
+
+  defp all_ships(board) do
+    board
+    |> Stream.with_index()
+    |> Enum.reduce(%{}, fn
+      {0, _}, acc ->
+        acc
+
+      {type, index}, acc ->
+        indexes = acc[type] || []
+        Map.put(acc, type, indexes ++ [index])
+    end)
   end
 
   defp valid?(ships, board) do
     Enum.reduce_while(ships, true, fn
-      {:bt0, [_, _, _, _] = indexes}, acc ->
+      {:bs0, [_, _, _, _] = indexes}, acc ->
         validate(indexes, acc, board)
 
       {k, [_, _, _] = indexes}, acc when k in ~w(c0 c1)a ->
@@ -82,24 +111,34 @@ defmodule PhoenixSeaBattle.Game.Board do
   defp nearest_empty?(index, board, indexes) do
     top? = index < 10
     bottom? = index > 89
-    left? = rem(index, 10)
-    right? = rem(index + 1, 10)
+    left? = rem(index, 10) == 0
+    right? = rem(index + 1, 10) == 0
 
-    (left? or top? or :array.get(index - 11, board) == 0) and
-      (top? or (index - 10) in indexes or :array.get(index - 10, board) == 0) and
-      (right? or top? or :array.get(index - 9, board) == 0) and
-      (left? or (index - 1) in indexes or :array.get(index - 1, board) == 0) and
-      (right? or (index + 1) in indexes or :array.get(index + 1, board) == 0) and
-      (left? or bottom? or :array.get(index + 9, board) == 0) and
-      (bottom? or (index + 10) in indexes or :array.get(index + 10, board) == 0) and
-      (right? or bottom? or :array.get(index + 11, board) == 0)
+    (left? or top? or Enum.at(board, index - 11) == 0) and
+      (top? or (index - 10) in indexes or Enum.at(board, index - 10) == 0) and
+      (right? or top? or Enum.at(board, index - 9) == 0) and
+      (left? or (index - 1) in indexes or Enum.at(board, index - 1) == 0) and
+      (right? or (index + 1) in indexes or Enum.at(board, index + 1) == 0) and
+      (left? or bottom? or Enum.at(board, index + 9) == 0) and
+      (bottom? or (index + 10) in indexes or Enum.at(board, index + 10) == 0) and
+      (right? or bottom? or Enum.at(board, index + 11) == 0)
   end
 
   defp anyone_missed?(ships) do
     Enum.reduce_while(@marks, :ok, fn mark, acc ->
       case ships[mark] do
-        nil -> {:halt, @ships[mark]}
+        nil -> {:halt, {mark, @ships[mark]}}
         _ -> {:cont, acc}
+      end
+    end)
+  end
+
+  defp check_cross(board, indexes) do
+    Enum.reduce_while(indexes, :ok, fn index, acc ->
+      if Enum.at(board, index) == 0 do
+        {:cont, acc}
+      else
+        {:halt, {:error, :cross}}
       end
     end)
   end

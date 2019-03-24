@@ -47,5 +47,11 @@
   border-style: solid;
 }
 .ghost_block{
-  background-color: rgb(240, 104, 70);
+  background-color: rgb(255, 145, 0);
+}
+.cross_block{
+  background-color: rgb(255, 0, 0);
+}
+.ship_block{
+  background-color: rgb(29, 25, 23);
 }
