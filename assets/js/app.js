@@ -17,8 +17,3 @@ import "phoenix_html"
 // paths "./socket" or full ones "web/static/js/socket".
 
 import socket from "./socket"
-// import Lobby from "./lobby"
-// import Game from "./game"
-
-// Lobby.init(socket, document.querySelector("#chat"))
-// Game.init(socket, document.querySelector("#game"), window.gameId)
