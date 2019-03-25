@@ -14,8 +14,9 @@ defmodule PhoenixSeaBattle.GameControllerTest do
   end
 
   setup %{conn: conn} = config do
-    if username = config[:login_as] do
-      user = insert_user(%{username: username, password: "secret"})
+    if name = config[:login_as] do
+      username = name <> "_user"
+      user = insert_user(%{name: name, username: username, password: "secret"})
 
       conn =
         conn
@@ -38,31 +39,31 @@ defmodule PhoenixSeaBattle.GameControllerTest do
 
   @tag login_as: "max123"
   test "GOT /game", %{conn: conn} do
-    conn = get(conn, "/game")
+    conn = get(conn, game_path(conn, :index))
     assert html_response(conn, 302)
   end
 
   @tag login_as: "max123"
   test "GOT /game/#{@valid_game} (exist game, admin)", %{conn: conn} do
-    conn = get(conn, "/game/#{@valid_game}")
+    conn = get(conn, game_path(conn, :show, @valid_game))
     assert html_response(conn, 200)
   end
 
   @tag login_as: "alex123"
   test "GOT /game/#{@valid_game} (exist game, opponent)", %{conn: conn} do
-    conn = get(conn, "/game/#{@valid_game}")
+    conn = get(conn, game_path(conn, :show, @valid_game))
     assert html_response(conn, 200)
   end
 
   @tag login_as: "john123"
   test "GOT /game/#{@valid_game} (exist game, wrong user)", %{conn: conn} do
-    conn = get(conn, "/game/#{@valid_game}")
+    conn = get(conn, game_path(conn, :show, @valid_game))
     assert html_response(conn, 302)
   end
 
   @tag login_as: "max123"
   test "GOT /game/#{@invalid_game} (game not exist)", %{conn: conn} do
-    conn = get(conn, "/game/#{@invalid_game}")
+    conn = get(conn, game_path(conn, :show, @invalid_game))
     assert html_response(conn, 302)
   end
 
@@ -70,7 +71,7 @@ defmodule PhoenixSeaBattle.GameControllerTest do
   test "DELETE sessions/:id", %{conn: conn, game_id: game_id} do
     pid = "#{game_id}" |> GameSupervisor.via_tuple() |> GenServer.whereis()
     ref = Process.monitor(pid)
-    conn = conn |> delete("game/#{game_id}")
+    conn = delete(conn, game_path(conn, :delete, game_id))
     assert html_response(conn, 302)
     assert_receive {:DOWN, ^ref, :process, ^pid, :normal}, 100
   end
@@ -83,7 +84,7 @@ defmodule PhoenixSeaBattle.GameControllerTest do
 
     with_mock Ecto.UUID,
       generate: fn -> Integer.to_string(:rand.uniform(10_000_000) + 10_000_000) end do
-      conn = get(conn, "/game")
+      conn = get(conn, game_path(conn, :index))
       assert html_response(conn, 302)
     end
   end
