@@ -6,7 +6,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
   use PhoenixSeaBattleWeb, :controller
   plug(:authenticate_user)
 
-  def show(conn = %{assigns: %{current_user: %{name: username}}}, %{"id" => id}) do
+  def show(conn = %{assigns: %{current_user: user}}, %{"id" => id}) do
     case GenServer.whereis(GameSupervisor.via_tuple(id)) do
       nil ->
         conn
@@ -14,7 +14,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
         |> redirect(to: page_path(conn, :index))
 
       pid ->
-        case Game.add_user(pid, username) do
+        case Game.add_user(pid, user) do
           {:ok, status} when status in ~w(admin opponent)a ->
             render(conn, "index.html", id: id, admin: status == :admin)
 
@@ -39,7 +39,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
     end
   end
 
-  def delete(conn = %{assigns: %{current_user: %{username: user}}}, %{"id" => id}) do
+  def delete(conn = %{assigns: %{current_user: user}}, %{"id" => id}) do
     case GenServer.whereis(GameSupervisor.via_tuple(id)) do
       nil -> :ok
       pid -> send(pid, {:terminate, user})

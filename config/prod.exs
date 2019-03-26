@@ -70,4 +70,4 @@ config :phoenix_sea_battle, PhoenixSeaBattle.Repo,
   pool_size: 20
 
 config :phoenix_sea_battle,
-  reconnect_time: 60_000
+  reconnect_time: 60

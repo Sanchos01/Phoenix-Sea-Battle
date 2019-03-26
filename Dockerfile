@@ -1,4 +1,4 @@
-FROM elixir:1.7-alpine as asset-builder-mix-getter
+FROM elixir:1.8-alpine as asset-builder-mix-getter
 
 ENV HOME=/app
 
@@ -26,7 +26,7 @@ RUN cd assets && \
     ./node_modules/.bin/brunch build
 
 ########################################################################
-FROM elixir:1.7-alpine as releaser
+FROM elixir:1.8-alpine as releaser
 
 ENV HOME=/app
 

@@ -1,17 +1,11 @@
 defmodule PhoenixSeaBattleWeb.Game.Initial do
   use Phoenix.LiveView
-  use Phoenix.HTML
   alias PhoenixSeaBattle.Game.Board
   alias PhoenixSeaBattle.Game
-  @marks ~w(bs0 c0 c1 d0 d1 d2 tb0 tb1 tb2 tb3)a
+  alias PhoenixSeaBattleWeb.Game.Rendering
 
   def render(assigns) do
     ~L"""
-    <div phx-keydown="keydown" phx-target="window">
-      <%= for {block, index} <- @blocks do %>
-        <%= render_block(block, index) %>
-      <% end %>
-    </div>
     """
   end
 
@@ -30,25 +24,16 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
   end
 
   def render_board(board, %{ready: true}) do
-    ~E"""
-    <div phx-keydown="keydown" phx-target="window">
-      <%= for {block, index} <- board do %>
-        <%= render_block(block, index) %>
-      <% end %>
-    </div>
-    """
+    board
+    |> Enum.with_index()
+    |> Rendering.render_boards()
   end
 
   def render_board(board, %{x: x, y: y, pos: pos, l: l}) do
     pre_ship_blocks = make_pre_ship(x, y, pos, l)
-    blocks = append_pre_ship(board, pre_ship_blocks)
-    ~E"""
-    <div phx-keydown="keydown" phx-target="window">
-      <%= for {block, index} <- blocks do %>
-        <%= render_block(block, index) %>
-      <% end %>
-    </div>
-    """
+    board
+    |> append_pre_ship(pre_ship_blocks)
+    |> Rendering.render_boards()
   end
 
   defp make_pre_ship(x, y, pos, l) when x < 0 do
@@ -70,51 +55,20 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
   defp append_pre_ship(list, pre_ship_blocks) do
     Enum.reduce(pre_ship_blocks, list, fn index, acc ->
       case Enum.at(acc, index) do
-        0 -> List.replace_at(acc, index, :ghost)
-        _ -> List.replace_at(acc, index, :cross)
+        0 ->
+          index
+          |> Board.near_indexes()
+          |> Enum.any?(& Enum.at(list, &1) not in [0, :ghost, :cross])
+          |> if do
+            List.replace_at(acc, index, :cross)
+          else
+            List.replace_at(acc, index, :ghost)
+          end
+        _ ->
+          List.replace_at(acc, index, :cross)
       end
     end)
     |> Stream.with_index()
-  end
-
-  defp render_block(0, index) do
-    ~E"""
-    <div class="block" <%= position_style_by_index(index) %>>
-    </div>
-    """
-  end
-  defp render_block(:ghost, index) do
-    ~E"""
-    <div class="block ghost_block" <%= position_style_by_index(index) %>>
-    </div>
-    """
-  end
-  defp render_block(:cross, index) do
-    ~E"""
-    <div class="block cross_block" <%= position_style_by_index(index) %>>
-    </div>
-    """
-  end
-  defp render_block(mark, index) when mark in @marks do
-    ~E"""
-    <div class="block ship_block" <%= position_style_by_index(index) %>>
-    </div>
-    """
-  end
-  defp render_block(x, index) do
-    IO.puts "x? #{inspect x}"
-    ~E"""
-    <div class="block" <%= position_style_by_index(index) %>>
-    </div>
-    """
-  end
-
-  defp position_style_by_index(index) do
-    left = Float.ceil(rem(index, 10) * 1.4, 2) + 3
-    top = Float.ceil(div(index, 10) * 1.4, 2) + 4
-    ~E"""
-    style="left: <%= left %>em; top: <%= top %>em"
-    """
   end
 
   def apply_key(_key, socket = %{assigns: %{render_opts: %{ready: true}}}) do
@@ -181,7 +135,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
   end
 
   def apply_key("Enter", socket = %{assigns: assigns}) do
-    Game.apply_ship(assigns.pid, assigns.user.name, assigns.render_opts)
+    Game.apply_ship(assigns.pid, assigns.user.id, assigns.render_opts)
     {:noreply, socket}
   end
 

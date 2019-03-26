@@ -1,7 +1,6 @@
 defmodule PhoenixSeaBattle.Game.Board do
-  @default [0] |> Stream.cycle() |> Enum.take(100)
-  # @columns for x <- ?a..?j, do: "#{<<x>>}"
-  # @lines for x <- 0..9, do: "#{x}"
+  @default_board [0] |> Stream.cycle() |> Enum.take(100)
+  @default_shots [nil] |> Stream.cycle() |> Enum.take(100)
 
   # 4 - battleship - bs0
   # 3 - cruiser - c{0-1}
@@ -11,7 +10,8 @@ defmodule PhoenixSeaBattle.Game.Board do
   @ships_length [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
   @ships Enum.zip(@marks, @ships_length)
 
-  def new(), do: @default
+  def new_board(), do: @default_board
+  def new_shots(), do: @default_shots
 
   def prepare(board) do
     ships = all_ships(board)
@@ -39,6 +39,27 @@ defmodule PhoenixSeaBattle.Game.Board do
       x + 10 * (y + add)
     end
   end
+
+  def near_indexes(index) do
+    top? = index < 10
+    bottom? = index > 89
+    left? = rem(index, 10) == 0
+    right? = rem(index + 1, 10) == 0
+
+    return_index(left?, top?, index - 11) ++
+    return_index(top?, index - 10) ++
+    return_index(right?, top?, index - 9) ++
+    return_index(left?, index - 1) ++
+    return_index(right?, index + 1) ++
+    return_index(left?, bottom?, index + 9) ++
+    return_index(bottom?, index + 10) ++
+    return_index(right?, bottom?, index + 11)
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp return_index(boolean1, boolean2 \\ false, index)
+  defp return_index(false, false, index), do: [index]
+  defp return_index(_, _, _), do: [nil]
 
   defp apply_pre_blocks(board, indexes) do
     ships = all_ships(board)
@@ -109,19 +130,15 @@ defmodule PhoenixSeaBattle.Game.Board do
   end
 
   defp nearest_empty?(index, board, indexes) do
-    top? = index < 10
-    bottom? = index > 89
-    left? = rem(index, 10) == 0
-    right? = rem(index + 1, 10) == 0
-
-    (left? or top? or Enum.at(board, index - 11) == 0) and
-      (top? or (index - 10) in indexes or Enum.at(board, index - 10) == 0) and
-      (right? or top? or Enum.at(board, index - 9) == 0) and
-      (left? or (index - 1) in indexes or Enum.at(board, index - 1) == 0) and
-      (right? or (index + 1) in indexes or Enum.at(board, index + 1) == 0) and
-      (left? or bottom? or Enum.at(board, index + 9) == 0) and
-      (bottom? or (index + 10) in indexes or Enum.at(board, index + 10) == 0) and
-      (right? or bottom? or Enum.at(board, index + 11) == 0)
+    index
+    |> near_indexes()
+    |> Enum.reduce_while(true, fn i, acc ->
+      if i in indexes or Enum.at(board, i) == 0 do
+        {:cont, acc}
+      else
+        {:halt, false}
+      end
+    end)
   end
 
   defp anyone_missed?(ships) do

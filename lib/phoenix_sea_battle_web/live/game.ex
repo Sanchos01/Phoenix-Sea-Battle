@@ -6,8 +6,6 @@ defmodule PhoenixSeaBattleWeb.Game do
   alias PhoenixSeaBattleWeb.Presence
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
   alias PhoenixSeaBattle.Game
-  # alias PhoenixSeaBattle.Game.Board
-  # alias Phoenix.Socket.Broadcast
   alias PhoenixSeaBattleWeb.Router.Helpers, as: Routes
 
   # user states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
@@ -116,14 +114,9 @@ defmodule PhoenixSeaBattleWeb.Game do
     end
   end
 
-  # def handle_info(%Broadcast{}, socket) do
-  #   {:ok, game_state} = Game.get(socket.assigns.pid, socket.assigns.user.username)
-  #   {:noreply, assign(socket, game_state: game_state)}
-  # end
-
-  defp update_state(socket = %{assigns: %{pid: pid, user: %{name: username}}}) do
-    {:ok, game_state} = Game.get(pid, username)
-    {:ok, board, shots, other_shots} = Game.get_board_and_shots(pid, username)
+  defp update_state(socket = %{assigns: %{pid: pid, user: user = %{name: username}}}) do
+    {:ok, game_state} = Game.get(pid, user)
+    {:ok, board, shots, other_shots} = Game.get_board_and_shots(pid, user)
     state = get_state(username, game_state)
     set_presence("lobby", username, %{state: state, game_id: socket.assigns.id})
     set_presence("game:" <> socket.assigns.id, username, %{})
@@ -165,9 +158,15 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   defp set_presence(topic, username, meta) do
-    case Presence.track(self(), topic, username, meta) do
-      {:ok, _} -> :ok
-      _ -> {:ok, _} = Presence.update(self(), topic, username, meta)
+    case topic |> Presence.list |> Enum.find(& elem(&1, 0) == username) do
+      {_username, %{metas: [old_meta]}} ->
+        if Enum.all?(meta, fn {k, v} -> Map.get(old_meta, k) == v end) do
+          :ok
+        else
+          {:ok, _} = Presence.update(self(), topic, username, meta)
+        end
+      nil ->
+        {:ok, _} = Presence.track(self(), topic, username, meta)
     end
   end
 end

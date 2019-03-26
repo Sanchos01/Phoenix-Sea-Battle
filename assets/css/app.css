@@ -55,3 +55,18 @@
 .ship_block{
   background-color: rgb(29, 25, 23);
 }
+.empty_block{
+  background-color: azure;
+}
+.shotted_block{
+  background-color: rgb(185, 0, 0);
+}
+.killed_block{
+  background-color: rgb(100, 0, 0);
+}
+.near_block{
+  background-color: rgb(34, 92, 168);
+}
+.missed_block{
+  background-color: rgb(100, 100, 100);
+}
