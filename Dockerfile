@@ -1,4 +1,4 @@
-FROM elixir:1.8-alpine as asset-builder-mix-getter
+FROM elixir:1.8.1-alpine as asset-builder-mix-getter
 
 ENV HOME=/app
 
@@ -19,14 +19,14 @@ ENV HOME=/app
 WORKDIR $HOME
 
 COPY --from=asset-builder-mix-getter $HOME/deps $HOME/deps
-COPY ./ ./
+COPY assets/ $HOME/assets
 
 RUN cd assets && \
     npm install && \
-    ./node_modules/.bin/brunch build
+    npm run deploy
 
 ########################################################################
-FROM elixir:1.8-alpine as releaser
+FROM elixir:1.8.1-alpine as releaser
 
 ENV HOME=/app
 
@@ -44,7 +44,9 @@ WORKDIR $HOME
 ENV MIX_ENV=prod
 RUN mix do deps.get --only $MIX_ENV, deps.compile
 
-COPY . $HOME/
+COPY lib $HOME/lib
+COPY priv $HOME/priv
+COPY rel $HOME/rel
 
 # Digest precompiled assets
 COPY --from=asset-builder $HOME/priv/static/ $HOME/priv/static/
@@ -56,18 +58,20 @@ RUN mix phx.digest
 RUN mix release --env=$MIX_ENV --verbose
 
 ########################################################################
-FROM alpine:3.6
+FROM alpine:3.9
 
 ENV LANG=en_US.UTF-8 \
     HOME=/app/ \
     TERM=xterm \
-    VERSION=0.1.0 \
+    VERSION=0.2.0 \
     MIX_ENV=prod \
     REPLACE_OS_VARS=true \
     SHELL=/bin/sh \
     APP=phoenix_sea_battle
 
-RUN apk add --no-cache bash ncurses-libs openssl
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache bash ncurses-libs ca-certificates openssl
 
 COPY --from=releaser $HOME/rel/$APP/releases/$VERSION/$APP.tar.gz $HOME
 WORKDIR $HOME
