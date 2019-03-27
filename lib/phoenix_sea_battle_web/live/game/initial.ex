@@ -1,5 +1,6 @@
 defmodule PhoenixSeaBattleWeb.Game.Initial do
   use Phoenix.LiveView
+  use Phoenix.HTML
   alias PhoenixSeaBattle.Game.Board
   alias PhoenixSeaBattle.Game
   alias PhoenixSeaBattleWeb.Game.Rendering
@@ -34,6 +35,17 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
     board
     |> append_pre_ship(pre_ship_blocks)
     |> Rendering.render_boards()
+  end
+
+  def sub_commands() do
+    ~E"""
+    <div class="column column-20 button-small">
+      <button phx-click="drop_last">Drop last</button>
+    </div>
+    <div class="column button-small">
+      <button phx-click="drop_all">Drop all</button>
+    </div>
+    """
   end
 
   defp make_pre_ship(x, y, pos, l) when x < 0 do
@@ -140,6 +152,20 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
   end
 
   def apply_key(_key, socket) do
+    {:noreply, socket}
+  end
+
+  def apply_event("drop_last", _key, socket) do
+    Game.drop_last(socket.assigns.pid, socket.assigns.user.id)
+    {:noreply, socket}
+  end
+
+  def apply_event("drop_all", _key, socket) do
+    Game.drop_all(socket.assigns.pid, socket.assigns.user.id)
+    {:noreply, socket}
+  end
+
+  def apply_event(_event, _key, socket) do
     {:noreply, socket}
   end
 

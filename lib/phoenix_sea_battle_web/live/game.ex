@@ -33,6 +33,9 @@ defmodule PhoenixSeaBattleWeb.Game do
           </div>
           <div id="game" class="panel-body panel-game">
             <%= render_board(@game_state, @board, @shots, @other_shots, @render_opts) %>
+            <div class="row panel-sub_commands">
+              <%= sub_commands(@game_state) %>
+            </div>
           </div>
         </div>
         <form phx-submit="insert_message">
@@ -84,9 +87,9 @@ defmodule PhoenixSeaBattleWeb.Game do
     {:noreply, socket}
   end
 
-  # def handle_event("keydown", _, socket) do
-  #   {:noreply, socket}
-  # end
+  def handle_event(event, key, socket = %{assigns: %{game_state: :initial}}) do
+    __MODULE__.Initial.apply_event(event, key, socket)
+  end
 
   def handle_info({:update_messages, messages}, socket) do
     {:noreply, socket |> assign(messages: messages)}
@@ -131,19 +134,25 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   defp message({:cross, _}, _) do
     ~E"""
+    <div class="error">
     Ships can't crossing
+    </div>
     """
   end
 
   defp message({:nearest, _}, _) do
     ~E"""
+    <div class="error">
     Ships can't touching
+    </div>
     """
   end
 
   defp message(nil, :initial) do
     ~E"""
+    <div>
     Place your ships
+    </div>
     """
   end
 
@@ -168,5 +177,9 @@ defmodule PhoenixSeaBattleWeb.Game do
       nil ->
         {:ok, _} = Presence.track(self(), topic, username, meta)
     end
+  end
+
+  defp sub_commands(:initial) do
+    __MODULE__.Initial.sub_commands()
   end
 end

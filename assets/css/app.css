@@ -24,19 +24,34 @@
   padding-left: 0.5em;
   padding-top: 0.5em;
 }
-.panel-default{
+.panel-default {
   border-color: #ddd
 }
 .panel-messages, .panel-users, .panel-game {
   height: 300px;
 }
-.users{
+.panel-sub_commands {
+  top: 18.7em;
+  position: absolute;
+  padding-left: 1.2em;
+}
+.state-bar {
+  padding-left: 0.5em
+}
+.error {
+  color: red;
+  font-weight: bold
+}
+.users {
   padding-bottom: 0.5em;
 }
-.button-default{
+.button-default {
   width: 100%;
 }
-.block{
+.button-small {
+  padding: 0em !important
+}
+.block {
   display: block;
   position: absolute;
   width: 1.3em;
@@ -46,27 +61,27 @@
   border-width: 0.1em;
   border-style: solid;
 }
-.ghost_block{
+.ghost_block {
   background-color: rgb(255, 145, 0);
 }
-.cross_block{
+.cross_block {
   background-color: rgb(255, 0, 0);
 }
-.ship_block{
+.ship_block {
   background-color: rgb(29, 25, 23);
 }
-.empty_block{
+.empty_block {
   background-color: azure;
 }
-.shotted_block{
+.shotted_block {
   background-color: rgb(185, 0, 0);
 }
-.killed_block{
+.killed_block {
   background-color: rgb(100, 0, 0);
 }
-.near_block{
+.near_block {
   background-color: rgb(34, 92, 168);
 }
-.missed_block{
+.missed_block {
   background-color: rgb(100, 100, 100);
 }

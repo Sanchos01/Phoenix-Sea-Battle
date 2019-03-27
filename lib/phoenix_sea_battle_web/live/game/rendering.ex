@@ -69,16 +69,8 @@ defmodule PhoenixSeaBattleWeb.Game.Rendering do
     """
   end
 
-  defp position_style_by_index(index, true) do
-    left = Float.ceil(rem(index, 10) * 1.4, 2) + 3
-    top = Float.ceil(div(index, 10) * 1.4, 2) + 4
-    ~E"""
-    style="left: <%= left %>em; top: <%= top %>em"
-    """
-  end
-
-  defp position_style_by_index(index, false) do
-    left = Float.ceil(rem(index, 10) * 1.4, 2) + 18.5
+  defp position_style_by_index(index, board?) do
+    left = Float.ceil(rem(index, 10) * 1.4, 2) + (if board?, do: 3, else: 18.5)
     top = Float.ceil(div(index, 10) * 1.4, 2) + 4
     ~E"""
     style="left: <%= left %>em; top: <%= top %>em"

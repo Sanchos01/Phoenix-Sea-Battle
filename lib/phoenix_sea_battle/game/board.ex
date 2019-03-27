@@ -57,6 +57,20 @@ defmodule PhoenixSeaBattle.Game.Board do
     |> Enum.reject(&is_nil/1)
   end
 
+  def drop_last(board) do
+    case board |> all_ships() |> Map.keys() do
+      [_|_] = ships ->
+        last = Enum.reduce_while(@marks, ships, fn
+          _, [last] -> {:halt, last}
+          m, acc -> {:cont, acc -- [m]}
+        end)
+        new_board = Enum.map(board, fn ^last -> 0; x -> x end)
+        {:ok, new_board}
+      [] ->
+        {:error, :no_ships}
+    end
+  end
+
   defp return_index(boolean1, boolean2 \\ false, index)
   defp return_index(false, false, index), do: [index]
   defp return_index(_, _, _), do: [nil]
