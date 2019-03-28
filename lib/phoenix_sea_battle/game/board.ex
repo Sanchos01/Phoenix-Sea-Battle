@@ -24,7 +24,7 @@ defmodule PhoenixSeaBattle.Game.Board do
 
     with :ok <- check_cross(board, pre_ship_blocks),
          true <- all_nearest_empty?(pre_ship_blocks, board) || {:error, :nearest} do
-      apply_pre_blocks(board, pre_ship_blocks)
+      apply_pre_blocks(board, pre_ship_blocks, l)
     end
   end
 
@@ -83,16 +83,20 @@ defmodule PhoenixSeaBattle.Game.Board do
   defp return_index(false, false, index), do: [index]
   defp return_index(_, _, _), do: [nil]
 
-  defp apply_pre_blocks(board, indexes) do
+  defp apply_pre_blocks(board, indexes, l) do
     ships = all_ships(board)
     {mark, _} = anyone_missed?(ships)
 
-    new_board =
-      Enum.reduce(indexes, board, fn i, acc ->
-        List.replace_at(acc, i, mark)
-      end)
+    if @ships[mark] == l do
+      new_board =
+        Enum.reduce(indexes, board, fn i, acc ->
+          List.replace_at(acc, i, mark)
+        end)
 
-    {:ok, new_board}
+      {:ok, new_board}
+    else
+      {:error, :wrong_ship}
+    end
   end
 
   defp all_ships(board) do
