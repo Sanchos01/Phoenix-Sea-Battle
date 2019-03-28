@@ -12,41 +12,64 @@ defmodule PhoenixSeaBattle.GameControllerTest do
     {:ok, :admin} = Game.add_user(GameSupervisor.via_tuple(id), user_max123)
     {:ok, :opponent} = Game.add_user(GameSupervisor.via_tuple(id), user_alex123)
 
-    config = case config[:login_as] do
-      "max123" ->
-        conn =
-          conn
-          |> assign(:current_user, user_max123)
-          |> post(session_path(conn, :create), %{
-            "session" => %{"username" => user_max123.username, "password" => "secret"}
+    config =
+      case config[:login_as] do
+        "max123" ->
+          conn =
+            conn
+            |> assign(:current_user, user_max123)
+            |> post(session_path(conn, :create), %{
+              "session" => %{"username" => user_max123.username, "password" => "secret"}
+            })
+
+          Map.merge(config, %{
+            conn: conn,
+            user_max123: user_max123,
+            user_alex123: user_alex123,
+            id: id
           })
 
-        Map.merge config, %{conn: conn, user_max123: user_max123, user_alex123: user_alex123, id: id}
+        "alex123" ->
+          conn =
+            conn
+            |> assign(:current_user, user_alex123)
+            |> post(session_path(conn, :create), %{
+              "session" => %{"username" => user_alex123.username, "password" => "secret"}
+            })
 
-      "alex123" ->
-        conn =
-          conn
-          |> assign(:current_user, user_alex123)
-          |> post(session_path(conn, :create), %{
-            "session" => %{"username" => user_alex123.username, "password" => "secret"}
+          Map.merge(config, %{
+            conn: conn,
+            user_max123: user_max123,
+            user_alex123: user_alex123,
+            id: id
           })
 
-        Map.merge config, %{conn: conn, user_max123: user_max123, user_alex123: user_alex123, id: id}
+        "" <> name ->
+          user = insert_user(%{name: name, username: "user_#{name}", password: "secret"})
 
-      "" <> name ->
-        user = insert_user(%{name: name, username: "user_#{name}", password: "secret"})
-        conn =
-          conn
-          |> assign(:current_user, user_alex123)
-          |> post(session_path(conn, :create), %{
-            "session" => %{"username" => user.username, "password" => "secret"}
+          conn =
+            conn
+            |> assign(:current_user, user_alex123)
+            |> post(session_path(conn, :create), %{
+              "session" => %{"username" => user.username, "password" => "secret"}
+            })
+
+          Map.merge(config, %{
+            conn: conn,
+            user_max123: user_max123,
+            user_alex123: user_alex123,
+            id: id,
+            user: user
           })
 
-        Map.merge config, %{conn: conn, user_max123: user_max123, user_alex123: user_alex123, id: id, user: user}
-      
-      _ ->
-        Map.merge config, %{conn: conn, user_max123: user_max123, user_alex123: user_alex123, id: id}
-    end
+        _ ->
+          Map.merge(config, %{
+            conn: conn,
+            user_max123: user_max123,
+            user_alex123: user_alex123,
+            id: id
+          })
+      end
 
     if id = config[:game_id] do
       GameSupervisor.new_game(id)

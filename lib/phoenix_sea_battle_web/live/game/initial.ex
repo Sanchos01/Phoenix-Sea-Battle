@@ -14,10 +14,12 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
     case socket.assigns do
       %{render_opts: %{x: _x, y: _y, pos: _pos, l: _l}} ->
         {:ok, socket}
+
       _ ->
         case Board.prepare(board) do
           :ok ->
             {:ok, socket |> assign(render_opts: %{ready: true})}
+
           {_type, l} when l in 1..4 ->
             {:ok, assign(socket, render_opts: %{x: 0, y: 0, pos: :h, l: l})}
         end
@@ -32,6 +34,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
 
   def render_board(board, %{x: x, y: y, pos: pos, l: l}) do
     pre_ship_blocks = make_pre_ship(x, y, pos, l)
+
     board
     |> append_pre_ship(pre_ship_blocks)
     |> Rendering.render_boards()
@@ -51,31 +54,37 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
   defp make_pre_ship(x, y, pos, l) when x < 0 do
     make_pre_ship(0, y, pos, l)
   end
+
   defp make_pre_ship(x, y, pos, l) when y < 0 do
     make_pre_ship(x, 0, pos, l)
   end
+
   defp make_pre_ship(x, y, :h, l) when x + l > 10 do
     make_pre_ship(10 - l, y, :h, l)
   end
+
   defp make_pre_ship(x, y, :v, l) when y + l > 10 do
     make_pre_ship(x, 10 - l, :v, l)
   end
+
   defp make_pre_ship(x, y, p, l) do
     Board.ship_opts_to_indexes(x, y, p, l)
   end
 
   defp append_pre_ship(list, pre_ship_blocks) do
-    Enum.reduce(pre_ship_blocks, list, fn index, acc ->
+    pre_ship_blocks
+    |> Enum.reduce(list, fn index, acc ->
       case Enum.at(acc, index) do
         0 ->
           index
           |> Board.near_indexes()
-          |> Enum.any?(& Enum.at(list, &1) not in [0, :ghost, :cross])
+          |> Enum.any?(&(Enum.at(list, &1) not in [0, :ghost, :cross]))
           |> if do
             List.replace_at(acc, index, :cross)
           else
             List.replace_at(acc, index, :ghost)
           end
+
         _ ->
           List.replace_at(acc, index, :cross)
       end
@@ -89,6 +98,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
 
   def apply_key("ArrowLeft", socket) do
     render_opts = socket.assigns.render_opts
+
     if can_decrease_x?(render_opts) do
       new_render_opts = %{render_opts | x: render_opts.x - 1}
       {:noreply, assign(socket, render_opts: new_render_opts)}
@@ -99,6 +109,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
 
   def apply_key("ArrowRight", socket) do
     render_opts = socket.assigns.render_opts
+
     if can_increase_x?(render_opts) do
       new_render_opts = %{render_opts | x: render_opts.x + 1}
       {:noreply, assign(socket, render_opts: new_render_opts)}
@@ -109,6 +120,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
 
   def apply_key("ArrowUp", socket) do
     render_opts = socket.assigns.render_opts
+
     if can_decrease_y?(render_opts) do
       new_render_opts = %{render_opts | y: render_opts.y - 1}
       {:noreply, assign(socket, render_opts: new_render_opts)}
@@ -119,6 +131,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
 
   def apply_key("ArrowDown", socket) do
     render_opts = socket.assigns.render_opts
+
     if can_increase_y?(render_opts) do
       new_render_opts = %{render_opts | y: render_opts.y + 1}
       {:noreply, assign(socket, render_opts: new_render_opts)}
@@ -129,20 +142,24 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
 
   def apply_key(" ", socket) do
     render_opts = socket.assigns.render_opts
-    new_render_opts = case render_opts do
-      %{pos: :h, y: y, l: l} ->
-        if l + y > 10 do
-          %{render_opts | pos: :v, y: 10 - l}
-        else
-          %{render_opts | pos: :v}
-        end
-      %{pos: :v, x: x, l: l} ->
-        if l + x > 10 do
-          %{render_opts | pos: :h, x: 10 - l}
-        else
-          %{render_opts | pos: :h}
-        end
-    end
+
+    new_render_opts =
+      case render_opts do
+        %{pos: :h, y: y, l: l} ->
+          if l + y > 10 do
+            %{render_opts | pos: :v, y: 10 - l}
+          else
+            %{render_opts | pos: :v}
+          end
+
+        %{pos: :v, x: x, l: l} ->
+          if l + x > 10 do
+            %{render_opts | pos: :h, x: 10 - l}
+          else
+            %{render_opts | pos: :h}
+          end
+      end
+
     {:noreply, assign(socket, render_opts: new_render_opts)}
   end
 

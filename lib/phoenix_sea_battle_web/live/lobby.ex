@@ -12,10 +12,12 @@ defmodule PhoenixSeaBattleWeb.Lobby do
     Endpoint.subscribe("lobby")
     {:ok, msgs} = LobbyArchiver.subs()
     socket = assign(socket, messages: msgs, msg: nil, online_users: [])
+
     case user do
       %User{name: name} ->
         {:ok, _} = Presence.track(self(), "lobby", name, %{state: 0})
         {:ok, socket |> assign(user: name)}
+
       _ ->
         {:ok, socket}
     end
@@ -119,7 +121,8 @@ defmodule PhoenixSeaBattleWeb.Lobby do
     {:noreply, assign(socket, messages: messages, msg: nil)}
   end
 
-  def handle_info(%Broadcast{event: event}, socket) when event in ~w(presence_diff change_state) do
+  def handle_info(%Broadcast{event: event}, socket)
+      when event in ~w(presence_diff change_state) do
     {:noreply, fetch(socket)}
   end
 

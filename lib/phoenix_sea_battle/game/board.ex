@@ -21,21 +21,21 @@ defmodule PhoenixSeaBattle.Game.Board do
 
   def apply_ship(board, %{x: x, y: y, pos: p, l: l}) do
     pre_ship_blocks = ship_opts_to_indexes(x, y, p, l)
+
     with :ok <- check_cross(board, pre_ship_blocks),
-         true <- all_nearest_empty?(pre_ship_blocks, board) || {:error, :nearest}
-    do
+         true <- all_nearest_empty?(pre_ship_blocks, board) || {:error, :nearest} do
       apply_pre_blocks(board, pre_ship_blocks)
     end
   end
 
   def ship_opts_to_indexes(x, y, :h, l) do
-    for add <- 0..l - 1 do
+    for add <- 0..(l - 1) do
       x + add + 10 * y
     end
   end
 
   def ship_opts_to_indexes(x, y, :v, l) do
-    for add <- 0..l - 1 do
+    for add <- 0..(l - 1) do
       x + 10 * (y + add)
     end
   end
@@ -46,26 +46,34 @@ defmodule PhoenixSeaBattle.Game.Board do
     left? = rem(index, 10) == 0
     right? = rem(index + 1, 10) == 0
 
-    return_index(left?, top?, index - 11) ++
-    return_index(top?, index - 10) ++
-    return_index(right?, top?, index - 9) ++
-    return_index(left?, index - 1) ++
-    return_index(right?, index + 1) ++
-    return_index(left?, bottom?, index + 9) ++
-    return_index(bottom?, index + 10) ++
-    return_index(right?, bottom?, index + 11)
+    (return_index(left?, top?, index - 11) ++
+       return_index(top?, index - 10) ++
+       return_index(right?, top?, index - 9) ++
+       return_index(left?, index - 1) ++
+       return_index(right?, index + 1) ++
+       return_index(left?, bottom?, index + 9) ++
+       return_index(bottom?, index + 10) ++
+       return_index(right?, bottom?, index + 11))
     |> Enum.reject(&is_nil/1)
   end
 
   def drop_last(board) do
     case board |> all_ships() |> Map.keys() do
-      [_|_] = ships ->
-        last = Enum.reduce_while(@marks, ships, fn
-          _, [last] -> {:halt, last}
-          m, acc -> {:cont, acc -- [m]}
-        end)
-        new_board = Enum.map(board, fn ^last -> 0; x -> x end)
+      [_ | _] = ships ->
+        last =
+          Enum.reduce_while(@marks, ships, fn
+            _, [last] -> {:halt, last}
+            m, acc -> {:cont, acc -- [m]}
+          end)
+
+        new_board =
+          Enum.map(board, fn
+            ^last -> 0
+            x -> x
+          end)
+
         {:ok, new_board}
+
       [] ->
         {:error, :no_ships}
     end
@@ -78,9 +86,12 @@ defmodule PhoenixSeaBattle.Game.Board do
   defp apply_pre_blocks(board, indexes) do
     ships = all_ships(board)
     {mark, _} = anyone_missed?(ships)
-    new_board = Enum.reduce(indexes, board, fn i, acc ->
-      List.replace_at(acc, i, mark)
-    end)
+
+    new_board =
+      Enum.reduce(indexes, board, fn i, acc ->
+        List.replace_at(acc, i, mark)
+      end)
+
     {:ok, new_board}
   end
 

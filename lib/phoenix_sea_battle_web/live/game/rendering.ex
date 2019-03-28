@@ -5,6 +5,7 @@ defmodule PhoenixSeaBattleWeb.Game.Rendering do
 
   def render_boards(board, shots \\ []) do
     shots_board = apply_shots(shots)
+
     ~E"""
     <div phx-keydown="keydown" phx-target="window">
       <%= for {block, index} <- board do %>
@@ -62,7 +63,8 @@ defmodule PhoenixSeaBattleWeb.Game.Rendering do
   end
 
   defp render_block(x, index, board?) do
-    IO.puts "x? #{inspect x}"
+    IO.puts("x? #{inspect(x)}")
+
     ~E"""
     <div class="block" <%= position_style_by_index(index, board?) %>>
     </div>
@@ -70,8 +72,9 @@ defmodule PhoenixSeaBattleWeb.Game.Rendering do
   end
 
   defp position_style_by_index(index, board?) do
-    left = Float.ceil(rem(index, 10) * 1.4, 2) + (if board?, do: 3, else: 18.5)
+    left = Float.ceil(rem(index, 10) * 1.4, 2) + if board?, do: 3, else: 18.5
     top = Float.ceil(div(index, 10) * 1.4, 2) + 4
+
     ~E"""
     style="left: <%= left %>em; top: <%= top %>em"
     """

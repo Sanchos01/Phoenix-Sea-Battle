@@ -12,8 +12,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   def mount(%{id: id, user: user}, socket) do
     with pid when is_pid(pid) <- GenServer.whereis(GameSupervisor.via_tuple(id)),
          ref when is_reference(ref) <- Process.monitor(pid),
-         {:ok, socket} <- socket |> assign(id: id, user: user, pid: pid) |> update_state()
-    do
+         {:ok, socket} <- socket |> assign(id: id, user: user, pid: pid) |> update_state() do
       messages = Game.get_messages(pid)
       socket = assign(socket, messages: messages, error: nil)
       {:ok, socket}
@@ -83,7 +82,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   def handle_event("keydown", key, socket) do
-    IO.puts "keydown: #{inspect key} ; #{inspect socket}"
+    IO.puts("keydown: #{inspect(key)} ; #{inspect(socket)}")
     {:noreply, socket}
   end
 
@@ -123,6 +122,7 @@ defmodule PhoenixSeaBattleWeb.Game do
     state = get_state(username, game_state)
     set_presence("lobby", username, %{state: state, game_id: socket.assigns.id})
     set_presence("game:" <> socket.assigns.id, username, %{})
+
     socket
     |> assign(board: board, shots: shots, other_shots: other_shots)
     |> append_render_opts(game_state, board)
@@ -167,15 +167,13 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   defp set_presence(topic, username, meta) do
-    case topic |> Presence.list |> Enum.find(& elem(&1, 0) == username) do
-      {_username, %{metas: [old_meta]}} ->
-        if Enum.all?(meta, fn {k, v} -> Map.get(old_meta, k) == v end) do
-          :ok
-        else
-          {:ok, _} = Presence.update(self(), topic, username, meta)
-        end
-      nil ->
-        {:ok, _} = Presence.track(self(), topic, username, meta)
+    with {_username, %{metas: [old_meta]}} <-
+           topic |> Presence.list() |> Enum.find(&(elem(&1, 0) == username)),
+         true <- Enum.all?(meta, fn {k, v} -> Map.get(old_meta, k) == v end) do
+      :ok
+    else
+      false -> {:ok, _} = Presence.update(self(), topic, username, meta)
+      nil -> {:ok, _} = Presence.track(self(), topic, username, meta)
     end
   end
 
