@@ -11,16 +11,18 @@ defmodule PhoenixSeaBattleWeb.Lobby do
   def mount(%{user: user}, socket) do
     Endpoint.subscribe("lobby")
     {:ok, msgs} = LobbyArchiver.subs()
-    socket = assign(socket, messages: msgs, msg: nil, online_users: [])
+    socket = assign(socket, messages: msgs, msg: nil)
 
-    case user do
+    socket = case user do
       %User{name: name} ->
         {:ok, _} = Presence.track(self(), "lobby", name, %{state: 0})
-        {:ok, socket |> assign(user: name)}
+        socket |> assign(user: name)
 
       _ ->
-        {:ok, socket}
+        socket
     end
+
+    {:ok, fetch(socket)}
   end
 
   def render(assigns) do
@@ -50,7 +52,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
         </div>
         <div id="userList" class="panel-body panel-users">
           <div>
-            <%= for {user, %{metas: [meta]}} <- sort_users(@online_users) do %>
+            <%= for {user, %{metas: [meta | _]}} <- sort_users(@online_users) do %>
               <li class="users">
               <%= render_user(user, meta) %>
               </li>
@@ -97,14 +99,6 @@ defmodule PhoenixSeaBattleWeb.Lobby do
     <%= user %>
     <br>
     <small>game ended</small>
-    """
-  end
-
-  defp render_user(user, _meta) do
-    ~E"""
-    <%= user %>
-    <br>
-    <small>Unknown state</small>
     """
   end
 
