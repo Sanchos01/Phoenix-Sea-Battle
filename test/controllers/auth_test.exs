@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattle.AuthTest do
-  use PhoenixSeaBattleWeb.ConnCase
+  use PhoenixSeaBattleWeb.ConnCase, async: true
   alias PhoenixSeaBattleWeb.Auth
   alias PhoenixSeaBattle.User
 

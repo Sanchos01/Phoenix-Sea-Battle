@@ -8,7 +8,7 @@ use Mix.Config
 # with webpack to recompile .js and .css sources.
 config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
   http: [
-    port: 4000,
+    port: 4005,
     transport_options: [
       num_acceptors: 5
     ]

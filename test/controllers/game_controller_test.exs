@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattle.GameControllerTest do
-  use PhoenixSeaBattleWeb.ConnCase
+  use PhoenixSeaBattleWeb.ConnCase, async: true
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
   alias PhoenixSeaBattle.Game
   import Mock

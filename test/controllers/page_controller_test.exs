@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattle.PageControllerTest do
-  use PhoenixSeaBattleWeb.ConnCase
+  use PhoenixSeaBattleWeb.ConnCase, async: true
 
   test "GET /", %{conn: conn} do
     conn = get(conn, "/")

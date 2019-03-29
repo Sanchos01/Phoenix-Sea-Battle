@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattle.UserControllerTest do
-  use PhoenixSeaBattleWeb.ConnCase
+  use PhoenixSeaBattleWeb.ConnCase, async: true
 
   setup %{conn: conn} = config do
     if username = config[:login_as] do

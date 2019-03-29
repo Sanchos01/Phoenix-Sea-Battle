@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattle.SessionControllerTest do
-  use PhoenixSeaBattleWeb.ConnCase
+  use PhoenixSeaBattleWeb.ConnCase, async: true
 
   setup %{conn: conn} = config do
     conn =

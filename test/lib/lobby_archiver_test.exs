@@ -5,13 +5,16 @@ defmodule PhoenixSeaBattle.LobbyArchiverTest do
 
   test "subs/0 and new_msg/2" do
     LobbyArchiver.subs()
-    body = "hello world"
-    user = "SomeUser"
+    body = "Archiver test msg"
+    user = "Some User"
     LobbyArchiver.new_msg(body, user)
-    [%{body: ^body, user: ^user, timestamp: _}] = LobbyArchiver.get_messages()
+    msgs = LobbyArchiver.get_messages()
+    assert Enum.any?(msgs, fn %{body: ^body, user: ^user, timestamp: _} -> true; _ -> false end)
     send LobbyArchiver, :timeout
-    [%{body: ^body, user: ^user, timestamp: _}] = LobbyArchiver.get_messages()
+    msgs = LobbyArchiver.get_messages()
+    assert Enum.any?(msgs, fn %{body: ^body, user: ^user, timestamp: _} -> true; _ -> false end)
 
-    assert_receive {:update, [%{body: ^body, user: ^user, timestamp: _}]}
+    assert_receive {:update, msgs}
+    assert Enum.any?(msgs, fn %{body: ^body, user: ^user, timestamp: _} -> true; _ -> false end)
   end
 end

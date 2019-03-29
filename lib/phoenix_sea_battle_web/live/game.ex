@@ -119,8 +119,9 @@ defmodule PhoenixSeaBattleWeb.Game do
   defp update_state(socket = %{assigns: %{pid: pid, user: user = %{name: username}}}) do
     {:ok, game_state} = Game.get(pid, user)
     {:ok, board, shots, other_shots} = Game.get_board_and_shots(pid, user)
-    state = get_state(username, game_state)
-    set_presence("lobby", username, %{state: state, game_id: socket.assigns.id})
+    {state, other} = get_state(username, game_state)
+    # TODO fix with
+    set_presence("lobby", username, %{state: state, game_id: socket.assigns.id, with: other})
     set_presence("game:" <> socket.assigns.id, username, %{})
 
     socket
@@ -128,9 +129,9 @@ defmodule PhoenixSeaBattleWeb.Game do
     |> append_render_opts(game_state, board)
   end
 
-  defp get_state(user, %{admin: admin, opponent: user}) when not is_nil(admin), do: 2
-  defp get_state(user, %{admin: user, opponent: opponent}) when not is_nil(opponent), do: 2
-  defp get_state(_, _), do: 1
+  defp get_state(user, %{admin: admin, opponent: user}) when not is_nil(admin), do: {2, admin}
+  defp get_state(user, %{admin: user, opponent: opponent}) when not is_nil(opponent), do: {2, opponent}
+  defp get_state(_, _), do: {1, nil}
 
   defp message({:cross, _}, _) do
     ~E"""
