@@ -16,7 +16,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
     socket = case user do
       %User{name: name} ->
         {:ok, _} = Presence.track(self(), "lobby", name, %{state: 0})
-        socket |> assign(user: name)
+        socket |> assign(user: user)
 
       _ ->
         socket
@@ -104,8 +104,8 @@ defmodule PhoenixSeaBattleWeb.Lobby do
 
   def handle_event("insert_message", %{"chat-input" => msg}, socket) when msg != "" do
     case socket.assigns do
-      %{user: %User{} = user} ->
-        LobbyArchiver.new_msg(msg, socket.assigns.user)
+      %{user: %User{name: username}} ->
+        LobbyArchiver.new_msg(msg, username)
         {:noreply, assign(socket, msg: msg)}
       _ ->
         {:noreply, socket}

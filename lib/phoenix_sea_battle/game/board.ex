@@ -104,13 +104,11 @@ defmodule PhoenixSeaBattle.Game.Board do
               _ -> false
             end)
             |> Enum.map(fn {_, i} -> i end)
-          IO.puts "killed: #{inspect killed_indexes}"
 
           near_indexes =
             killed_indexes
             |> Stream.flat_map(&near_indexes/1)
             |> Enum.reject(& &1 in killed_indexes)
-          IO.puts "near_indexes: #{inspect near_indexes}"
 
           new_shots =
             shots

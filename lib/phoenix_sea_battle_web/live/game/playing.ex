@@ -2,7 +2,6 @@ defmodule PhoenixSeaBattleWeb.Game.Playing do
   use Phoenix.LiveView
   use Phoenix.HTML
   alias PhoenixSeaBattle.Game.Board
-  alias PhoenixSeaBattle.Game
   alias PhoenixSeaBattleWeb.Game.Rendering
 
   def render(assigns) do
@@ -10,7 +9,7 @@ defmodule PhoenixSeaBattleWeb.Game.Playing do
     """
   end
 
-  def update_render_opts(socket, board) do
+  def update_render_opts(socket, _board) do
     {:ok, assign(socket, render_opts: nil)}
   end
 
