@@ -47,6 +47,9 @@ defmodule PhoenixSeaBattle.Game do
   def new_msg(pid, msg),                do: GenServer.cast(pid, {:new_msg, msg})
   def drop_last(pid, user_id),          do: GenServer.cast(pid, {:drop_last, user_id})
   def drop_all(pid, user_id),           do: GenServer.cast(pid, {:drop_all, user_id})
+  def ready(pid, user_id),              do: GenServer.cast(pid, {:ready, user_id})
+  def unready(pid, user_id),            do: GenServer.cast(pid, {:unready, user_id})
+  def shot(pid, user_id, index),        do: GenServer.cast(pid, {:shot, user_id, index})
 
   # Calls
   # get
@@ -95,7 +98,7 @@ defmodule PhoenixSeaBattle.Game do
   end
 
   # add_user
-  def handle_call({:add_user, user}, _from, state = %{admin: nil}) do
+  def handle_call({:add_user, %User{} = user}, _from, state = %{admin: nil}) do
     {:reply, {:ok, :admin}, %{state | admin: user, admin_board: Board.new_board()}}
   end
 
@@ -138,6 +141,20 @@ defmodule PhoenixSeaBattle.Game do
     end
   end
 
+  def handle_cast({:apply_ship, user_id, ship_opts}, state = %{opponent: %{id: user_id}}) do
+    board = state.opponent_board
+
+    case Board.apply_ship(board, ship_opts) do
+      {:ok, new_board} ->
+        send(state.opponent_pid, :update_state)
+        {:noreply, %{state | opponent_board: new_board}}
+
+      {:error, error} ->
+        send(state.opponent_pid, {:render_error, error})
+        {:noreply, state}
+    end
+  end
+
   def handle_cast(
         {:drop_last, user_id},
         state = %{admin: %{id: user_id}, playing: false, winner: nil}
@@ -158,6 +175,38 @@ defmodule PhoenixSeaBattle.Game do
         {:drop_last, user_id},
         state = %{opponent: %{id: user_id}, playing: false, winner: nil}
       ) do
+    board = state.opponent_board
+
+    case Board.drop_last(board) do
+      {:ok, new_board} ->
+        send(state.opponent_pid, :update_state)
+        {:noreply, %{state | opponent_board: new_board}}
+
+      _ ->
+        {:noreply, state}
+    end
+  end
+
+  def handle_cast(
+        {:drop_last, user_id},
+        state = %{admin: %{id: user_id}, playing: {:ready, user_id2}}
+      ) when user_id != user_id2 do
+    board = state.admin_board
+
+    case Board.drop_last(board) do
+      {:ok, new_board} ->
+        send(state.admin_pid, :update_state)
+        {:noreply, %{state | admin_board: new_board}}
+
+      _ ->
+        {:noreply, state}
+    end
+  end
+
+  def handle_cast(
+        {:drop_last, user_id},
+        state = %{opponent: %{id: user_id}, playing: {:ready, user_id2}}
+      ) when user_id != user_id2 do
     board = state.opponent_board
 
     case Board.drop_last(board) do
@@ -192,7 +241,102 @@ defmodule PhoenixSeaBattle.Game do
     {:noreply, %{state | opponent_board: new_board}}
   end
 
+  def handle_cast(
+        {:drop_all, user_id},
+        state = %{admin: %{id: user_id}, playing: {:ready, user_id2}}
+      ) when user_id != user_id2 do
+    new_board = Board.new_board()
+    send(state.admin_pid, :update_state)
+    {:noreply, %{state | admin_board: new_board}}
+  end
+
+  def handle_cast(
+        {:drop_all, user_id},
+        state = %{opponent: %{id: user_id}, playing: {:ready, user_id2}}
+      ) when user_id != user_id2 do
+    new_board = Board.new_board()
+    send(state.opponent_pid, :update_state)
+    {:noreply, %{state | opponent_board: new_board}}
+  end
+
   def handle_cast({:drop_all, _}, state) do
+    {:noreply, state}
+  end
+
+  def handle_cast({:ready, user_id}, state = %{admin: %{id: user_id}, playing: false, winner: nil}) do
+    if Board.prepare(state.admin_board) == :ok do
+      state.admin_pid && send(state.admin_pid, :update_state)
+      state.opponent_pid && send(state.opponent_pid, :update_state)
+      {:noreply, %{state | playing: {:ready, user_id}}}
+    else
+      {:noreply, state}
+    end
+  end
+
+  def handle_cast({:ready, user_id}, state = %{opponent: %{id: user_id}, playing: false, winner: nil}) do
+    if Board.prepare(state.opponent_board) == :ok do
+      state.admin_pid && send(state.admin_pid, :update_state)
+      state.opponent_pid && send(state.opponent_pid, :update_state)
+      {:noreply, %{state | playing: {:ready, user_id}}}
+    else
+      {:noreply, state}
+    end
+  end
+
+  def handle_cast({:ready, user_id}, state = %{admin: %{id: user_id}, playing: {:ready, user_id2}}) do
+    if user_id != user_id2 and Board.prepare(state.admin_board) == :ok do
+      state.admin_pid && send(state.admin_pid, :update_state)
+      state.opponent_pid && send(state.opponent_pid, :update_state)
+      turn = Enum.random([state.admin.id, state.opponent.id])
+      {:noreply, %{state | playing: true, turn: turn, admin_shots: state.opponent_board, opponent_shots: state.admin_board}}
+    else
+      {:noreply, state}
+    end
+  end
+
+  def handle_cast({:ready, user_id}, state = %{opponent: %{id: user_id}, playing: {:ready, user_id2}}) do
+    if user_id != user_id2 and Board.prepare(state.opponent_board) == :ok do
+      state.admin_pid && send(state.admin_pid, :update_state)
+      state.opponent_pid && send(state.opponent_pid, :update_state)
+      turn = Enum.random([state.admin.id, state.opponent.id])
+      {:noreply, %{state | playing: true, turn: turn, admin_shots: state.opponent_board, opponent_shots: state.admin_board}}
+    else
+      {:noreply, state}
+    end
+  end
+
+  def handle_cast({:ready, _user_id}, state) do
+    {:noreply, state}
+  end
+
+  def handle_cast({:unready, user_id}, state = %{playing: {:ready, user_id}, winner: nil}) do
+    state.admin_pid && send(state.admin_pid, :update_state)
+    state.opponent_pid && send(state.opponent_pid, :update_state)
+    {:noreply, %{state | playing: false}}
+  end
+
+  def handle_cast({:unready, _user_id}, state) do
+    {:noreply, state}
+  end
+
+  # TODO add check winner
+  def handle_cast({:shot, user_id, index}, state = %{playing: true, turn: user_id, admin: %{id: user_id}}) do
+    {:ok, new_shots, same_turn?} = Board.apply_shot(state.opponent_board, state.admin_shots, index)
+    state.admin_pid && send(state.admin_pid, :update_state)
+    state.opponent_pid && send(state.opponent_pid, :update_state)
+    new_turn = if same_turn?, do: state.turn, else: state.opponent.id
+    {:noreply, %{state | admin_shots: new_shots, turn: new_turn}}
+  end
+
+  def handle_cast({:shot, user_id, index}, state = %{playing: true, turn: user_id, opponent: %{id: user_id}}) do
+    {:ok, new_shots, same_turn?} = Board.apply_shot(state.admin_board, state.opponent_shots, index)
+    state.admin_pid && send(state.admin_pid, :update_state)
+    state.opponent_pid && send(state.opponent_pid, :update_state)
+    new_turn = if same_turn?, do: state.turn, else: state.admin.id
+    {:noreply, %{state | opponent_shots: new_shots, turn: new_turn}}
+  end
+
+  def handle_cast({:shot, _user_id, _index}, state) do
     {:noreply, state}
   end
 

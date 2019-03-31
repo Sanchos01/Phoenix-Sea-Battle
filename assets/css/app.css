@@ -51,6 +51,15 @@
 .button-small {
   padding: 0em !important
 }
+.empty-button {
+  padding: 0em;
+  margin: 0em;
+  border-radius: 0em;
+  height: 100% !important;
+  width: 100% !important;
+  border: 0.2em solid black !important;
+  background-color: white !important;
+}
 .block {
   display: block;
   position: absolute;

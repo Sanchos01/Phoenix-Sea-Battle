@@ -3,7 +3,7 @@ defmodule PhoenixSeaBattleWeb.Game.Rendering do
   alias PhoenixSeaBattle.Game.Board
   @marks ~w(bs0 c0 c1 d0 d1 d2 tb0 tb1 tb2 tb3)a
 
-  def render_boards(board, shots \\ []) do
+  def render_boards(board, shots \\ [], move? \\ false) do
     shots_board = apply_shots(shots)
 
     ~E"""
@@ -12,73 +12,127 @@ defmodule PhoenixSeaBattleWeb.Game.Rendering do
         <%= render_block(block, index) %>
       <% end %>
       <%= for {block, index} <- shots_board do %>
-        <%= render_block(block, index, false) %>
+        <%= render_shot(block, index, move?) %>
       <% end %>
     </div>
     """
   end
 
-  defp render_block(block, index, board? \\ true)
-
-  defp render_block(0, index, board?) do
+  defp render_block(nil, index) do
     ~E"""
-    <div class="block" <%= position_style_by_index(index, board?) %>>
+    <div class="block" style="<%= position_style_by_index(index, true) %>">
     </div>
     """
   end
 
-  defp render_block(:ghost, index, board?) do
+  defp render_block(:ghost, index) do
     ~E"""
-    <div class="block ghost_block" <%= position_style_by_index(index, board?) %>>
+    <div class="block ghost_block" style="<%= position_style_by_index(index, true) %>">
     </div>
     """
   end
 
-  defp render_block(:cross, index, board?) do
+  defp render_block(:cross, index) do
     ~E"""
-    <div class="block cross_block" <%= position_style_by_index(index, board?) %>>
+    <div class="block cross_block" style="<%= position_style_by_index(index, true) %>">
     </div>
     """
   end
 
-  defp render_block(nil, index, board?) do
+  defp render_block(mark, index) when mark in @marks do
     ~E"""
-    <div class="block empty_block" <%= position_style_by_index(index, board?) %>>
+    <div class="block ship_block" style="<%= position_style_by_index(index, true) %>">
     </div>
     """
   end
 
-  defp render_block(:near, index, board?) do
+  defp render_block(:shotted, index) do
     ~E"""
-    <div class="block near_block" <%= position_style_by_index(index, board?) %>>
+    <div class="block shotted_block" style="<%= position_style_by_index(index, true) %>">
     </div>
     """
   end
 
-  defp render_block(mark, index, board?) when mark in @marks do
+  defp render_block(:killed, index) do
     ~E"""
-    <div class="block ship_block" <%= position_style_by_index(index, board?) %>>
+    <div class="block killed_block" style="<%= position_style_by_index(index, true) %>">
     </div>
     """
   end
 
-  defp render_block(x, index, board?) do
+  defp render_block(:miss, index) do
+    ~E"""
+    <div class="block missed_block" style="<%= position_style_by_index(index, true) %>">
+    </div>
+    """
+  end
+
+  defp render_block(x, index) do
     IO.puts("x? #{inspect(x)}")
 
     ~E"""
-    <div class="block" <%= position_style_by_index(index, board?) %>>
+    <div class="block" style="<%= position_style_by_index(index, true) %>">
     </div>
     """
   end
 
-  defp position_style_by_index(index, board?) do
-    left = Float.ceil(rem(index, 10) * 1.4, 2) + if board?, do: 3, else: 18.5
-    top = Float.ceil(div(index, 10) * 1.4, 2) + 4
-
+  defp render_shot(k, index, true) when is_nil(k) or k in @marks do
     ~E"""
-    style="left: <%= left %>em; top: <%= top %>em"
+    <div style="width: 1.3em; height: 1.3em; position: absolute; <%= position_style_by_index(index, false) %>">
+      <button class="block empty-block empty-button" phx-click="shot" phx-value=<%= index %>>
+      </button>
+    </div>
     """
   end
 
-  defp apply_shots([]), do: Board.new_shots() |> Enum.with_index()
+  defp render_shot(k, index, false) when is_nil(k) or k in @marks do
+    ~E"""
+    <div class="block empty_block" style="<%= position_style_by_index(index, false) %>">
+    </div>
+    """
+  end
+
+  defp render_shot(:near, index, _) do
+    ~E"""
+    <div class="block near_block" style="<%= position_style_by_index(index, false) %>">
+    </div>
+    """
+  end
+
+  defp render_shot(:miss, index, _) do
+    ~E"""
+    <div class="block missed_block" style="<%= position_style_by_index(index, false) %>">
+    </div>
+    """
+  end
+
+  defp render_shot(:shotted, index, _) do
+    ~E"""
+    <div class="block shotted_block" style="<%= position_style_by_index(index, false) %>">
+    </div>
+    """
+  end
+
+  defp render_shot(:killed, index, _) do
+    ~E"""
+    <div class="block killed_block" style="<%= position_style_by_index(index, false) %>">
+    </div>
+    """
+  end
+
+  defp render_shot(k, index, _) do
+    render_block(k, index)
+  end
+
+  defp position_style_by_index(index, board?) do
+    left = Float.ceil(rem(index, 10) * 1.5, 2) + if board?, do: 3, else: 18.7
+    top = Float.ceil(div(index, 10) * 1.5, 2) + 3.5
+
+    ~E"""
+    left: <%= left %>em; top: <%= top %>em
+    """
+  end
+
+  defp apply_shots([]), do: Board.new_board() |> Enum.with_index()
+  defp apply_shots([_|_] = shots), do: Stream.with_index(shots)
 end

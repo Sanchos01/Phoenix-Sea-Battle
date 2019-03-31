@@ -40,13 +40,26 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
     |> Rendering.render_boards()
   end
 
-  def sub_commands() do
+  def sub_commands(:initial, board) do
     ~E"""
     <div class="column column-20 button-small">
-      <button phx-click="drop_last">Drop last</button>
+      <button phx-click="drop_last" style="width: 85%">Drop last</button>
     </div>
-    <div class="column button-small">
-      <button phx-click="drop_all">Drop all</button>
+    <div class="column column-20 button-small">
+      <button phx-click="drop_all" style="width: 85%">Drop all</button>
+    </div>
+    <%= if Board.prepare(board) == :ok do %>
+      <div class="column column-20 button-small">
+        <button phx-click="ready" style="width: 85%">Ready</button>
+      </div>
+    <% end %>
+    """
+  end
+
+  def sub_commands(:ready, _board) do
+    ~E"""
+    <div class="column column-20 button-small">
+      <button phx-click="unready" style="width: 85%">Unready</button>
     </div>
     """
   end
@@ -75,10 +88,10 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
     pre_ship_blocks
     |> Enum.reduce(list, fn index, acc ->
       case Enum.at(acc, index) do
-        0 ->
+        nil ->
           index
           |> Board.near_indexes()
-          |> Enum.any?(&(Enum.at(list, &1) not in [0, :ghost, :cross]))
+          |> Enum.any?(&(Enum.at(list, &1) not in [nil, :ghost, :cross]))
           |> if do
             List.replace_at(acc, index, :cross)
           else
@@ -140,7 +153,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
     end
   end
 
-  def apply_key(" ", socket) do
+  def apply_key(k, socket) when k in ~w(- _) do
     render_opts = socket.assigns.render_opts
 
     new_render_opts =
@@ -163,7 +176,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
     {:noreply, assign(socket, render_opts: new_render_opts)}
   end
 
-  def apply_key("Enter", socket = %{assigns: assigns}) do
+  def apply_key(k, socket = %{assigns: assigns}) when k in ~w(+ =) do
     Game.apply_ship(assigns.pid, assigns.user.id, assigns.render_opts)
     {:noreply, socket}
   end
@@ -172,17 +185,28 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
     {:noreply, socket}
   end
 
-  def apply_event("drop_last", _key, socket) do
+  def apply_event("drop_last", _key, socket = %{assigns: %{game_state: :initial}}) do
     Game.drop_last(socket.assigns.pid, socket.assigns.user.id)
     {:noreply, socket}
   end
 
-  def apply_event("drop_all", _key, socket) do
+  def apply_event("drop_all", _key, socket = %{assigns: %{game_state: :initial}}) do
     Game.drop_all(socket.assigns.pid, socket.assigns.user.id)
     {:noreply, socket}
   end
 
-  def apply_event(_event, _key, socket) do
+  def apply_event("ready", _key, socket = %{assigns: %{game_state: :initial}}) do
+    Game.ready(socket.assigns.pid, socket.assigns.user.id)
+    {:noreply, socket}
+  end
+
+  def apply_event("unready", _key, socket = %{assigns: %{game_state: :ready}}) do
+    Game.unready(socket.assigns.pid, socket.assigns.user.id)
+    {:noreply, socket}
+  end
+
+  def apply_event(event, _key, socket) do
+    IO.puts "event: #{inspect event} ; #{inspect socket}"
     {:noreply, socket}
   end
 

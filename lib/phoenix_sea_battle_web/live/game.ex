@@ -33,7 +33,7 @@ defmodule PhoenixSeaBattleWeb.Game do
           <div id="game" class="panel-body panel-game">
             <%= render_board(@game_state, @board, @shots, @other_shots, @render_opts) %>
             <div class="row panel-sub_commands">
-              <%= sub_commands(@game_state) %>
+              <%= sub_commands(@game_state, @board, @user) %>
             </div>
           </div>
         </div>
@@ -81,13 +81,21 @@ defmodule PhoenixSeaBattleWeb.Game do
     __MODULE__.Initial.apply_key(key, socket)
   end
 
-  def handle_event("keydown", key, socket) do
-    IO.puts("keydown: #{inspect(key)} ; #{inspect(socket)}")
+  def handle_event("keydown", _key, socket) do
     {:noreply, socket}
   end
 
-  def handle_event(event, key, socket = %{assigns: %{game_state: :initial}}) do
+  def handle_event(event, key, socket = %{assigns: %{game_state: state}}) when state in ~w(initial ready)a do
     __MODULE__.Initial.apply_event(event, key, socket)
+  end
+
+  def handle_event("shot", value, socket = %{assigns: %{game_state: :move}}) do
+    with {index, ""} when index >= 0 and index < 100 <- Integer.parse(value) do
+      Game.shot(socket.assigns.pid, socket.assigns.user.id, index)
+      {:noreply, socket}
+    else
+      _ -> {:noreply, socket}
+    end
   end
 
   def handle_info({:update_messages, messages}, socket) do
@@ -120,7 +128,6 @@ defmodule PhoenixSeaBattleWeb.Game do
     {:ok, game_state} = Game.get(pid, user)
     {:ok, board, shots, other_shots} = Game.get_board_and_shots(pid, user)
     {state, other} = get_state(username, game_state)
-    # TODO fix with
     set_presence("lobby", username, %{state: state, game_id: socket.assigns.id, with: other})
     set_presence("game:" <> socket.assigns.id, username, %{})
 
@@ -136,7 +143,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   defp message({:cross, _}, _) do
     ~E"""
     <div class="error">
-    Ships can't crossing
+    Ships shouldn't cross
     </div>
     """
   end
@@ -144,7 +151,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   defp message({:nearest, _}, _) do
     ~E"""
     <div class="error">
-    Ships can't touching
+    Ships shouldn't touch
     </div>
     """
   end
@@ -152,7 +159,31 @@ defmodule PhoenixSeaBattleWeb.Game do
   defp message(nil, :initial) do
     ~E"""
     <div>
-    Place your ships
+    Move your ships with arrows, use '-' for rotating and '+' for placing
+    </div>
+    """
+  end
+
+  defp message(nil, :ready) do
+    ~E"""
+    <div>
+    Ready, await your opponent
+    </div>
+    """
+  end
+
+  defp message(nil, :move) do
+    ~E"""
+    <div>
+    Make your move
+    </div>
+    """
+  end
+
+  defp message(nil, :await) do
+    ~E"""
+    <div>
+    Wait the opponent's move
     </div>
     """
   end
@@ -163,12 +194,30 @@ defmodule PhoenixSeaBattleWeb.Game do
     |> __MODULE__.Initial.update_render_opts(board)
   end
 
-  defp render_board(:initial, board, _shots, _other_shots, render_opts) do
+  defp append_render_opts(socket, %{playing: {:ready, user_id}, winner: nil}, board) do
+    state = if socket.assigns.user.id == user_id, do: :ready, else: :initial
+    socket
+    |> assign(game_state: state)
+    |> __MODULE__.Initial.update_render_opts(board)
+  end
+
+  defp append_render_opts(socket, %{playing: true, turn: user_id}, board) do
+    state = if socket.assigns.user.id == user_id, do: :move, else: :await
+    socket
+    |> assign(game_state: state)
+    |> __MODULE__.Playing.update_render_opts(board)
+  end
+
+  defp render_board(state, board, _shots, _other_shots, render_opts) when state in ~w(initial ready)a do
     __MODULE__.Initial.render_board(board, render_opts)
   end
 
+  defp render_board(state, board, shots, other_shots, _render_opts) when state in ~w(move await)a do
+    __MODULE__.Playing.render_board(state, board, shots, other_shots)
+  end
+
   defp set_presence(topic, username, meta) do
-    with {_username, %{metas: [old_meta]}} <-
+    with {_username, %{metas: [old_meta | _]}} <-
            topic |> Presence.list() |> Enum.find(&(elem(&1, 0) == username)),
          true <- Enum.all?(meta, fn {k, v} -> Map.get(old_meta, k) == v end) do
       :ok
@@ -178,7 +227,9 @@ defmodule PhoenixSeaBattleWeb.Game do
     end
   end
 
-  defp sub_commands(:initial) do
-    __MODULE__.Initial.sub_commands()
+  defp sub_commands(state, board, _user) when state in ~w(initial ready)a do
+    __MODULE__.Initial.sub_commands(state, board)
   end
+
+  defp sub_commands(_state, _board, _user), do: nil
 end

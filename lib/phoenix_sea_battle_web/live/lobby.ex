@@ -103,8 +103,13 @@ defmodule PhoenixSeaBattleWeb.Lobby do
   end
 
   def handle_event("insert_message", %{"chat-input" => msg}, socket) when msg != "" do
-    LobbyArchiver.new_msg(msg, socket.assigns.user)
-    {:noreply, assign(socket, msg: msg)}
+    case socket.assigns do
+      %{user: %User{} = user} ->
+        LobbyArchiver.new_msg(msg, socket.assigns.user)
+        {:noreply, assign(socket, msg: msg)}
+      _ ->
+        {:noreply, socket}
+    end
   end
 
   def handle_event("insert_message", _, socket) do

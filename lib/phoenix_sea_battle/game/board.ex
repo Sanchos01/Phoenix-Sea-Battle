@@ -1,6 +1,5 @@
 defmodule PhoenixSeaBattle.Game.Board do
-  @default_board [0] |> Stream.cycle() |> Enum.take(100)
-  @default_shots [nil] |> Stream.cycle() |> Enum.take(100)
+  @default_board [nil] |> Stream.cycle() |> Enum.take(100)
 
   # 4 - battleship - bs0
   # 3 - cruiser - c{0-1}
@@ -11,7 +10,6 @@ defmodule PhoenixSeaBattle.Game.Board do
   @ships Enum.zip(@marks, @ships_length)
 
   def new_board(), do: @default_board
-  def new_shots(), do: @default_shots
 
   def prepare(board) do
     ships = all_ships(board)
@@ -68,7 +66,7 @@ defmodule PhoenixSeaBattle.Game.Board do
 
         new_board =
           Enum.map(board, fn
-            ^last -> 0
+            ^last -> nil
             x -> x
           end)
 
@@ -76,6 +74,62 @@ defmodule PhoenixSeaBattle.Game.Board do
 
       [] ->
         {:error, :no_ships}
+    end
+  end
+
+  def apply_shots(board, shots) do
+    shots
+    |> Stream.with_index()
+    |> Enum.reduce(board, fn
+      {k, index}, acc when k in ~w(shotted killed miss)a ->
+        List.replace_at(acc, index, k)
+      _, acc ->
+        acc
+    end)
+  end
+
+  def apply_shot(board, shots, index) do
+    case Enum.at(shots, index) do
+      m when m in @marks ->
+        shots
+        |> Enum.filter(& &1 == m)
+        |> length()
+        |> Kernel.==(1)
+        |> if do
+          killed_indexes =
+            board
+            |> Stream.with_index()
+            |> Stream.filter(fn
+              {^m, _} -> true
+              _ -> false
+            end)
+            |> Enum.map(fn {_, i} -> i end)
+          IO.puts "killed: #{inspect killed_indexes}"
+
+          near_indexes =
+            killed_indexes
+            |> Stream.flat_map(&near_indexes/1)
+            |> Enum.reject(& &1 in killed_indexes)
+          IO.puts "near_indexes: #{inspect near_indexes}"
+
+          new_shots =
+            shots
+            |> Stream.with_index()
+            |> Enum.map(fn {value, i} ->
+              cond do
+                i in killed_indexes -> :killed
+                i in near_indexes and is_nil(value) -> :near
+                true -> value
+              end
+            end)
+
+          {:ok, new_shots, true}
+        else
+          {:ok, List.replace_at(shots, index, :shotted), true}
+        end
+
+      nil ->
+        {:ok, List.replace_at(shots, index, :miss), false}
     end
   end
 
@@ -103,7 +157,7 @@ defmodule PhoenixSeaBattle.Game.Board do
     board
     |> Stream.with_index()
     |> Enum.reduce(%{}, fn
-      {0, _}, acc ->
+      {nil, _}, acc ->
         acc
 
       {type, index}, acc ->
@@ -162,7 +216,7 @@ defmodule PhoenixSeaBattle.Game.Board do
     index
     |> near_indexes()
     |> Enum.reduce_while(true, fn i, acc ->
-      if i in indexes or Enum.at(board, i) == 0 do
+      if i in indexes or Enum.at(board, i) == nil do
         {:cont, acc}
       else
         {:halt, false}
@@ -181,7 +235,7 @@ defmodule PhoenixSeaBattle.Game.Board do
 
   defp check_cross(board, indexes) do
     Enum.reduce_while(indexes, :ok, fn index, acc ->
-      if Enum.at(board, index) == 0 do
+      if Enum.at(board, index) == nil do
         {:cont, acc}
       else
         {:halt, {:error, :cross}}
