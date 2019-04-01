@@ -40,7 +40,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
     |> Rendering.render_boards()
   end
 
-  def sub_commands(:initial, board) do
+  def sub_panel(:initial, board) do
     ~E"""
     <div class="column column-20 button-small">
       <button phx-click="drop_last" style="width: 85%">Drop last</button>
@@ -56,7 +56,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
     """
   end
 
-  def sub_commands(:ready, _board) do
+  def sub_panel(:ready, _board) do
     ~E"""
     <div class="column column-20 button-small">
       <button phx-click="unready" style="width: 85%">Unready</button>

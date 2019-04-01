@@ -37,8 +37,8 @@ defmodule PhoenixSeaBattleWeb.Game do
           </div>
           <div id="game" class="panel-body panel-game">
             <%= render_board(@game_state, @board, @shots, @other_shots, @render_opts) %>
-            <div class="row panel-sub_commands">
-              <%= sub_commands(@game_state, @board, @user) %>
+            <div class="row panel-sub">
+              <%= sub_panel(@game_state, @board, @shots) %>
             </div>
           </div>
         </div>
@@ -262,9 +262,11 @@ defmodule PhoenixSeaBattleWeb.Game do
     end
   end
 
-  defp sub_commands(state, board, _user) when state in ~w(initial ready)a do
-    __MODULE__.Initial.sub_commands(state, board)
+  defp sub_panel(state, board, _shots) when state in ~w(initial ready)a do
+    __MODULE__.Initial.sub_panel(state, board)
   end
 
-  defp sub_commands(_state, _board, _user), do: nil
+  defp sub_panel(state, _board, shots) when state in ~w(move await lose win)a do
+    __MODULE__.Playing.sub_panel(shots)
+  end
 end

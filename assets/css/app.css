@@ -30,7 +30,7 @@
 .panel-messages, .panel-users, .panel-game {
   height: 300px;
 }
-.panel-sub_commands {
+.panel-sub {
   top: 18.7em;
   position: absolute;
   padding-left: 1.2em;
@@ -92,5 +92,5 @@
   background-color: rgb(34, 92, 168);
 }
 .missed_block {
-  background-color: rgb(100, 100, 100);
+  background-color: rgb(150, 150, 150);
 }

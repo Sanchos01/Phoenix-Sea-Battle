@@ -2,6 +2,7 @@ defmodule PhoenixSeaBattleWeb.Game.Playing do
   use Phoenix.LiveView
   use Phoenix.HTML
   alias PhoenixSeaBattleWeb.Game.Rendering
+  alias PhoenixSeaBattle.Game.Board
 
   def render(assigns) do
     ~L"""
@@ -22,5 +23,15 @@ defmodule PhoenixSeaBattleWeb.Game.Playing do
     other_shots
     |> Enum.with_index()
     |> Rendering.render_boards(shots, state == :move)
+  end
+
+  def sub_panel(shots) do
+    left = Board.left_ships(shots)
+    ~E"""
+    <div style="padding-right: 1em; padding-top: 0.6em">4-fielded - <%= left[4] %>;</div>
+    <div style="padding-right: 1em; padding-top: 0.6em">3-fielded - <%= left[3] %>;</div>
+    <div style="padding-right: 1em; padding-top: 0.6em">2-fielded - <%= left[2] %>;</div>
+    <div style="padding-right: 1em; padding-top: 0.6em">1-fielded - <%= left[1] %>;</div>
+    """
   end
 end
