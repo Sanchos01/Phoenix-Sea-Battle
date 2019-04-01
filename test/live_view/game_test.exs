@@ -30,7 +30,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
 
     user3 = insert_user(%{name: "user3"})
     {:error, "game already full"} = GameServer.add_user(GameSupervisor.via_tuple(id), user3)
-    params = [session: %{user: user1, id: id, token: token}]
+    params = [session: %{user: user3, id: id, token: token}]
 
     assert {:error, %{redirect: "/"}} =
              LiveViewTest.mount_disconnected(Endpoint, GameLive, params)
