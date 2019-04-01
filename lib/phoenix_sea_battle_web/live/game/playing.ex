@@ -13,7 +13,14 @@ defmodule PhoenixSeaBattleWeb.Game.Playing do
     {:ok, assign(socket, render_opts: nil)}
   end
 
-  def render_board(state, board, shots, other_shots) do
+  def render_board(state, board, shots, other_shots) when state in ~w(win lose)a do
+    board
+    |> Board.apply_shots(other_shots)
+    |> Enum.with_index()
+    |> Rendering.render_final_boards(shots)
+  end
+
+  def render_board(state, board, shots, other_shots) when state in ~w(move await)a do
     board
     |> Board.apply_shots(other_shots)
     |> Enum.with_index()

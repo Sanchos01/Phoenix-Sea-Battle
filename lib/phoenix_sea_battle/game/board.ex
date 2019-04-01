@@ -77,6 +77,7 @@ defmodule PhoenixSeaBattle.Game.Board do
     end
   end
 
+  # TODO maybe delete?
   def apply_shots(board, shots) do
     shots
     |> Stream.with_index()
@@ -118,6 +119,16 @@ defmodule PhoenixSeaBattle.Game.Board do
 
       nil ->
         {:ok, List.replace_at(shots, index, :miss), false}
+    end
+  end
+
+  def all_dead?(board) do
+    board
+    |> all_ships()
+    |> Map.keys()
+    |> case do
+      [] -> true
+      _ -> false
     end
   end
 

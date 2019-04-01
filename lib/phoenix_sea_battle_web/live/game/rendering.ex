@@ -18,60 +18,66 @@ defmodule PhoenixSeaBattleWeb.Game.Rendering do
     """
   end
 
-  defp render_block(nil, index) do
+  def render_final_boards(board, shots) do
     ~E"""
-    <div class="block" style="<%= position_style_by_index(index, true) %>">
+    <div phx-keydown="keydown" phx-target="window">
+      <%= for {block, index} <- board do %>
+        <%= render_block(block, index) %>
+      <% end %>
+      <%= for {block, index} <- Stream.with_index(shots) do %>
+        <%= render_block(block, index, false) %>
+      <% end %>
     </div>
     """
   end
 
-  defp render_block(:ghost, index) do
+  defp render_block(block, index, left? \\ true)
+
+  defp render_block(nil, index, left?) do
     ~E"""
-    <div class="block ghost_block" style="<%= position_style_by_index(index, true) %>">
+    <div class="block" style="<%= position_style_by_index(index, left?) %>">
     </div>
     """
   end
 
-  defp render_block(:cross, index) do
+  defp render_block(:ghost, index, left?) do
     ~E"""
-    <div class="block cross_block" style="<%= position_style_by_index(index, true) %>">
+    <div class="block ghost_block" style="<%= position_style_by_index(index, left?) %>">
     </div>
     """
   end
 
-  defp render_block(mark, index) when mark in @marks do
+  defp render_block(:cross, index, left?) do
     ~E"""
-    <div class="block ship_block" style="<%= position_style_by_index(index, true) %>">
+    <div class="block cross_block" style="<%= position_style_by_index(index, left?) %>">
     </div>
     """
   end
 
-  defp render_block(:shotted, index) do
+  defp render_block(mark, index, left?) when mark in @marks do
     ~E"""
-    <div class="block shotted_block" style="<%= position_style_by_index(index, true) %>">
+    <div class="block ship_block" style="<%= position_style_by_index(index, left?) %>">
     </div>
     """
   end
 
-  defp render_block(:killed, index) do
+  defp render_block(:shotted, index, left?) do
     ~E"""
-    <div class="block killed_block" style="<%= position_style_by_index(index, true) %>">
+    <div class="block shotted_block" style="<%= position_style_by_index(index, left?) %>">
     </div>
     """
   end
 
-  defp render_block(:miss, index) do
+  defp render_block(:killed, index, left?) do
     ~E"""
-    <div class="block missed_block" style="<%= position_style_by_index(index, true) %>">
+    <div class="block killed_block" style="<%= position_style_by_index(index, left?) %>">
     </div>
     """
   end
 
-  defp render_block(x, index) do
-    IO.puts("x? #{inspect(x)}")
-
+  defp render_block(:miss, index, left?) do
     ~E"""
-    <div class="block" style="<%= position_style_by_index(index, true) %>">
+    <div class="block missed_block" style="<%= position_style_by_index(index, left?) %>">
     </div>
     """
   end
@@ -133,6 +139,6 @@ defmodule PhoenixSeaBattleWeb.Game.Rendering do
     """
   end
 
-  defp apply_shots([]), do: Board.new_board() |> Enum.with_index()
+  defp apply_shots([]), do: Board.new_board() |> Stream.with_index()
   defp apply_shots(shots = [_ | _]), do: Stream.with_index(shots)
 end

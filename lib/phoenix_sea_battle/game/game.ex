@@ -54,26 +54,20 @@ defmodule PhoenixSeaBattle.Game do
 
   # Calls
   # get
-  def handle_call({:get, %User{id: id}}, {pid, _ref}, state) do
+  def handle_call({:get, %User{id: id}}, {pid, _ref}, state = %{admin: %User{id: id}}) do
+    new_state = if state.admin_pid != pid, do: %__MODULE__{state | admin_pid: pid}, else: state
+    {:reply, make_get_reply(new_state), new_state}
+  end
+
+  def handle_call({:get, %User{id: id}}, {pid, _ref}, state = %{opponent: %User{id: id}}) do
     new_state =
-      case state do
-        %{admin: %User{id: ^id}, admin_pid: old_pid} when old_pid != pid ->
-          %__MODULE__{state | admin_pid: pid}
+      if state.opponent_pid != pid, do: %__MODULE__{state | opponent_pid: pid}, else: state
 
-        %{opponent: %User{id: ^id}, admin_pid: old_pid} when old_pid != pid ->
-          %__MODULE__{state | opponent_pid: pid}
-
-        _ ->
-          state
+    {:reply, make_get_reply(new_state), new_state}
       end
 
-    reply =
-      new_state
-      |> Map.update(:admin, nil, &get_user_name/1)
-      |> Map.update(:opponent, nil, &get_user_name/1)
-      |> Map.take(@get_keys)
-
-    {:reply, {:ok, reply}, new_state}
+  def handle_call({:get, _}, _from, state) do
+    {:reply, :error, state}
   end
 
   def handle_call(:get_messages, _from, state = %__MODULE__{messages: messages}) do
@@ -373,8 +367,13 @@ defmodule PhoenixSeaBattle.Game do
       Board.apply_shot(state.opponent_board, state.admin_shots, index)
 
     send_update_stats([state.admin_pid, state.opponent_pid])
+
+    if Board.all_dead?(new_shots) do
+      {:noreply, %__MODULE__{state | admin_shots: new_shots, winner: user_id, playing: false}}
+    else
     new_turn = if same_turn?, do: state.turn, else: state.opponent.id
     {:noreply, %__MODULE__{state | admin_shots: new_shots, turn: new_turn}}
+  end
   end
 
   def handle_cast(
@@ -385,8 +384,13 @@ defmodule PhoenixSeaBattle.Game do
       Board.apply_shot(state.admin_board, state.opponent_shots, index)
 
     send_update_stats([state.admin_pid, state.opponent_pid])
+
+    if Board.all_dead?(new_shots) do
+      {:noreply, %__MODULE__{state | opponent_shots: new_shots, winner: user_id, playing: false}}
+    else
     new_turn = if same_turn?, do: state.turn, else: state.admin.id
     {:noreply, %__MODULE__{state | opponent_shots: new_shots, turn: new_turn}}
+  end
   end
 
   def handle_cast({:shot, _user_id, _index}, state) do
@@ -491,8 +495,16 @@ defmodule PhoenixSeaBattle.Game do
       "Unusual stop game #{state.id} with reason #{inspect(reason)}, state: #{inspect(state)}"
     )
 
-    :ets.insert(:saver, {state.id, state, :os.system_time(:second)})
+    :ets.insert(:saver, {state.id, state, :os.system_time(:second) + 30_000})
     :ok
+  end
+
+  defp make_get_reply(state) do
+    state
+    |> Map.update(:admin, nil, &get_user_name/1)
+    |> Map.update(:opponent, nil, &get_user_name/1)
+    |> Map.take(@get_keys)
+    |> (fn x -> {:ok, x} end).()
   end
 
   defp compare_state_and_presence(state = %__MODULE__{id: id}) do

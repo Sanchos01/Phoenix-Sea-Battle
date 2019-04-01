@@ -16,9 +16,10 @@ defmodule PhoenixSeaBattle do
       # Start your own worker by calling: PhoenixSeaBattle.Worker.start_link(arg1, arg2, arg3)
       # worker(PhoenixSeaBattle.Worker, [arg1, arg2, arg3]),
       supervisor(PhoenixSeaBattleWeb.Presence, []),
-      supervisor(PhoenixSeaBattle.Game.Supervisor, []),
+      worker(PhoenixSeaBattle.Saver, []),
+      worker(PhoenixSeaBattle.LobbyArchiver, []),
       supervisor(Registry, [:unique, PhoenixSeaBattle.Game.Registry]),
-      worker(PhoenixSeaBattle.LobbyArchiver, [])
+      supervisor(PhoenixSeaBattle.Game.Supervisor, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

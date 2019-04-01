@@ -5,7 +5,6 @@ defmodule PhoenixSeaBattle.Game.Supervisor do
   def start_link, do: DynamicSupervisor.start_link(__MODULE__, [], name: __MODULE__)
 
   def init(_) do
-    :ets.new(:saver, ~w(named_table public set)a)
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 

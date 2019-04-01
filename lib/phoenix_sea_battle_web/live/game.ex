@@ -18,7 +18,12 @@ defmodule PhoenixSeaBattleWeb.Game do
       {:ok, socket}
     else
       _ ->
-        {:stop, socket |> redirect(to: Routes.game_path(socket, :show, id))}
+        new_socket =
+          socket
+          |> put_flash(:error, "You must be logged in to access that page")
+          |> redirect(to: Routes.page_path(socket, :index))
+
+        {:stop, new_socket}
     end
   end
 
@@ -126,15 +131,16 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   defp update_state(socket = %{assigns: %{pid: pid, user: user = %{name: username}}}) do
-    {:ok, game_state} = Game.get(pid, user)
-    {:ok, board, shots, other_shots} = Game.get_board_and_shots(pid, user)
-    {state, other} = get_state(username, game_state)
-    set_presence("lobby", username, %{state: state, game_id: socket.assigns.id, with: other})
-    set_presence("game:" <> socket.assigns.id, username, %{})
+    with {:ok, game_state} <- Game.get(pid, user),
+         {:ok, board, shots, other_shots} <- Game.get_board_and_shots(pid, user) do
+      {state, other} = get_state(username, game_state)
+      set_presence("lobby", username, %{state: state, game_id: socket.assigns.id, with: other})
+      set_presence("game:" <> socket.assigns.id, username, %{})
 
-    socket
-    |> assign(board: board, shots: shots, other_shots: other_shots)
-    |> append_render_opts(game_state, board)
+      socket
+      |> assign(board: board, shots: shots, other_shots: other_shots)
+      |> append_render_opts(game_state, board)
+    end
   end
 
   defp get_state(user, %{admin: "" <> admin, opponent: user}), do: {2, admin}
@@ -189,6 +195,22 @@ defmodule PhoenixSeaBattleWeb.Game do
     """
   end
 
+  defp message(nil, :win) do
+    ~E"""
+    <div>
+    Congratulations, you win
+    </div>
+    """
+  end
+
+  defp message(nil, :lose) do
+    ~E"""
+    <div>
+    You lose, good luck next time
+    </div>
+    """
+  end
+
   defp append_render_opts(socket, %{playing: false, winner: nil}, board) do
     socket
     |> assign(game_state: :initial)
@@ -211,13 +233,21 @@ defmodule PhoenixSeaBattleWeb.Game do
     |> __MODULE__.Playing.update_render_opts(board)
   end
 
+  defp append_render_opts(socket, %{playing: false, winner: user_id}, board) do
+    state = if socket.assigns.user.id == user_id, do: :win, else: :lose
+
+    socket
+    |> assign(game_state: state)
+    |> __MODULE__.Playing.update_render_opts(board)
+  end
+
   defp render_board(state, board, _shots, _other_shots, render_opts)
        when state in ~w(initial ready)a do
     __MODULE__.Initial.render_board(board, render_opts)
   end
 
   defp render_board(state, board, shots, other_shots, _render_opts)
-       when state in ~w(move await)a do
+       when state in ~w(move await win lose)a do
     __MODULE__.Playing.render_board(state, board, shots, other_shots)
   end
 

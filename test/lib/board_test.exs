@@ -51,4 +51,31 @@ defmodule PhoenixSeaBattle.BoardTest do
 
     assert {:tb2, 1} = Board.prepare(board)
   end
+
+  test "apply_shot/1" do
+    board = Board.new_board()
+    {:ok, board} = Board.apply_ship(board, %{x: 1, y: 2, pos: :h, l: 4})
+    {:ok, board} = Board.apply_ship(board, %{x: 3, y: 4, pos: :v, l: 3})
+    {:ok, board} = Board.apply_ship(board, %{x: 0, y: 0, pos: :h, l: 3})
+    {:ok, board} = Board.apply_ship(board, %{x: 4, y: 0, pos: :h, l: 2})
+    {:ok, board} = Board.apply_ship(board, %{x: 7, y: 0, pos: :h, l: 2})
+    {:ok, board} = Board.apply_ship(board, %{x: 0, y: 9, pos: :h, l: 2})
+    {:ok, board} = Board.apply_ship(board, %{x: 3, y: 9, pos: :h, l: 1})
+    {:ok, board} = Board.apply_ship(board, %{x: 5, y: 9, pos: :h, l: 1})
+    {:ok, board} = Board.apply_ship(board, %{x: 7, y: 9, pos: :h, l: 1})
+    {:ok, board} = Board.apply_ship(board, %{x: 9, y: 9, pos: :h, l: 1})
+    # hit
+    assert {:ok, [_ | _], true} = Board.apply_shot(board, board, 21)
+    # miss
+    assert {:ok, [_ | _], false} = Board.apply_shot(board, board, 20)
+    # kill
+    assert {:ok, [_ | _], true} = Board.apply_shot(board, board, 99)
+  end
+
+  test "all_dead?/1" do
+    board = Board.new_board()
+    assert Board.all_dead?(board)
+    {:ok, board} = Board.apply_ship(board, %{x: 1, y: 2, pos: :h, l: 4})
+    refute Board.all_dead?(board)
+  end
 end
