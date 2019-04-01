@@ -33,7 +33,7 @@ defmodule PhoenixSeaBattleWeb.Game.Rendering do
 
   defp render_block(block, index, left? \\ true)
 
-  defp render_block(nil, index, left?) do
+  defp render_block(k, index, left?) when k in [nil, :near] do
     ~E"""
     <div class="block" style="<%= position_style_by_index(index, left?) %>">
     </div>

@@ -9,12 +9,12 @@ defmodule PhoenixSeaBattleWeb.Game do
   alias PhoenixSeaBattleWeb.Router.Helpers, as: Routes
 
   # user states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
-  def mount(%{id: id, user: user}, socket) do
+  def mount(%{id: id, user: user, token: token}, socket) do
     with pid when is_pid(pid) <- GenServer.whereis(GameSupervisor.via_tuple(id)),
          ref when is_reference(ref) <- Process.monitor(pid),
          {:ok, socket} <- socket |> assign(id: id, user: user, pid: pid) |> update_state() do
       messages = Game.get_messages(pid)
-      socket = assign(socket, messages: messages, error: nil)
+      socket = assign(socket, messages: messages, error: nil, token: token)
       {:ok, socket}
     else
       _ ->
@@ -63,7 +63,7 @@ defmodule PhoenixSeaBattleWeb.Game do
           </div>
         </div>
         <td class="text-right">
-          <%= link "Exit Game", to: page_path(@socket, :index),
+          <%= link "Exit Game", to: game_path(@socket, :delete, @id), method: :delete, csrf_token: @token,
             data: [confirm: "You want leave the game?"], class: "button button-default" %>
         </td>
       </div>

@@ -16,7 +16,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
       pid ->
         case Game.add_user(pid, user) do
           {:ok, status} when status in ~w(admin opponent)a ->
-            render(conn, "index.html", id: id, admin: status == :admin)
+            render(conn, "index.html", id: id, token: Phoenix.Controller.get_csrf_token())
 
           {:error, reason} ->
             conn

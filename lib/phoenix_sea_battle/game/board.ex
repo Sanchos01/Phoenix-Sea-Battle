@@ -77,19 +77,6 @@ defmodule PhoenixSeaBattle.Game.Board do
     end
   end
 
-  # TODO maybe delete?
-  def apply_shots(board, shots) do
-    shots
-    |> Stream.with_index()
-    |> Enum.reduce(board, fn
-      {k, index}, acc when k in ~w(shotted killed miss)a ->
-        List.replace_at(acc, index, k)
-
-      _, acc ->
-        acc
-    end)
-  end
-
   def apply_shot(board, shots, index) do
     case Enum.at(shots, index) do
       m when m in @marks ->
