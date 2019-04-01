@@ -13,14 +13,15 @@ defmodule PhoenixSeaBattleWeb.Lobby do
     {:ok, msgs} = LobbyArchiver.subs()
     socket = assign(socket, messages: msgs, msg: nil)
 
-    socket = case user do
-      %User{name: name} ->
-        {:ok, _} = Presence.track(self(), "lobby", name, %{state: 0})
-        socket |> assign(user: user)
+    socket =
+      case user do
+        %User{name: name} ->
+          {:ok, _} = Presence.track(self(), "lobby", name, %{state: 0})
+          socket |> assign(user: user)
 
-      _ ->
-        socket
-    end
+        _ ->
+          socket
+      end
 
     {:ok, fetch(socket)}
   end
@@ -107,6 +108,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
       %{user: %User{name: username}} ->
         LobbyArchiver.new_msg(msg, username)
         {:noreply, assign(socket, msg: msg)}
+
       _ ->
         {:noreply, socket}
     end

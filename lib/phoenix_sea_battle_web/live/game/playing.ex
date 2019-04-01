@@ -14,7 +14,8 @@ defmodule PhoenixSeaBattleWeb.Game.Playing do
   end
 
   def render_board(state, board, shots, other_shots) do
-    Board.apply_shots(board, other_shots)
+    board
+    |> Board.apply_shots(other_shots)
     |> Enum.with_index()
     |> Rendering.render_boards(shots, state == :move)
   end

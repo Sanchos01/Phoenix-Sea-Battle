@@ -15,9 +15,9 @@ defmodule PhoenixSeaBattleWeb.LobbyTest do
   end
 
   test "render user list (client online)", %{view: view, user: %{name: name}} do
-    Task.async fn -> track_and_sleep("user1", %{state: 1, game_id: "asdqwe"}) end
-    Task.async fn -> track_and_sleep("user2", %{state: 2, with: "user3"}) end
-    Task.async fn -> track_and_sleep("user4", %{state: 3}) end
+    Task.async(fn -> track_and_sleep("user1", %{state: 1, game_id: "asdqwe"}) end)
+    Task.async(fn -> track_and_sleep("user2", %{state: 2, with: "user3"}) end)
+    Task.async(fn -> track_and_sleep("user4", %{state: 3}) end)
     :timer.sleep(20)
     html = LiveViewTest.render(view)
     assert html =~ "#{name}\n<br>\n<small>in lobby</small>"
@@ -30,7 +30,7 @@ defmodule PhoenixSeaBattleWeb.LobbyTest do
     msg = "lobby live view test"
     refute LiveViewTest.render(view) =~ msg
     LiveViewTest.render_submit(view, "insert_message", %{"chat-input" => msg})
-    :timer.sleep 20
+    :timer.sleep(20)
     assert LiveViewTest.render(view) =~ "] Some User: #{msg}"
   end
 end

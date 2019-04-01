@@ -9,12 +9,25 @@ defmodule PhoenixSeaBattle.LobbyArchiverTest do
     user = "Some User"
     LobbyArchiver.new_msg(body, user)
     msgs = LobbyArchiver.get_messages()
-    assert Enum.any?(msgs, fn %{body: ^body, user: ^user, timestamp: _} -> true; _ -> false end)
-    send LobbyArchiver, :timeout
+
+    assert Enum.any?(msgs, fn
+             %{body: ^body, user: ^user, timestamp: _} -> true
+             _ -> false
+           end)
+
+    send(LobbyArchiver, :timeout)
     msgs = LobbyArchiver.get_messages()
-    assert Enum.any?(msgs, fn %{body: ^body, user: ^user, timestamp: _} -> true; _ -> false end)
+
+    assert Enum.any?(msgs, fn
+             %{body: ^body, user: ^user, timestamp: _} -> true
+             _ -> false
+           end)
 
     assert_receive {:update, msgs}
-    assert Enum.any?(msgs, fn %{body: ^body, user: ^user, timestamp: _} -> true; _ -> false end)
+
+    assert Enum.any?(msgs, fn
+             %{body: ^body, user: ^user, timestamp: _} -> true
+             _ -> false
+           end)
   end
 end

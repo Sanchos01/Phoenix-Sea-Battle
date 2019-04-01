@@ -134,5 +134,5 @@ defmodule PhoenixSeaBattleWeb.Game.Rendering do
   end
 
   defp apply_shots([]), do: Board.new_board() |> Enum.with_index()
-  defp apply_shots([_|_] = shots), do: Stream.with_index(shots)
+  defp apply_shots(shots = [_ | _]), do: Stream.with_index(shots)
 end

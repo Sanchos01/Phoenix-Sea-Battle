@@ -83,6 +83,7 @@ defmodule PhoenixSeaBattle.Game.Board do
     |> Enum.reduce(board, fn
       {k, index}, acc when k in ~w(shotted killed miss)a ->
         List.replace_at(acc, index, k)
+
       _, acc ->
         acc
     end)
@@ -92,30 +93,19 @@ defmodule PhoenixSeaBattle.Game.Board do
     case Enum.at(shots, index) do
       m when m in @marks ->
         shots
-        |> Enum.filter(& &1 == m)
+        |> Enum.filter(&(&1 == m))
         |> length()
         |> Kernel.==(1)
         |> if do
-          killed_indexes =
-            board
-            |> Stream.with_index()
-            |> Stream.filter(fn
-              {^m, _} -> true
-              _ -> false
-            end)
-            |> Enum.map(fn {_, i} -> i end)
-
-          near_indexes =
-            killed_indexes
-            |> Stream.flat_map(&near_indexes/1)
-            |> Enum.reject(& &1 in killed_indexes)
+          ship_indexes = ship_indexes(board, m)
+          near_indexes = near_ship_indexes(ship_indexes)
 
           new_shots =
             shots
             |> Stream.with_index()
             |> Enum.map(fn {value, i} ->
               cond do
-                i in killed_indexes -> :killed
+                i in ship_indexes -> :killed
                 i in near_indexes and is_nil(value) -> :near
                 true -> value
               end
@@ -239,5 +229,21 @@ defmodule PhoenixSeaBattle.Game.Board do
         {:halt, {:error, :cross}}
       end
     end)
+  end
+
+  defp ship_indexes(board, m) do
+    board
+    |> Stream.with_index()
+    |> Stream.filter(fn
+      {^m, _} -> true
+      _ -> false
+    end)
+    |> Enum.map(fn {_, i} -> i end)
+  end
+
+  defp near_ship_indexes(ship_indexes) do
+    ship_indexes
+    |> Stream.flat_map(&near_indexes/1)
+    |> Enum.reject(&(&1 in ship_indexes))
   end
 end

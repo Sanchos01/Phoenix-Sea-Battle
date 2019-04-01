@@ -85,7 +85,8 @@ defmodule PhoenixSeaBattleWeb.Game do
     {:noreply, socket}
   end
 
-  def handle_event(event, key, socket = %{assigns: %{game_state: state}}) when state in ~w(initial ready)a do
+  def handle_event(event, key, socket = %{assigns: %{game_state: state}})
+      when state in ~w(initial ready)a do
     __MODULE__.Initial.apply_event(event, key, socket)
   end
 
@@ -136,8 +137,8 @@ defmodule PhoenixSeaBattleWeb.Game do
     |> append_render_opts(game_state, board)
   end
 
-  defp get_state(user, %{admin: admin, opponent: user}) when not is_nil(admin), do: {2, admin}
-  defp get_state(user, %{admin: user, opponent: opponent}) when not is_nil(opponent), do: {2, opponent}
+  defp get_state(user, %{admin: "" <> admin, opponent: user}), do: {2, admin}
+  defp get_state(user, %{admin: user, opponent: "" <> opponent}), do: {2, opponent}
   defp get_state(_, _), do: {1, nil}
 
   defp message({:cross, _}, _) do
@@ -196,6 +197,7 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   defp append_render_opts(socket, %{playing: {:ready, user_id}, winner: nil}, board) do
     state = if socket.assigns.user.id == user_id, do: :ready, else: :initial
+
     socket
     |> assign(game_state: state)
     |> __MODULE__.Initial.update_render_opts(board)
@@ -203,16 +205,19 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   defp append_render_opts(socket, %{playing: true, turn: user_id}, board) do
     state = if socket.assigns.user.id == user_id, do: :move, else: :await
+
     socket
     |> assign(game_state: state)
     |> __MODULE__.Playing.update_render_opts(board)
   end
 
-  defp render_board(state, board, _shots, _other_shots, render_opts) when state in ~w(initial ready)a do
+  defp render_board(state, board, _shots, _other_shots, render_opts)
+       when state in ~w(initial ready)a do
     __MODULE__.Initial.render_board(board, render_opts)
   end
 
-  defp render_board(state, board, shots, other_shots, _render_opts) when state in ~w(move await)a do
+  defp render_board(state, board, shots, other_shots, _render_opts)
+       when state in ~w(move await)a do
     __MODULE__.Playing.render_board(state, board, shots, other_shots)
   end
 

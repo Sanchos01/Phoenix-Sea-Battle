@@ -206,7 +206,7 @@ defmodule PhoenixSeaBattleWeb.Game.Initial do
   end
 
   def apply_event(event, _key, socket) do
-    IO.puts "event: #{inspect event} ; #{inspect socket}"
+    IO.puts("event: #{inspect(event)} ; #{inspect(socket)}")
     {:noreply, socket}
   end
 
