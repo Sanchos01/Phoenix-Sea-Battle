@@ -1,0 +1,3 @@
+<div class="column column-20 button-small">
+  <button phx-click="unready" style="width: 85%">Unready</button>
+</div>

@@ -3,10 +3,11 @@ defmodule PhoenixSeaBattleWeb.Game do
   use Phoenix.HTML
   require Logger
   import PhoenixSeaBattleWeb.Router.Helpers
-  alias PhoenixSeaBattleWeb.Presence
+  alias PhoenixSeaBattleWeb.{Presence, BoardView}
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
   alias PhoenixSeaBattle.Game
   alias PhoenixSeaBattleWeb.Router.Helpers, as: Routes
+  alias PhoenixSeaBattle.Game.Board
 
   # user states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   def mount(%{id: id, user: user, token: token}, socket) do
@@ -33,12 +34,12 @@ defmodule PhoenixSeaBattleWeb.Game do
       <div class="column column-75">
         <div class="panel panel-default game-panel">
           <div id="state-bar" class="panel-heading state-bar">
-            <%= message(@error, @game_state) %>
+            <%= BoardView.message(@error, @game_state) %>
           </div>
           <div id="game" class="panel-body panel-game">
             <%= render_board(@game_state, @board, @shots, @other_shots, @render_opts) %>
             <div class="row panel-sub_commands">
-              <%= sub_commands(@game_state, @board, @user) %>
+              <%= sub_commands(@game_state, @board) %>
             </div>
           </div>
         </div>
@@ -83,7 +84,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   def handle_event("keydown", key, socket = %{assigns: %{game_state: :initial}}) do
-    __MODULE__.Initial.apply_key(key, socket)
+    __MODULE__.InitialEventHandle.apply_key(key, socket)
   end
 
   def handle_event("keydown", _key, socket) do
@@ -92,7 +93,7 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   def handle_event(event, key, socket = %{assigns: %{game_state: state}})
       when state in ~w(initial ready)a do
-    __MODULE__.Initial.apply_event(event, key, socket)
+    __MODULE__.InitialEventHandle.apply_event(event, key, socket)
   end
 
   def handle_event("shot", value, socket = %{assigns: %{game_state: :move}}) do
@@ -147,74 +148,10 @@ defmodule PhoenixSeaBattleWeb.Game do
   defp get_state(user, %{admin: user, opponent: "" <> opponent}), do: {2, opponent}
   defp get_state(_, _), do: {1, nil}
 
-  defp message({:cross, _}, _) do
-    ~E"""
-    <div class="error">
-    Ships shouldn't cross
-    </div>
-    """
-  end
-
-  defp message({:nearest, _}, _) do
-    ~E"""
-    <div class="error">
-    Ships shouldn't touch
-    </div>
-    """
-  end
-
-  defp message(nil, :initial) do
-    ~E"""
-    <div>
-    Move your ships with arrows, use '-' for rotating and '+' for placing
-    </div>
-    """
-  end
-
-  defp message(nil, :ready) do
-    ~E"""
-    <div>
-    Ready, await your opponent
-    </div>
-    """
-  end
-
-  defp message(nil, :move) do
-    ~E"""
-    <div>
-    Make your move
-    </div>
-    """
-  end
-
-  defp message(nil, :await) do
-    ~E"""
-    <div>
-    Wait the opponent's move
-    </div>
-    """
-  end
-
-  defp message(nil, :win) do
-    ~E"""
-    <div>
-    Congratulations, you win
-    </div>
-    """
-  end
-
-  defp message(nil, :lose) do
-    ~E"""
-    <div>
-    You lose, good luck next time
-    </div>
-    """
-  end
-
   defp append_render_opts(socket, %{playing: false, winner: nil}, board) do
     socket
     |> assign(game_state: :initial)
-    |> __MODULE__.Initial.update_render_opts(board)
+    |> update_render_opts(board)
   end
 
   defp append_render_opts(socket, %{playing: {:ready, user_id}, winner: nil}, board) do
@@ -222,33 +159,55 @@ defmodule PhoenixSeaBattleWeb.Game do
 
     socket
     |> assign(game_state: state)
-    |> __MODULE__.Initial.update_render_opts(board)
+    |> update_render_opts(board)
   end
 
-  defp append_render_opts(socket, %{playing: true, turn: user_id}, board) do
+  defp append_render_opts(socket, %{playing: true, turn: user_id}, _board) do
     state = if socket.assigns.user.id == user_id, do: :move, else: :await
-
-    socket
-    |> assign(game_state: state)
-    |> __MODULE__.Playing.update_render_opts(board)
+    {:ok, socket |> assign(game_state: state, render_opts: nil)}
   end
 
-  defp append_render_opts(socket, %{playing: false, winner: user_id}, board) do
+  defp append_render_opts(socket, %{playing: false, winner: user_id}, _board) do
     state = if socket.assigns.user.id == user_id, do: :win, else: :lose
-
-    socket
-    |> assign(game_state: state)
-    |> __MODULE__.Playing.update_render_opts(board)
+    {:ok, socket |> assign(game_state: state, render_opts: nil)}
   end
 
-  defp render_board(state, board, _shots, _other_shots, render_opts)
+  defp update_render_opts(socket, board) do
+    case socket.assigns do
+      %{render_opts: %{x: _x, y: _y, pos: _pos, l: _l}} ->
+        {:ok, socket}
+
+      _ ->
+        case Board.prepare(board) do
+          :ok ->
+            {:ok, socket |> assign(render_opts: %{ready: true})}
+
+          {_type, l} when l in 1..4 ->
+            {:ok, assign(socket, render_opts: %{x: 0, y: 0, pos: :h, l: l})}
+        end
+    end
+  end
+
+  defp render_board(state, board, _, _, %{ready: true}) when state in ~w(initial ready)a do
+    assigns = [board: Stream.with_index(board), shots: [], move?: false]
+    BoardView.render("board.html", assigns)
+  end
+
+  defp render_board(state, board, _, _, %{x: x, y: y, pos: pos, l: l})
        when state in ~w(initial ready)a do
-    __MODULE__.Initial.render_board(board, render_opts)
+    pre_ship_blocks = make_pre_ship(x, y, pos, l)
+    assigns = [board: append_pre_ship(board, pre_ship_blocks), shots: [], move?: false]
+    BoardView.render("board.html", assigns)
   end
 
-  defp render_board(state, board, shots, other_shots, _render_opts)
-       when state in ~w(move await win lose)a do
-    __MODULE__.Playing.render_board(state, board, shots, other_shots)
+  defp render_board(state, _, shots, other_shots, _) when state in ~w(win lose)a do
+    assigns = [board: Stream.with_index(other_shots), shots: shots]
+    BoardView.render("final_board.html", assigns)
+  end
+
+  defp render_board(state, _, shots, other_shots, _) when state in ~w(move await)a do
+    assigns = [board: Stream.with_index(other_shots), shots: shots, move?: state == :move]
+    BoardView.render("board.html", assigns)
   end
 
   defp set_presence(topic, username, meta) do
@@ -262,9 +221,54 @@ defmodule PhoenixSeaBattleWeb.Game do
     end
   end
 
-  defp sub_commands(state, board, _user) when state in ~w(initial ready)a do
-    __MODULE__.Initial.sub_commands(state, board)
+  defp sub_commands(:initial, board) do
+    BoardView.render("sub_commands_initial.html", board: board)
   end
 
-  defp sub_commands(_state, _board, _user), do: nil
+  defp sub_commands(:ready, _board) do
+    BoardView.render("sub_commands_ready.html", %{})
+  end
+
+  defp sub_commands(_state, _board), do: nil
+
+  defp make_pre_ship(x, y, pos, l) when x < 0 do
+    make_pre_ship(0, y, pos, l)
+  end
+
+  defp make_pre_ship(x, y, pos, l) when y < 0 do
+    make_pre_ship(x, 0, pos, l)
+  end
+
+  defp make_pre_ship(x, y, :h, l) when x + l > 10 do
+    make_pre_ship(10 - l, y, :h, l)
+  end
+
+  defp make_pre_ship(x, y, :v, l) when y + l > 10 do
+    make_pre_ship(x, 10 - l, :v, l)
+  end
+
+  defp make_pre_ship(x, y, p, l) do
+    Board.ship_opts_to_indexes(x, y, p, l)
+  end
+
+  defp append_pre_ship(list, pre_ship_blocks) do
+    pre_ship_blocks
+    |> Enum.reduce(list, fn index, acc ->
+      case Enum.at(acc, index) do
+        nil ->
+          index
+          |> Board.near_indexes()
+          |> Enum.any?(&(Enum.at(list, &1) not in [nil, :ghost, :cross]))
+          |> if do
+            List.replace_at(acc, index, :cross)
+          else
+            List.replace_at(acc, index, :ghost)
+          end
+
+        _ ->
+          List.replace_at(acc, index, :cross)
+      end
+    end)
+    |> Stream.with_index()
+  end
 end

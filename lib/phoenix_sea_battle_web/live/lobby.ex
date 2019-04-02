@@ -3,7 +3,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
   use Phoenix.HTML
   require Logger
 
-  alias PhoenixSeaBattleWeb.{Endpoint, Presence}
+  alias PhoenixSeaBattleWeb.{Endpoint, Presence, BoardView}
   alias PhoenixSeaBattle.{LobbyArchiver, User}
   alias Phoenix.Socket.Broadcast
   alias PhoenixSeaBattleWeb.Router.Helpers, as: Routes
@@ -55,7 +55,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
           <div>
             <%= for {user, %{metas: [meta | _]}} <- sort_users(@online_users) do %>
               <li class="users">
-              <%= render_user(user, meta) %>
+              <%= BoardView.render_user(user, meta) %>
               </li>
             <% end %>
           </div>
@@ -67,39 +67,6 @@ defmodule PhoenixSeaBattleWeb.Lobby do
       </td>
     </div>
     </div>
-    """
-  end
-
-  defp render_user(user, %{state: 0}) do
-    ~E"""
-    <%= user %>
-    <br>
-    <small>in lobby</small>
-    """
-  end
-
-  defp render_user(user, %{state: 1, game_id: game_id}) do
-    ~E"""
-    <%= user %>
-    <br>
-    <small>in game</small>
-    <a class="btn btn-default btn-xs" href="/game/<%= game_id %>">Join</a>
-    """
-  end
-
-  defp render_user(user, %{state: 2, with: opponent}) do
-    ~E"""
-    <%= user %>
-    <br>
-    <small>in game with <%= opponent %></small>
-    """
-  end
-
-  defp render_user(user, %{state: 3}) do
-    ~E"""
-    <%= user %>
-    <br>
-    <small>game ended</small>
     """
   end
 
@@ -135,11 +102,11 @@ defmodule PhoenixSeaBattleWeb.Lobby do
     assign(socket, online_users: Presence.list("lobby"))
   end
 
-  defp sort_users(users) do
+  def sort_users(users) do
     Enum.sort(users, fn
-      {_, %{state: 1}}, _ -> true
-      {_, %{state: s1}}, {_, %{state: s2}} -> s1 < s2
-      _, _ -> false
+      {_, %{metas: [%{state: 1} | _]}}, _ -> true
+      _, {_, %{metas: [%{state: 1} | _]}} -> false
+      {_, %{metas: [%{state: s1} | _]}}, {_, %{metas: [%{state: s2} | _]}} -> s1 < s2
     end)
   end
 end

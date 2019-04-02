@@ -1,32 +1,101 @@
-defmodule PhoenixSeaBattleWeb.Game.Rendering do
-  use Phoenix.HTML
+defmodule PhoenixSeaBattleWeb.BoardView do
+  use PhoenixSeaBattleWeb, :view
   alias PhoenixSeaBattle.Game.Board
   @marks ~w(bs0 c0 c1 d0 d1 d2 tb0 tb1 tb2 tb3)a
 
-  def render_boards(board, shots \\ [], move? \\ false) do
-    shots_board = apply_shots(shots)
-
+  def render_user(user, %{state: 0}) do
     ~E"""
-    <div phx-keydown="keydown" phx-target="window">
-      <%= for {block, index} <- board do %>
-        <%= render_block(block, index) %>
-      <% end %>
-      <%= for {block, index} <- shots_board do %>
-        <%= render_shot(block, index, move?) %>
-      <% end %>
+    <%= user %>
+    <br>
+    <small>in lobby</small>
+    """
+  end
+
+  def render_user(user, %{state: 1, game_id: game_id}) do
+    ~E"""
+    <%= user %>
+    <br>
+    <small>in game</small>
+    <a class="btn btn-default btn-xs" href="/game/<%= game_id %>">Join</a>
+    """
+  end
+
+  def render_user(user, %{state: 2, with: opponent}) do
+    ~E"""
+    <%= user %>
+    <br>
+    <small>in game with <%= opponent %></small>
+    """
+  end
+
+  def render_user(user, %{state: 3}) do
+    ~E"""
+    <%= user %>
+    <br>
+    <small>game ended</small>
+    """
+  end
+
+  def message({:cross, _}, _) do
+    ~E"""
+    <div class="error">
+    Ships shouldn't cross
     </div>
     """
   end
 
-  def render_final_boards(board, shots) do
+  def message({:nearest, _}, _) do
     ~E"""
-    <div phx-keydown="keydown" phx-target="window">
-      <%= for {block, index} <- board do %>
-        <%= render_block(block, index) %>
-      <% end %>
-      <%= for {block, index} <- Stream.with_index(shots) do %>
-        <%= render_block(block, index, false) %>
-      <% end %>
+    <div class="error">
+    Ships shouldn't touch
+    </div>
+    """
+  end
+
+  def message(nil, :initial) do
+    ~E"""
+    <div>
+    Move your ships with arrows, use '-' for rotating and '+' for placing
+    </div>
+    """
+  end
+
+  def message(nil, :ready) do
+    ~E"""
+    <div>
+    Ready, await your opponent
+    </div>
+    """
+  end
+
+  def message(nil, :move) do
+    ~E"""
+    <div>
+    Make your move
+    </div>
+    """
+  end
+
+  def message(nil, :await) do
+    ~E"""
+    <div>
+    Wait the opponent's move
+    </div>
+    """
+  end
+
+  def message(nil, :win) do
+    ~E"""
+    <div>
+    Congratulations, you win
+    </div>
+    """
+  end
+
+  def message(nil, :lose) do
+    ~E"""
+    <div>
+    You lose, good luck next time
     </div>
     """
   end

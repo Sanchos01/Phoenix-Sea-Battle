@@ -1,0 +1,8 @@
+<div phx-keydown="keydown" phx-target="window">
+  <%= for {block, index} <- @board do %>
+    <%= render_block(block, index) %>
+  <% end %>
+  <%= for {block, index} <- apply_shots(@shots) do %>
+    <%= render_shot(block, index, @move?) %>
+  <% end %>
+</div>

@@ -1,0 +1,11 @@
+<div class="column column-20 button-small">
+  <button phx-click="drop_last" style="width: 85%">Drop last</button>
+</div>
+<div class="column column-20 button-small">
+  <button phx-click="drop_all" style="width: 85%">Drop all</button>
+</div>
+<%= if Board.prepare(@board) == :ok do %>
+  <div class="column column-20 button-small">
+    <button phx-click="ready" style="width: 85%">Ready</button>
+  </div>
+<% end %>
