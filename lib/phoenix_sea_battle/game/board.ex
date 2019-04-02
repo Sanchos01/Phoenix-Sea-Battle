@@ -119,6 +119,17 @@ defmodule PhoenixSeaBattle.Game.Board do
     end
   end
 
+  def left_ships(board) do
+    board
+    |> all_ships()
+    |> Enum.reduce(%{1 => 0, 2 => 0, 3 => 0, 4 => 0}, fn
+      {:bs0, _}, acc -> %{acc | 4 => 1}
+      {m, _}, acc when m in ~w(c0 c1)a -> %{acc | 3 => acc[3] + 1}
+      {m, _}, acc when m in ~w(d0 d1 d2)a -> %{acc | 2 => acc[2] + 1}
+      {m, _}, acc when m in ~w(tb0 tb1 tb2 tb3)a -> %{acc | 1 => acc[1] + 1}
+    end)
+  end
+
   defp return_index(boolean1, boolean2 \\ false, index)
   defp return_index(false, false, index), do: [index]
   defp return_index(_, _, _), do: [nil]
@@ -143,12 +154,12 @@ defmodule PhoenixSeaBattle.Game.Board do
     board
     |> Stream.with_index()
     |> Enum.reduce(%{}, fn
-      {nil, _}, acc ->
-        acc
-
-      {type, index}, acc ->
+      {type, index}, acc when type in @marks ->
         indexes = acc[type] || []
         Map.put(acc, type, indexes ++ [index])
+
+      _, acc ->
+        acc
     end)
   end
 

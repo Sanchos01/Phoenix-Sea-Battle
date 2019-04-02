@@ -38,8 +38,8 @@ defmodule PhoenixSeaBattleWeb.Game do
           </div>
           <div id="game" class="panel-body panel-game">
             <%= render_board(@game_state, @board, @shots, @other_shots, @render_opts) %>
-            <div class="row panel-sub_commands">
-              <%= sub_commands(@game_state, @board) %>
+            <div class="row panel-sub">
+              <%= sub_panel(@game_state, @board, @shots) %>
             </div>
           </div>
         </div>
@@ -221,15 +221,17 @@ defmodule PhoenixSeaBattleWeb.Game do
     end
   end
 
-  defp sub_commands(:initial, board) do
-    BoardView.render("sub_commands_initial.html", board: board)
+  defp sub_panel(:initial, board, _) do
+    BoardView.render("sub_panel_initial.html", board: board)
   end
 
-  defp sub_commands(:ready, _board) do
-    BoardView.render("sub_commands_ready.html", %{})
+  defp sub_panel(:ready, _board, _) do
+    BoardView.render("sub_panel_ready.html", %{})
   end
 
-  defp sub_commands(_state, _board), do: nil
+  defp sub_panel(_state, _board, shots) do
+    BoardView.render("sub_panel_game.html", left: Board.left_ships(shots))
+  end
 
   defp make_pre_ship(x, y, pos, l) when x < 0 do
     make_pre_ship(0, y, pos, l)
