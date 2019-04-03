@@ -44,7 +44,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
         </div>
         <form phx-submit="insert_message">
           <input name="chat-input" type="text" class="form-control" value=""
-                  placeholder="Type a message..." autocomplete="off">
+                  maxlength="100" placeholder="Type a message..." autocomplete="off">
         </form>
       </div>
       <div class="column">

@@ -2,18 +2,23 @@
 // The MiniCssExtractPlugin is used to separate it out into
 // its own CSS file.
 import css from "../css/app.css"
-
-// webpack automatically bundles all modules in your
-// entry points. Those entry points can be configured
-// in "webpack.config.js".
-//
-// Import dependencies
-//
 import "phoenix_html"
+import LiveSocket from "phoenix_live_view"
 
-// Import local files
-//
-// Local files can be imported directly using relative
-// paths "./socket" or full ones "web/static/js/socket".
+let liveSocket = new LiveSocket("/live")
+liveSocket.connect()
 
-import socket from "./socket"
+document.addEventListener("DOMContentLoaded", _event => {
+  let el = document.getElementById("messages");
+  el.scrollTop = el.scrollHeight;
+});
+
+Array.from(document.getElementsByName("chat-input")).map(elem => {
+  elem.addEventListener("focus", event => {
+    if(event.sourceCapabilities === null && elem.value != ""){
+      elem.value = "";
+      let el = document.getElementById("messages");
+      el.scrollTop = el.scrollHeight;
+    }
+  })
+});
