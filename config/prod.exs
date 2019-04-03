@@ -13,7 +13,9 @@ use Mix.Config
 # which you typically run after static files are built.
 config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
   http: [port: {:system, "PORT"}],
-  url: [host: "localhost", port: {:system, "PORT"}],
+  url: [scheme: :https, host: "radiant-plateau-73240", port: 443],
+  force_ssl: [rewrite_on: [:x_forwarded_proto]],
+  secret_key_base: Map.fetch!(System.get_env(), "SECRET_KEY_BASE"),
   cache_static_manifest: "priv/static/cache_manifest.json",
   server: true,
   root: "."
@@ -67,7 +69,8 @@ config :phoenix_sea_battle, PhoenixSeaBattle.Repo,
   username: "postgres",
   password: "postgres",
   database: "phoenix_sea_battle_prod",
-  pool_size: 20
+  url: System.get_env("DATABASE_URL"),
+  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
 
 config :phoenix_sea_battle,
   reconnect_time: 60

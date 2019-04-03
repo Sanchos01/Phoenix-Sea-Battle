@@ -29,43 +29,44 @@ defmodule PhoenixSeaBattleWeb.Lobby do
   def render(assigns) do
     ~L"""
     <div id="chat" class="row chat container">
-    <div class="column column-75">
-      <div class="panel panel-default chat-room">
-        <div class="panel-heading">
-          Messages:
-        </div>
-        <div id="messages" class="panel-body panel-messages" style="text-overflow: clip">
-          <%= for msg <- @messages do %>
-            <div>
-              <%= "[#{format_ts(msg.timestamp)}] #{msg.user}: #{msg.body}" %>
-            </div>
-          <% end %>
-        </div>
-      </div>
-      <form phx-submit="insert_message">
-        <input name="chat-input" type="text" class="form-control" value="<%= @msg %>" placeholder="Type a message..." autocomplete="off">
-      </form>
-    </div>
-    <div class="column">
-      <div class="panel panel-default chat-room">
-        <div class="panel-heading">
-          Users Online:
-        </div>
-        <div id="userList" class="panel-body panel-users">
-          <div>
-            <%= for {user, %{metas: [meta | _]}} <- sort_users(@online_users) do %>
-              <li class="users">
-              <%= BoardView.render_user(user, meta) %>
-              </li>
+      <div class="column column-75">
+        <div class="panel panel-default chat-room">
+          <div class="panel-heading">
+            Messages:
+          </div>
+          <div id="messages" class="panel-body panel-messages" style="text-overflow: clip">
+            <%= for msg <- @messages do %>
+              <div>
+                <%= "[#{format_ts(msg.timestamp)}] #{msg.user}: #{msg.body}" %>
+              </div>
             <% end %>
           </div>
         </div>
+        <form phx-submit="insert_message">
+          <input name="chat-input" type="text" class="form-control" value="<%= @msg %>"
+                  placeholder="Type a message..." autocomplete="off">
+        </form>
       </div>
-      <td class="text-right">
-        <%= link "Start game", to: Routes.game_path(@socket, :index),
-              class: "button button-default" %>
-      </td>
-    </div>
+      <div class="column">
+        <div class="panel panel-default chat-room">
+          <div class="panel-heading">
+            Users Online:
+          </div>
+          <div id="userList" class="panel-body panel-users">
+            <div>
+              <%= for {user, %{metas: [meta | _]}} <- sort_users(@online_users) do %>
+                <li class="users">
+                <%= BoardView.render_user(user, meta) %>
+                </li>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <td class="text-right">
+          <%= link "Start game", to: Routes.game_path(@socket, :index),
+                class: "button button-default" %>
+        </td>
+      </div>
     </div>
     """
   end
