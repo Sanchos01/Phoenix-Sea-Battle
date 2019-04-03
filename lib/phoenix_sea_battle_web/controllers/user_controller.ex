@@ -1,12 +1,14 @@
 defmodule PhoenixSeaBattleWeb.UserController do
   use PhoenixSeaBattleWeb, :controller
-  plug(:authenticate_user when action in [:index, :show])
+
   alias PhoenixSeaBattle.User
-  alias PhoenixSeaBattleWeb.Auth
+  alias PhoenixSeaBattleWeb.UserLive
+  alias Phoenix.LiveView.Controller, as: LiveController
+
+  plug(:authenticate_user when action in [:index, :show])
 
   def index(conn, _params) do
-    users = Repo.all(User)
-    render(conn, "index.html", users: users)
+    LiveController.live_render(conn, UserLive.Index, session: %{})
   end
 
   def show(conn, %{"id" => id}) do
@@ -15,22 +17,6 @@ defmodule PhoenixSeaBattleWeb.UserController do
   end
 
   def new(conn, _params) do
-    changeset = User.changeset(%User{})
-    render(conn, "new.html", changeset: changeset)
-  end
-
-  def create(conn, %{"user" => user_params}) do
-    changeset = User.registration_changeset(%User{}, user_params)
-
-    case Repo.insert(changeset) do
-      {:ok, user} ->
-        conn
-        |> Auth.login(user)
-        |> put_flash(:info, "#{user.name} created!")
-        |> redirect(to: user_path(conn, :index))
-
-      {:error, changeset} ->
-        render(conn, "new.html", changeset: changeset)
-    end
+    LiveController.live_render(conn, UserLive.New, session: %{})
   end
 end

@@ -5,7 +5,7 @@ defmodule PhoenixSeaBattleWeb.TestHelpers do
     changes =
       Map.merge(
         %{
-          name: "Some User",
+          name: "SomeUser",
           username: "user#{Base.encode16(:crypto.strong_rand_bytes(8))}",
           password: "supersecret"
         },

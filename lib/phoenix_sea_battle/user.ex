@@ -11,13 +11,18 @@ defmodule PhoenixSeaBattle.User do
     timestamps()
   end
 
+  @format ~r/^[a-zA-Z0-9_]+$/
+
   def changeset(model, params \\ %{}) do
     model
     |> cast(params, [:name, :username])
-    |> validate_required(:username)
-    |> validate_length(:username, min: 3)
-    |> validate_length(:username, max: 20)
+    |> validate_required([:username, :name])
+    |> validate_length(:username, min: 3, max: 20)
+    |> validate_length(:name, min: 3, max: 20)
+    |> validate_format(:username, @format, message: "only letters, numbers, and underscores")
+    |> validate_format(:name, @format, message: "only letters, numbers, and underscores")
     |> unique_constraint(:username)
+    |> unique_constraint(:name)
   end
 
   def registration_changeset(model, params) do

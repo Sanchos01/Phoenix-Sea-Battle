@@ -3,7 +3,7 @@ defmodule PhoenixSeaBattle.UserTest do
   alias PhoenixSeaBattle.User
   alias Comeonin.Bcrypt
 
-  @valid_attrs %{name: "A User", username: "eva", password: "secret"}
+  @valid_attrs %{name: "SomeUser", username: "eva", password: "secret"}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

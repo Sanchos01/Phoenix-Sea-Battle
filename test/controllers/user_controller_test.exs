@@ -35,31 +35,4 @@ defmodule PhoenixSeaBattle.UserControllerTest do
     conn = get(conn, "/users/new")
     assert html_response(conn, 200)
   end
-
-  test "POST /users valid", %{conn: conn} do
-    conn =
-      post(conn, "/users", %{
-        "user" => %{
-          name: "Some User",
-          username: "user#{Base.encode16(:crypto.strong_rand_bytes(8))}",
-          password: "supersecret"
-        }
-      })
-
-    assert html_response(conn, 302)
-  end
-
-  test "POST /users invalid", %{conn: conn} do
-    conn =
-      post(conn, "/users", %{
-        "user" => %{
-          name: "Some User",
-          username: "user#{Base.encode16(:crypto.strong_rand_bytes(8))}",
-          password: "1"
-        }
-      })
-
-    assert html_response(conn, 200) =~
-             "Oops, something going wrong! Please check the errors below."
-  end
 end

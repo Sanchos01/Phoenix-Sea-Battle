@@ -31,6 +31,6 @@ defmodule PhoenixSeaBattleWeb.LobbyTest do
     refute LiveViewTest.render(view) =~ msg
     LiveViewTest.render_submit(view, "insert_message", %{"chat-input" => msg})
     :timer.sleep(20)
-    assert LiveViewTest.render(view) =~ "] Some User: #{msg}"
+    assert LiveViewTest.render(view) =~ "] SomeUser: #{msg}"
   end
 end

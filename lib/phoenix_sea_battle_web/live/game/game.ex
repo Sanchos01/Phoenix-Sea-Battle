@@ -73,7 +73,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   def handle_event("insert_message", %{"chat-input" => msg}, socket) when msg != "" do
-    username = socket.assigns.user.username
+    username = socket.assigns.user.name
     payload = %{user: username, body: HtmlSanitizeEx.strip_tags(msg)}
     Game.new_msg(socket.assigns.pid, payload)
     {:noreply, socket}
