@@ -66,11 +66,8 @@ config :logger, level: :info
 # Copy from prod.secret.exs
 # Configure your database
 config :phoenix_sea_battle, PhoenixSeaBattle.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "phoenix_sea_battle_prod",
   url: System.get_env("DATABASE_URL"),
-  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
 config :phoenix_sea_battle,
   reconnect_time: 60
