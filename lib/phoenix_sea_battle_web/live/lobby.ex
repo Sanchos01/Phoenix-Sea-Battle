@@ -11,7 +11,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
   def mount(%{user: user}, socket) do
     Endpoint.subscribe("lobby")
     {:ok, msgs} = LobbyArchiver.subs()
-    socket = assign(socket, messages: msgs, msg: nil)
+    socket = assign(socket, messages: msgs)
 
     socket =
       case user do
@@ -43,7 +43,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
           </div>
         </div>
         <form phx-submit="insert_message">
-          <input name="chat-input" type="text" class="form-control" value="<%= @msg %>"
+          <input name="chat-input" type="text" class="form-control" value=""
                   placeholder="Type a message..." autocomplete="off">
         </form>
       </div>
@@ -73,13 +73,11 @@ defmodule PhoenixSeaBattleWeb.Lobby do
 
   def handle_event("insert_message", %{"chat-input" => msg}, socket) when msg != "" do
     case socket.assigns do
-      %{user: %User{name: username}} ->
-        LobbyArchiver.new_msg(msg, username)
-        {:noreply, assign(socket, msg: msg)}
-
-      _ ->
-        {:noreply, socket}
+      %{user: %User{name: username}} -> LobbyArchiver.new_msg(msg, username)
+      _ -> :ok
     end
+
+    {:noreply, socket}
   end
 
   def handle_event("insert_message", _, socket) do
@@ -87,7 +85,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
   end
 
   def handle_info({:update, messages}, socket) do
-    {:noreply, assign(socket, messages: messages, msg: nil)}
+    {:noreply, assign(socket, messages: messages)}
   end
 
   def handle_info(%Broadcast{event: event}, socket)
