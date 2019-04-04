@@ -12,6 +12,12 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 Ready to run in production? Please [check our deployment guides](http://www.phoenixframework.org/docs/deployment).
 
+## Info
+
+  It was a long way attempts to use js, but  [`LiveView`](https://github.com/phoenixframework/phoenix_live_view) make it really easy.
+  
+  Example: https://radiant-plateau-73240.herokuapp.com/
+
 ## Learn more
 
   * Official website: http://www.phoenixframework.org/
