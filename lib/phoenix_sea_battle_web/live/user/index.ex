@@ -7,7 +7,7 @@ defmodule PhoenixSeaBattleWeb.UserLive.Index do
   alias PhoenixSeaBattleWeb.UserView
 
   @page_size 2
-  @pre_query (from u in User, order_by: u.id, select: map(u, [:id, :name]))
+  @pre_query from(u in User, order_by: u.id, select: map(u, [:id, :name]))
 
   def mount(_session, socket) do
     page_size = @page_size
@@ -36,11 +36,13 @@ defmodule PhoenixSeaBattleWeb.UserLive.Index do
 
   defp render_users(page, page_size) do
     offset = (page - 1) * page_size
+
     users =
       @pre_query
       |> limit([u], ^page_size)
       |> offset([u], ^offset)
       |> Repo.all()
+
     ~E"""
     <table class="table">
         <%= for user <- users do %>
@@ -63,7 +65,7 @@ defmodule PhoenixSeaBattleWeb.UserLive.Index do
   end
 
   defp maybe_update_total(true, _total) do
-    Repo.one(from u in User, select: count(u))
+    Repo.one(from(u in User, select: count(u)))
   end
 
   defp maybe_update_total(false, total), do: total

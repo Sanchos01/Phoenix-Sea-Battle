@@ -473,7 +473,15 @@ defmodule PhoenixSeaBattle.Game do
     # cast_change_user_states(%{admin.name => %__MODULE__{state: 1, game_id: state.id}}) # old functions, needs rework
     # TODO maybe win, depends on playing and winner
     state.admin_pid && send(state.admin_pid, :update_state)
-    new_state = %__MODULE__{state | opponent: nil, opponent_pid: nil, opponent_board: nil, opponent_shots: []}
+
+    new_state = %__MODULE__{
+      state
+      | opponent: nil,
+        opponent_pid: nil,
+        opponent_board: nil,
+        opponent_shots: []
+    }
+
     {:noreply, new_state}
   end
 

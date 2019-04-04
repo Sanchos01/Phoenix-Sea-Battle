@@ -1,7 +1,7 @@
 defmodule PhoenixSeaBattleWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :phoenix_sea_battle
 
-  socket("/live", Phoenix.LiveView.Socket)
+  socket("/live", Phoenix.LiveView.Socket, websocket: [timeout: 45_000])
 
   # socket("/socket", PhoenixSeaBattleWeb.UserSocket,
   #   # or list of options

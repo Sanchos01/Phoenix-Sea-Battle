@@ -108,7 +108,6 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   def handle_info(:retry_connect, socket = %{assigns: %{id: id}}) do
-    Logger.warn "reconnect"
     {:stop, redirect(socket, to: Routes.game_path(socket, :show, id))}
   end
 
