@@ -3,27 +3,23 @@
 @import "./phoenix.css";
 @import "../../deps/phoenix_live_view/assets/css/live_view.css";
 
-#messages {
-  overflow-y: auto;
-  margin-top: 0em;
-  min-height: 200px;
-  word-wrap: break-word;
-  text-overflow: clip;
-}
 .chat, .game {
-  margin-top: 0em;
-}
-.chat-room, .game-panel {
-  margin-top: 1em;
+  display: grid;
+  grid-template-rows: 400px 40px;
+  grid-template-columns: 4fr 1fr;
+  grid-gap: 20px;
+  height: 460px;
+  margin: 0;
 }
 .panel {
-  margin-bottom: 1em;
   background: #eee;
   border: 1px solid transparent;
   border-radius: 6px;
   -webkit-box-shadow: 0 1px 1px rgba(0,0,0,.05);
   box-shadow: 0 1px 1px rgba(0,0,0,.05);
-  height: 350px;
+  height: 100%;
+  border-color: #ddd;
+  height: 400px;
 }
 .panel-heading {
   border-bottom: 2px solid transparent;
@@ -31,24 +27,22 @@
   border-color: #ddd;
   padding-left: 0.5em;
   padding-top: 0.3em;
+  height: 8%;
 }
 .panel-body {
   padding-left: 0.5em;
   padding-top: 0.3em;
+  word-wrap: break-word;
+  overflow-y: auto;
+  height: 92%;
 }
-.panel-default {
-  border-color: #ddd
-}
-.panel-messages, .panel-users {
-  height: 91%;
-}
-.panel-game {
-  height: 300px;
+.opponent-status {
+  padding-left: 1.4em;
 }
 .panel-sub {
-  top: 19.7em;
+  top: 21em;
   position: absolute;
-  padding-left: 1.2em;
+  padding-left: 1.8em;
 }
 .state-bar {
   padding-left: 0.5em
@@ -62,9 +56,10 @@
 }
 .button-default {
   width: 100%;
+  padding: 0;
 }
 .button-small {
-  padding: 0em !important
+  padding: 0 !important
 }
 .empty-button {
   padding: 0em;

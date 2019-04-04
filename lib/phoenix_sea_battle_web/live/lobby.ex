@@ -13,10 +13,12 @@ defmodule PhoenixSeaBattleWeb.Lobby do
       :ok = Endpoint.subscribe("lobby")
       {:ok, msgs} = LobbyArchiver.subs()
       socket = assign(socket, messages: msgs)
+
       case user do
         %User{name: name} ->
           {:ok, _} = Presence.track(self(), "lobby", name, %{state: 0})
           {:ok, socket |> assign(user: user) |> fetch()}
+
         _ ->
           {:ok, fetch(socket)}
       end
@@ -27,13 +29,13 @@ defmodule PhoenixSeaBattleWeb.Lobby do
 
   def render(assigns) do
     ~L"""
-    <div id="chat" class="row chat container">
-      <div class="column column-75">
-        <div class="panel panel-default chat-room">
+    <div id="chat" class="chat container">
+      <div>
+        <div class="panel panel-default">
           <div class="panel-heading">
             Messages:
           </div>
-          <div id="messages" class="panel-body panel-messages">
+          <div id="messages" class="panel-body">
             <%= for msg <- @messages do %>
               <div>
                 <%= "[#{format_ts(msg.timestamp)}] #{msg.user}: #{msg.body}" %>
@@ -41,17 +43,13 @@ defmodule PhoenixSeaBattleWeb.Lobby do
             <% end %>
           </div>
         </div>
-        <form phx-submit="insert_message">
-          <input name="chat-input" type="text" class="form-control" value=""
-                  maxlength="100" placeholder="Type a message..." autocomplete="off">
-        </form>
       </div>
-      <div class="column">
-        <div class="panel panel-default chat-room">
+      <div>
+        <div class="panel panel-default">
           <div class="panel-heading">
             Users Online:
           </div>
-          <div id="userList" class="panel-body panel-users">
+          <div id="userList" class="panel-body">
             <div>
               <%= for {user, %{metas: [meta | _]}} <- sort_users(@online_users) do %>
                 <li class="users">
@@ -61,6 +59,14 @@ defmodule PhoenixSeaBattleWeb.Lobby do
             </div>
           </div>
         </div>
+      </div>
+      <div>
+        <form phx-submit="insert_message">
+          <input name="chat-input" type="text" class="form-control" value=""
+                  maxlength="100" placeholder="Type a message..." autocomplete="off">
+        </form>
+      </div>
+      <div>
         <td class="text-right">
           <%= link "Start game", to: Routes.game_path(@socket, :index),
                 class: "button button-default" %>

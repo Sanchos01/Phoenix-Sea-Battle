@@ -205,8 +205,8 @@ defmodule PhoenixSeaBattleWeb.BoardView do
   end
 
   defp position_style_by_index(index, board?) do
-    left = Float.ceil(rem(index, 10) * 1.5, 2) + if board?, do: 3, else: 18.7
-    top = Float.ceil(div(index, 10) * 1.5, 2) + 4
+    left = Float.ceil(rem(index, 10) * 1.5, 2) + if board?, do: 3, else: 20
+    top = Float.ceil(div(index, 10) * 1.5, 2) + 4.4
 
     ~E"""
     left: <%= left %>em; top: <%= top %>em

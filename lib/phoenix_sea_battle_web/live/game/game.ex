@@ -45,31 +45,27 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   def render(assigns) do
     ~L"""
-    <div id="game-container" class="row game container">
-      <div class="column column-75">
-        <div class="panel panel-default game-panel">
-          <div id="state-bar" class="panel-heading state-bar">
+    <div id="game-container" class="game container">
+      <div>
+        <div class="panel panel-default">
+          <div id="state-bar" class="panel-heading">
             <%= BoardView.message(@error, @game_state) %>
           </div>
-          <div id="game" class="panel-body panel-game">
+          <div id="game" class="panel-body">
+            <div class="opponent-status"><%= opponent_status(@opponent) %></div>
             <%= render_board(@game_state, @board, @shots, @other_shots, @render_opts) %>
             <div class="row panel-sub">
               <%= sub_panel(@game_state, @board, @shots) %>
             </div>
           </div>
         </div>
-        <form phx-submit="insert_message">
-          <input name="chat-input" type="text" class="form-control" placeholder="Type a message..." autocomplete="off">
-        </form>
       </div>
-
-      <div class="column column-25">
-        <div class="panel panel-default chat-room">
+      <div>
+        <div class="panel panel-default">
           <div class="panel-heading">
-            <%= opponent_status(@opponent) %><br>
             InGame Chat:
           </div>
-          <div id="messages" class="panel-body panel-messages" style="height: 84%">
+          <div id="messages" class="panel-body panel-messages">
             <%= for msg <- Enum.reverse(@messages) do %>
             <div>
             <%= "#{msg.user}: #{msg.body}" %>
@@ -77,6 +73,13 @@ defmodule PhoenixSeaBattleWeb.Game do
             <% end %>
           </div>
         </div>
+      </div>
+      <div>
+        <form phx-submit="insert_message">
+          <input name="chat-input" type="text" class="form-control" placeholder="Type a message..." autocomplete="off">
+        </form>
+      </div>
+      <div>
         <td class="text-right">
           <%= link "Exit Game", to: game_path(@socket, :delete, @id), method: :delete, csrf_token: @token,
             data: [confirm: "You want leave the game?"], class: "button button-default" %>

@@ -14,8 +14,8 @@ Ready to run in production? Please [check our deployment guides](http://www.phoe
 
 ## Info
 
-  It was a long way attempts to use js, but  [`LiveView`](https://github.com/phoenixframework/phoenix_live_view) make it really easy.
-  
+  It was a long way attempts to use js, but [`LiveView`](https://github.com/phoenixframework/phoenix_live_view) make it really easy.
+
   Example: https://radiant-plateau-73240.herokuapp.com/
 
 ## Learn more
