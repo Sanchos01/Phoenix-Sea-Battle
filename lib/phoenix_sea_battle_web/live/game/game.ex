@@ -209,14 +209,23 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   defp set_presence(topic, username, meta) do
-    with {_username, %{metas: [old_meta | _]}} <-
-           topic |> Presence.list() |> Enum.find(&(elem(&1, 0) == username)),
-         true <- Enum.all?(meta, fn {k, v} -> Map.get(old_meta, k) == v end) do
-      :ok
+    with {_, %{metas: [old_meta | _]}} <- find_user_in_presence(topic, username),
+         false <- Enum.all?(meta, fn {k, v} -> Map.get(old_meta, k) == v end),
+         {:error, _} <- Presence.update(self(), topic, username, meta) do
+      {:ok, _} = Presence.track(self(), topic, username, meta)
     else
-      false -> {:ok, _} = Presence.update(self(), topic, username, meta)
+      true -> :ok
       nil -> {:ok, _} = Presence.track(self(), topic, username, meta)
     end
+  end
+
+  defp find_user_in_presence(topic, username) do
+    topic
+    |> Presence.list()
+    |> Enum.find(fn
+      {^username, _} -> true
+      _ -> false
+    end)
   end
 
   defp sub_panel(:initial, board, _) do
