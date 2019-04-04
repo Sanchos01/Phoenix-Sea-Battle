@@ -11,19 +11,28 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   # user states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   def mount(%{id: id, user: user, token: token}, socket) do
+    socket = assign(socket, id: id, user: user, token: token)
+
     with pid when is_pid(pid) <- GenServer.whereis(GameSupervisor.via_tuple(id)),
-         {:ok, socket} <- socket |> assign(id: id, user: user, pid: pid) |> update_state() do
+         {:ok, socket} <- socket |> assign(pid: pid) |> update_state() do
       messages = Game.get_messages(pid)
-      socket = assign(socket, messages: messages, error: nil, token: token)
+      socket = assign(socket, messages: messages, error: nil)
       {:ok, socket}
     else
       _ ->
-        new_socket =
-          socket
-          |> put_flash(:error, "You must be logged in to access that page")
-          |> redirect(to: Routes.page_path(socket, :index))
+        send(self(), :retry_connect)
 
-        {:stop, new_socket}
+        {:ok,
+         assign(socket,
+           error: nil,
+           game_state: :initial,
+           messages: [],
+           board: Board.new_board(),
+           shots: [],
+           other_shots: [],
+           render_opts: %{ready: true},
+           opponent: nil
+         )}
     end
   end
 
