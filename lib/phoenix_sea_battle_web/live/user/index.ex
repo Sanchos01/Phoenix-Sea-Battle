@@ -22,11 +22,13 @@ defmodule PhoenixSeaBattleWeb.UserLive.Index do
       <% else %>
         <button class="button">Prev</button>
       <% end %>
+      Page: <%= @page %>
       <%= if @page * @page_size < @total do %>
         <button phx-click="next_page" class="button">Next</button>
       <% else %>
         <button class="button">Next</button>
       <% end %>
+      Total: <%= @total %>
 
       <%= render_users(@page, @page_size) %>
     """

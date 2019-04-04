@@ -8,4 +8,8 @@
   <div class="column column-20 button-small">
     <button phx-click="ready" style="width: 85%">Ready</button>
   </div>
+<% else %>
+  <div style="padding-top: 0.4em">
+    left to place: <%= left_to_place(@board) %> ships
+  </div>
 <% end %>

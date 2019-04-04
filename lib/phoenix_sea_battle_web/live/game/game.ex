@@ -12,7 +12,6 @@ defmodule PhoenixSeaBattleWeb.Game do
   # user states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   def mount(%{id: id, user: user, token: token}, socket) do
     with pid when is_pid(pid) <- GenServer.whereis(GameSupervisor.via_tuple(id)),
-         ref when is_reference(ref) <- Process.monitor(pid),
          {:ok, socket} <- socket |> assign(id: id, user: user, pid: pid) |> update_state() do
       messages = Game.get_messages(pid)
       socket = assign(socket, messages: messages, error: nil, token: token)
@@ -51,9 +50,8 @@ defmodule PhoenixSeaBattleWeb.Game do
       <div class="column column-25">
         <div class="panel panel-default chat-room">
           <div class="panel-heading">
-            InGame Chat
-            <td id="game-control" class="text-right">
-            </td>
+            <%= opponent_status(@opponent) %><br>
+            InGame Chat:
           </div>
           <div id="messages" class="panel-body panel-messages">
             <%= for msg <- Enum.reverse(@messages) do %>
@@ -109,8 +107,9 @@ defmodule PhoenixSeaBattleWeb.Game do
     {:noreply, socket |> assign(messages: messages)}
   end
 
-  def handle_info({:DOWN, _, _, pid, _}, socket = %{assigns: assigns = %{pid: pid}}) do
-    {:stop, socket |> redirect(to: Routes.game_path(socket, :show, assigns.id))}
+  def handle_info(:retry_connect, socket = %{assigns: %{id: id}}) do
+    Logger.warn "reconnect"
+    {:stop, redirect(socket, to: Routes.game_path(socket, :show, id))}
   end
 
   def handle_info(:update_state, socket) do
@@ -131,6 +130,11 @@ defmodule PhoenixSeaBattleWeb.Game do
     end
   end
 
+  def handle_info(:exit, socket) do
+    socket = socket |> put_flash(:info, "Game ended because of admin out")
+    {:stop, redirect(socket, to: Routes.page_path(socket, :index))}
+  end
+
   defp update_state(socket = %{assigns: %{pid: pid, user: user = %{name: username}}}) do
     with {:ok, game_state} <- Game.get(pid, user),
          {:ok, board, shots, other_shots} <- Game.get_board_and_shots(pid, user) do
@@ -140,6 +144,7 @@ defmodule PhoenixSeaBattleWeb.Game do
 
       socket
       |> assign(board: board, shots: shots, other_shots: other_shots)
+      |> get_opponent(game_state, username)
       |> append_render_opts(game_state, board)
     end
   end
@@ -216,5 +221,25 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   defp sub_panel(_state, _board, shots) do
     BoardView.render("sub_panel_game.html", left: Board.left_ships(shots))
+  end
+
+  defp get_opponent(socket, %{admin: username, opponent: opponent}, username) do
+    assign(socket, opponent: opponent)
+  end
+
+  defp get_opponent(socket, %{admin: opponent, opponent: username}, username) do
+    assign(socket, opponent: opponent)
+  end
+
+  defp opponent_status(nil) do
+    ~E"""
+    No opponent
+    """
+  end
+
+  defp opponent_status(opponent) do
+    ~E"""
+    Opponent: <%= opponent %>
+    """
   end
 end

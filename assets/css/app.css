@@ -22,8 +22,18 @@
   border-radius: 6px;
   -webkit-box-shadow: 0 1px 1px rgba(0,0,0,.05);
   box-shadow: 0 1px 1px rgba(0,0,0,.05);
+  height: 350px;
+}
+.panel-heading {
+  border-bottom: 2px solid transparent;
+  background: rgb(243, 240, 253);
+  border-color: #ddd;
   padding-left: 0.5em;
-  padding-top: 0.5em;
+  padding-top: 0.3em;
+}
+.panel-body {
+  padding-left: 0.5em;
+  padding-top: 0.3em;
 }
 .panel-default {
   border-color: #ddd
@@ -32,7 +42,7 @@
   height: 300px;
 }
 .panel-sub {
-  top: 18.7em;
+  top: 19.7em;
   position: absolute;
   padding-left: 1.2em;
 }

@@ -105,8 +105,9 @@ defmodule PhoenixSeaBattle.Game do
         state = %__MODULE__{admin: admin, opponent: nil}
       ) do
     if user.id != admin.id do
-      {:reply, {:ok, :opponent},
-       %__MODULE__{state | opponent: user, opponent_board: Board.new_board()}}
+      state.admin_pid && send(state.admin_pid, :update_state)
+      new_state = %__MODULE__{state | opponent: user, opponent_board: Board.new_board()}
+      {:reply, {:ok, :opponent}, new_state}
     else
       {:reply, {:ok, :admin}, state}
     end
@@ -462,31 +463,23 @@ defmodule PhoenixSeaBattle.Game do
   end
 
   def handle_info({:terminate, %User{id: id}}, state = %__MODULE__{admin: %User{id: id}}) do
-    # if opponent, do: cast_change_user_states(%{opponent.name => %__MODULE__{state: 3}})
-    # TODO don't stop game few seconds
+    # if opponent, do: cast_change_user_states(%{opponent.name => %__MODULE__{state: 3}}) # old functions, needs rework
+    # TODO don't stop game few seconds, annonce to opponent about ending?
+    state.opponent_pid && send(state.opponent_pid, :exit)
     {:stop, :normal, state}
   end
 
   def handle_info({:terminate, %User{id: id}}, state = %__MODULE__{opponent: %User{id: id}}) do
-    # cast_change_user_states(%{admin.name => %__MODULE__{state: 1, game_id: state.id}})
+    # cast_change_user_states(%{admin.name => %__MODULE__{state: 1, game_id: state.id}}) # old functions, needs rework
     # TODO maybe win, depends on playing and winner
-    {:noreply,
-     %__MODULE__{
-       state
-       | opponent: nil,
-         opponent_pid: nil,
-         opponent_board: nil,
-         opponent_shots: []
-     }}
+    state.admin_pid && send(state.admin_pid, :update_state)
+    new_state = %__MODULE__{state | opponent: nil, opponent_pid: nil, opponent_board: nil, opponent_shots: []}
+    {:noreply, new_state}
   end
 
-  def handle_info(msg, state) do
-    Logger.warn("uncatched message: #{inspect(msg)}")
-    {:noreply, state}
-  end
-
-  def terminate(:normal, %{id: _id}) do
-    # Endpoint.broadcast("game:" <> id, "all out", %{})
+  def terminate(:normal, state = %__MODULE__{id: _id}) do
+    state.admin_pid && send(state.admin_pid, :retry_connect)
+    state.opponent_pid && send(state.opponent_pid, :retry_connect)
     :ok
   end
 
@@ -495,6 +488,8 @@ defmodule PhoenixSeaBattle.Game do
       "Unusual stop game #{state.id} with reason #{inspect(reason)}, state: #{inspect(state)}"
     )
 
+    state.admin_pid && send(state.admin_pid, :retry_connect)
+    state.opponent_pid && send(state.opponent_pid, :retry_connect)
     :ets.insert(:saver, {state.id, state, :os.system_time(:second) + 30_000})
     :ok
   end

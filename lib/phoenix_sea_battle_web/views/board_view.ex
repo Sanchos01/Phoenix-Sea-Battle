@@ -3,6 +3,11 @@ defmodule PhoenixSeaBattleWeb.BoardView do
   alias PhoenixSeaBattle.Game.Board
   @marks ~w(bs0 c0 c1 d0 d1 d2 tb0 tb1 tb2 tb3)a
 
+  def left_to_place(board) do
+    placed = board |> Board.left_ships() |> Enum.reduce(0, fn {_, v}, acc -> acc + v end)
+    length(@marks) - placed
+  end
+
   def render_user(user, %{state: 0}) do
     ~E"""
     <%= user %>
@@ -201,7 +206,7 @@ defmodule PhoenixSeaBattleWeb.BoardView do
 
   defp position_style_by_index(index, board?) do
     left = Float.ceil(rem(index, 10) * 1.5, 2) + if board?, do: 3, else: 18.7
-    top = Float.ceil(div(index, 10) * 1.5, 2) + 3.5
+    top = Float.ceil(div(index, 10) * 1.5, 2) + 4
 
     ~E"""
     left: <%= left %>em; top: <%= top %>em
