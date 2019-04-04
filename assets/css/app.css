@@ -8,6 +8,7 @@
   margin-top: 0em;
   min-height: 200px;
   word-wrap: break-word;
+  text-overflow: clip;
 }
 .chat, .game {
   margin-top: 0em;
@@ -38,7 +39,10 @@
 .panel-default {
   border-color: #ddd
 }
-.panel-messages, .panel-users, .panel-game {
+.panel-messages, .panel-users {
+  height: 91%;
+}
+.panel-game {
   height: 300px;
 }
 .panel-sub {

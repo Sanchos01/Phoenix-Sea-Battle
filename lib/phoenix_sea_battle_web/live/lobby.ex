@@ -9,21 +9,20 @@ defmodule PhoenixSeaBattleWeb.Lobby do
   alias PhoenixSeaBattleWeb.Router.Helpers, as: Routes
 
   def mount(%{user: user}, socket) do
-    Endpoint.subscribe("lobby")
-    {:ok, msgs} = LobbyArchiver.subs()
-    socket = assign(socket, messages: msgs)
-
-    socket =
+    with true <- connected?(socket) do
+      :ok = Endpoint.subscribe("lobby")
+      {:ok, msgs} = LobbyArchiver.subs()
+      socket = assign(socket, messages: msgs)
       case user do
         %User{name: name} ->
           {:ok, _} = Presence.track(self(), "lobby", name, %{state: 0})
-          socket |> assign(user: user)
-
+          {:ok, socket |> assign(user: user) |> fetch()}
         _ ->
-          socket
+          {:ok, fetch(socket)}
       end
-
-    {:ok, fetch(socket)}
+    else
+      false -> {:ok, socket |> assign(messages: [], online_users: [])}
+    end
   end
 
   def render(assigns) do
@@ -34,7 +33,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
           <div class="panel-heading">
             Messages:
           </div>
-          <div id="messages" class="panel-body panel-messages" style="text-overflow: clip">
+          <div id="messages" class="panel-body panel-messages">
             <%= for msg <- @messages do %>
               <div>
                 <%= "[#{format_ts(msg.timestamp)}] #{msg.user}: #{msg.body}" %>
@@ -72,8 +71,10 @@ defmodule PhoenixSeaBattleWeb.Lobby do
   end
 
   def handle_event("insert_message", %{"chat-input" => msg}, socket) when msg != "" do
-    case socket.assigns do
-      %{user: %User{name: username}} -> LobbyArchiver.new_msg(msg, username)
+    with msg when is_binary(msg) and msg != "" <- HtmlSanitizeEx.strip_tags(msg),
+         %{user: %User{name: username}} <- socket.assigns do
+      LobbyArchiver.new_msg(msg, username)
+    else
       _ -> :ok
     end
 

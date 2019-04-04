@@ -11,28 +11,35 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   # user states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   def mount(%{id: id, user: user, token: token}, socket) do
-    socket = assign(socket, id: id, user: user, token: token)
+    socket =
+      assign(socket,
+        id: id,
+        user: user,
+        token: token,
+        pid: nil,
+        error: nil,
+        game_state: :initial,
+        messages: [],
+        board: Board.new_board(),
+        shots: [],
+        other_shots: [],
+        render_opts: %{ready: true},
+        opponent: nil
+      )
 
-    with pid when is_pid(pid) <- GenServer.whereis(GameSupervisor.via_tuple(id)),
+    with true <- connected?(socket),
+         pid when is_pid(pid) <- GenServer.whereis(GameSupervisor.via_tuple(id)),
          {:ok, socket} <- socket |> assign(pid: pid) |> update_state() do
       messages = Game.get_messages(pid)
       socket = assign(socket, messages: messages, error: nil)
       {:ok, socket}
     else
+      false ->
+        {:ok, socket}
+
       _ ->
         send(self(), :retry_connect)
-
-        {:ok,
-         assign(socket,
-           error: nil,
-           game_state: :initial,
-           messages: [],
-           board: Board.new_board(),
-           shots: [],
-           other_shots: [],
-           render_opts: %{ready: true},
-           opponent: nil
-         )}
+        {:ok, socket}
     end
   end
 
@@ -62,7 +69,7 @@ defmodule PhoenixSeaBattleWeb.Game do
             <%= opponent_status(@opponent) %><br>
             InGame Chat:
           </div>
-          <div id="messages" class="panel-body panel-messages">
+          <div id="messages" class="panel-body panel-messages" style="height: 84%">
             <%= for msg <- Enum.reverse(@messages) do %>
             <div>
             <%= "#{msg.user}: #{msg.body}" %>
