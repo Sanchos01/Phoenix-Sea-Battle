@@ -105,112 +105,103 @@ defmodule PhoenixSeaBattleWeb.BoardView do
     """
   end
 
-  defp render_block(block, index, left? \\ true)
+  defp render_block(block)
 
-  defp render_block(k, index, left?) when k in [nil, :near] do
+  defp render_block(k) when k in [nil, :near] do
     ~E"""
-    <div class="block" style="<%= position_style_by_index(index, left?) %>">
+    <div class="block">
     </div>
     """
   end
 
-  defp render_block(:ghost, index, left?) do
+  defp render_block(:ghost) do
     ~E"""
-    <div class="block ghost_block" style="<%= position_style_by_index(index, left?) %>">
+    <div class="block ghost_block">
     </div>
     """
   end
 
-  defp render_block(:cross, index, left?) do
+  defp render_block(:cross) do
     ~E"""
-    <div class="block cross_block" style="<%= position_style_by_index(index, left?) %>">
+    <div class="block cross_block">
     </div>
     """
   end
 
-  defp render_block(mark, index, left?) when mark in @marks do
+  defp render_block(mark) when mark in @marks do
     ~E"""
-    <div class="block ship_block" style="<%= position_style_by_index(index, left?) %>">
+    <div class="block ship_block">
     </div>
     """
   end
 
-  defp render_block(:shotted, index, left?) do
+  defp render_block(:shotted) do
     ~E"""
-    <div class="block shotted_block" style="<%= position_style_by_index(index, left?) %>">
+    <div class="block shotted_block">
     </div>
     """
   end
 
-  defp render_block(:killed, index, left?) do
+  defp render_block(:killed) do
     ~E"""
-    <div class="block killed_block" style="<%= position_style_by_index(index, left?) %>">
+    <div class="block killed_block">
     </div>
     """
   end
 
-  defp render_block(:miss, index, left?) do
+  defp render_block(:miss) do
     ~E"""
-    <div class="block missed_block" style="<%= position_style_by_index(index, left?) %>">
+    <div class="block missed_block">
     </div>
     """
   end
+
+  defp render_shot(key, index, move?)
 
   defp render_shot(k, index, true) when is_nil(k) or k in @marks do
     ~E"""
-    <div style="width: 1.3em; height: 1.3em; position: absolute; <%= position_style_by_index(index, false) %>">
-      <button class="block empty-block empty-button" phx-click="shot" phx-value=<%= index %>>
-      </button>
+    <button class="block empty-block empty-button" phx-click="shot" phx-value=<%= index %>>
+    </button>
+    """
+  end
+
+  defp render_shot(k, _index, false) when is_nil(k) or k in @marks do
+    ~E"""
+    <div class="block empty_block">
     </div>
     """
   end
 
-  defp render_shot(k, index, false) when is_nil(k) or k in @marks do
+  defp render_shot(:near, _index, _) do
     ~E"""
-    <div class="block empty_block" style="<%= position_style_by_index(index, false) %>">
+    <div class="block near_block">
     </div>
     """
   end
 
-  defp render_shot(:near, index, _) do
+  defp render_shot(:miss, _index, _) do
     ~E"""
-    <div class="block near_block" style="<%= position_style_by_index(index, false) %>">
+    <div class="block missed_block">
     </div>
     """
   end
 
-  defp render_shot(:miss, index, _) do
+  defp render_shot(:shotted, _index, _) do
     ~E"""
-    <div class="block missed_block" style="<%= position_style_by_index(index, false) %>">
+    <div class="block shotted_block">
     </div>
     """
   end
 
-  defp render_shot(:shotted, index, _) do
+  defp render_shot(:killed, _index, _) do
     ~E"""
-    <div class="block shotted_block" style="<%= position_style_by_index(index, false) %>">
+    <div class="block killed_block">
     </div>
     """
   end
 
-  defp render_shot(:killed, index, _) do
-    ~E"""
-    <div class="block killed_block" style="<%= position_style_by_index(index, false) %>">
-    </div>
-    """
-  end
-
-  defp render_shot(k, index, _) do
-    render_block(k, index)
-  end
-
-  defp position_style_by_index(index, board?) do
-    left = Float.ceil(rem(index, 10) * 1.5, 2) + if board?, do: 3, else: 20
-    top = Float.ceil(div(index, 10) * 1.5, 2) + 4.4
-
-    ~E"""
-    left: <%= left %>em; top: <%= top %>em
-    """
+  defp render_shot(k, _, _) do
+    render_block(k)
   end
 
   defp apply_shots([]), do: Board.new_board() |> Stream.with_index()

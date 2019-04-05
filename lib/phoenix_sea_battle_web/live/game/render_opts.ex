@@ -61,6 +61,5 @@ defmodule PhoenixSeaBattleWeb.Game.RenderOpts do
           List.replace_at(acc, index, :cross)
       end
     end)
-    |> Stream.with_index()
   end
 end

@@ -1,15 +1,17 @@
-<div class="column column-20 button-small">
-  <button class="button-small" phx-click="drop_last" style="width: 85%">Drop last</button>
-</div>
-<div class="column column-20 button-small">
-  <button class="button-small" phx-click="drop_all" style="width: 85%">Drop all</button>
-</div>
-<%= if Board.prepare(@board) == :ok do %>
-  <div class="column column-20 button-small">
-    <button class="button-small" phx-click="ready" style="width: 85%">Ready</button>
+<div class="panel-sub">
+  <div>
+    <button phx-click="drop_last">Drop last</button>
   </div>
-<% else %>
-  <div style="padding-top: 0.4em">
-    left to place: <%= left_to_place(@board) %> ships
+  <div>
+    <button phx-click="drop_all">Drop all</button>
   </div>
-<% end %>
+  <%= if Board.prepare(@board) == :ok do %>
+    <div>
+      <button phx-click="ready">Ready</button>
+    </div>
+  <% else %>
+    <div style="padding-top: 0.4em">
+      left to place: <%= left_to_place(@board) %> ships
+    </div>
+  <% end %>
+</div>

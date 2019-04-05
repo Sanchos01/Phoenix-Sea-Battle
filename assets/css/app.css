@@ -3,12 +3,17 @@
 @import "./phoenix.css";
 @import "../../deps/phoenix_live_view/assets/css/live_view.css";
 
+#game {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 16fr 4fr;
+}
 .chat, .game {
   display: grid;
-  grid-template-rows: 400px 40px;
+  grid-template-rows: 5fr 1fr;
   grid-template-columns: 4fr 1fr;
   grid-gap: 20px;
-  height: 460px;
+  height: 500px;
   margin: 0;
 }
 .panel {
@@ -37,12 +42,14 @@
   height: 92%;
 }
 .opponent-status {
+  padding-top: 0.5em;
   padding-left: 1.4em;
 }
 .panel-sub {
-  top: 21em;
-  position: absolute;
-  padding-left: 1.8em;
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding-left: 1em;
 }
 .state-bar {
   padding-left: 0.5em
@@ -70,11 +77,25 @@
   border: 0.2em solid black !important;
   background-color: white !important;
 }
+.boards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  grid-gap: 1.6em;
+  margin-top: 0.8em;
+  margin-left: 1.2em;
+  margin-right: 1.2em;
+}
+.board {
+  display: grid;
+  grid-template-rows: repeat(10, 1.3em);
+  grid-template-columns: repeat(10, 1.3em);
+  grid-gap: 0.2em;
+  padding: 0;
+  margin: 0;
+}
 .block {
   display: block;
-  position: absolute;
-  width: 1.3em;
-  height: 1.3em;
   background-color: #6699ff;
   border-color: black;
   border-width: 0.1em;

@@ -54,9 +54,7 @@ defmodule PhoenixSeaBattleWeb.Game do
           <div id="game" class="panel-body">
             <div class="opponent-status"><%= opponent_status(@opponent) %></div>
             <%= render_board(@game_state, @board, @shots, @other_shots, @render_opts) %>
-            <div class="row panel-sub">
-              <%= sub_panel(@game_state, @board, @shots) %>
-            </div>
+            <%= sub_panel(@game_state, @board, @shots) %>
           </div>
         </div>
       </div>
@@ -196,7 +194,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   defp render_board(state, board, _, _, %{ready: true}) when state in ~w(initial ready)a do
-    assigns = [board: Stream.with_index(board), shots: [], move?: false]
+    assigns = [board: board, shots: [], move?: false]
     BoardView.render("board.html", assigns)
   end
 
@@ -209,12 +207,12 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   defp render_board(state, _, shots, other_shots, _) when state in ~w(win lose)a do
-    assigns = [board: Stream.with_index(other_shots), shots: shots]
+    assigns = [board: other_shots, shots: shots]
     BoardView.render("final_board.html", assigns)
   end
 
   defp render_board(state, _, shots, other_shots, _) when state in ~w(move await)a do
-    assigns = [board: Stream.with_index(other_shots), shots: shots, move?: state == :move]
+    assigns = [board: other_shots, shots: shots, move?: state == :move]
     BoardView.render("board.html", assigns)
   end
 
@@ -225,6 +223,7 @@ defmodule PhoenixSeaBattleWeb.Game do
       {:ok, _} = Presence.track(self(), topic, username, meta)
     else
       true -> :ok
+      {:ok, _} -> :ok
       nil -> {:ok, _} = Presence.track(self(), topic, username, meta)
     end
   end

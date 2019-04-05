@@ -1,8 +1,12 @@
-<div phx-keydown="keydown" phx-target="window">
-  <%= for {block, index} <- @board do %>
-    <%= render_block(block, index) %>
-  <% end %>
-  <%= for {block, index} <- apply_shots(@shots) do %>
-    <%= render_shot(block, index, @move?) %>
-  <% end %>
+<div class="boards" phx-keydown="keydown" phx-target="window">
+  <div class="board">
+    <%= for block <- @board do %>
+      <%= render_block(block) %>
+    <% end %>
+  </div>
+  <div class="board">
+    <%= for {block, index} <- apply_shots(@shots) do %>
+      <%= render_shot(block, index, @move?) %>
+    <% end %>
+  </div>
 </div>
