@@ -38,8 +38,7 @@ defmodule PhoenixSeaBattleWeb.Game do
         {:ok, socket}
 
       _ ->
-        send(self(), :retry_connect)
-        {:ok, socket}
+        {:stop, redirect(socket, to: Routes.game_path(socket, :show, id))}
     end
   end
 

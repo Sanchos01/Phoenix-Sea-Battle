@@ -19,14 +19,14 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     token = Phoenix.Controller.get_csrf_token()
     params = [session: %{user: user1, id: id, token: token}]
 
-    {:ok, %LiveViewTest.View{}, _html} =
-      LiveViewTest.mount_disconnected(Endpoint, GameLive, params)
+    {:ok, view, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
+    "" <> _ = LiveViewTest.render(view)
 
     {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
     params = [session: %{user: user2, id: id, token: token}]
 
-    {:ok, %LiveViewTest.View{}, _html} =
-      LiveViewTest.mount_disconnected(Endpoint, GameLive, params)
+    {:ok, view, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
+    "" <> _ = LiveViewTest.render(view)
 
     user3 = insert_user(%{name: "user3"})
     {:error, "game already full"} = GameServer.add_user(GameSupervisor.via_tuple(id), user3)
