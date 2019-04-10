@@ -79,7 +79,6 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     test "render error messages", %{view1: view} do
       assert LiveViewTest.render(view) =~ "Move your ships with arrows"
       LiveViewTest.render_keydown(view, "keydown", "+")
-      :timer.sleep(20)
       LiveViewTest.render_keydown(view, "keydown", "+")
       :timer.sleep(20)
       assert LiveViewTest.render(view) =~ "<div class=\"error\">\nShips shouldn't cross"

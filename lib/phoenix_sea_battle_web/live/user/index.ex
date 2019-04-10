@@ -45,11 +45,11 @@ defmodule PhoenixSeaBattleWeb.UserLive.Index do
 
     ~E"""
     <table class="table">
-        <%= for user <- users do %>
-          <tr>
-            <td><%= UserView.render("user.html", %{user: user}) %></td>
-          </tr>
-        <% end %>
+      <%= for user <- users do %>
+        <tr>
+          <td><%= UserView.render("user.html", %{user: user}) %></td>
+        </tr>
+      <% end %>
     </table>
     """
   end
