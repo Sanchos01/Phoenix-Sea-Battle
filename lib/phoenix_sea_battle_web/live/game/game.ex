@@ -9,6 +9,8 @@ defmodule PhoenixSeaBattleWeb.Game do
   alias PhoenixSeaBattleWeb.Router.Helpers, as: Routes
   alias PhoenixSeaBattle.Game.Board
 
+  @error_timeout Application.get_env(:phoenix_sea_battle, :game_live_timeout, 3_000)
+
   # user states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
   def mount(%{id: id, user: user, token: token}, socket) do
     socket =
@@ -134,7 +136,7 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   def handle_info({:render_error, error}, socket) do
     ref = make_ref()
-    Process.send_after(self(), {:clean_error, ref}, 3_000)
+    Process.send_after(self(), {:clean_error, ref}, @error_timeout)
     {:noreply, socket |> assign(error: {error, ref})}
   end
 

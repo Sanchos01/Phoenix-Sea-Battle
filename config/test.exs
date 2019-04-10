@@ -19,3 +19,5 @@ config :phoenix_sea_battle, PhoenixSeaBattle.Repo,
 
 config :comeonin, :bcrypt_log_rounds, 4
 config :comeonin, :pbkdf2_rounds, 1
+
+config :phoenix_sea_battle, :game_live_timeout, 100
