@@ -169,32 +169,14 @@ defmodule PhoenixSeaBattle.Game do
         {:drop_last, user_id},
         state = %__MODULE__{admin: %{id: user_id}, playing: false, winner: nil}
       ) do
-    board = state.admin_board
-
-    case Board.drop_last(board) do
-      {:ok, new_board} ->
-        send_update_stats([state.admin_pid])
-        {:noreply, %__MODULE__{state | admin_board: new_board}}
-
-      _ ->
-        {:noreply, state}
-    end
+    dropping_last(:admin, state)
   end
 
   def handle_cast(
         {:drop_last, user_id},
         state = %__MODULE__{opponent: %{id: user_id}, playing: false, winner: nil}
       ) do
-    board = state.opponent_board
-
-    case Board.drop_last(board) do
-      {:ok, new_board} ->
-        send_update_stats([state.opponent_pid])
-        {:noreply, %__MODULE__{state | opponent_board: new_board}}
-
-      _ ->
-        {:noreply, state}
-    end
+    dropping_last(:opponent, state)
   end
 
   def handle_cast(
@@ -202,16 +184,7 @@ defmodule PhoenixSeaBattle.Game do
         state = %__MODULE__{admin: %{id: user_id}, playing: {:ready, user_id2}}
       )
       when user_id != user_id2 do
-    board = state.admin_board
-
-    case Board.drop_last(board) do
-      {:ok, new_board} ->
-        send_update_stats([state.admin_pid])
-        {:noreply, %__MODULE__{state | admin_board: new_board}}
-
-      _ ->
-        {:noreply, state}
-    end
+    dropping_last(:admin, state)
   end
 
   def handle_cast(
@@ -219,16 +192,7 @@ defmodule PhoenixSeaBattle.Game do
         state = %__MODULE__{opponent: %{id: user_id}, playing: {:ready, user_id2}}
       )
       when user_id != user_id2 do
-    board = state.opponent_board
-
-    case Board.drop_last(board) do
-      {:ok, new_board} ->
-        send_update_stats([state.opponent_pid])
-        {:noreply, %__MODULE__{state | opponent_board: new_board}}
-
-      _ ->
-        {:noreply, state}
-    end
+    dropping_last(:opponent, state)
   end
 
   def handle_cast({:drop_last, _}, state) do
@@ -237,20 +201,16 @@ defmodule PhoenixSeaBattle.Game do
 
   def handle_cast(
         {:drop_all, user_id},
-        state = %__MODULE__{admin: %{id: user_id}, playing: false, winner: nil}
+        state = %{admin: %{id: user_id}, playing: false, winner: nil}
       ) do
-    new_board = Board.new_board()
-    send_update_stats([state.admin_pid])
-    {:noreply, %__MODULE__{state | admin_board: new_board}}
+    dropping_all(:admin, state)
   end
 
   def handle_cast(
         {:drop_all, user_id},
         state = %__MODULE__{opponent: %{id: user_id}, playing: false, winner: nil}
       ) do
-    new_board = Board.new_board()
-    send_update_stats([state.opponent_pid])
-    {:noreply, %__MODULE__{state | opponent_board: new_board}}
+    dropping_all(:opponent, state)
   end
 
   def handle_cast(
@@ -258,9 +218,7 @@ defmodule PhoenixSeaBattle.Game do
         state = %__MODULE__{admin: %{id: user_id}, playing: {:ready, user_id2}}
       )
       when user_id != user_id2 do
-    new_board = Board.new_board()
-    send_update_stats([state.admin_pid])
-    {:noreply, %__MODULE__{state | admin_board: new_board}}
+    dropping_all(:admin, state)
   end
 
   def handle_cast(
@@ -268,9 +226,7 @@ defmodule PhoenixSeaBattle.Game do
         state = %__MODULE__{opponent: %{id: user_id}, playing: {:ready, user_id2}}
       )
       when user_id != user_id2 do
-    new_board = Board.new_board()
-    send_update_stats([state.opponent_pid])
-    {:noreply, %__MODULE__{state | opponent_board: new_board}}
+    dropping_all(:opponent, state)
   end
 
   def handle_cast({:drop_all, _}, state) do
@@ -432,8 +388,7 @@ defmodule PhoenixSeaBattle.Game do
     {:noreply, %__MODULE__{state | timer: timer, offline: offline}}
   end
 
-  def handle_info(msg = %Broadcast{}, state) do
-    Logger.info("nothing intresting, msg - #{inspect(msg)}")
+  def handle_info(%Broadcast{}, state) do
     {:noreply, state}
   end
 
@@ -508,6 +463,44 @@ defmodule PhoenixSeaBattle.Game do
     |> Map.update(:opponent, nil, &get_user_name/1)
     |> Map.take(@get_keys)
     |> (fn x -> {:ok, x} end).()
+  end
+
+  defp dropping_last(:admin, state) do
+    board = state.admin_board
+
+    case Board.drop_last(board) do
+      {:ok, new_board} ->
+        send_update_stats([state.admin_pid])
+        {:noreply, %__MODULE__{state | admin_board: new_board}}
+
+      _ ->
+        {:noreply, state}
+    end
+  end
+
+  defp dropping_last(:opponent, state) do
+    board = state.opponent_board
+
+    case Board.drop_last(board) do
+      {:ok, new_board} ->
+        send_update_stats([state.opponent_pid])
+        {:noreply, %__MODULE__{state | opponent_board: new_board}}
+
+      _ ->
+        {:noreply, state}
+    end
+  end
+
+  defp dropping_all(:admin, state) do
+    new_board = Board.new_board()
+    send_update_stats([state.admin_pid])
+    {:noreply, %__MODULE__{state | admin_board: new_board}}
+  end
+
+  defp dropping_all(:opponent, state) do
+    new_board = Board.new_board()
+    send_update_stats([state.opponent_pid])
+    {:noreply, %__MODULE__{state | opponent_board: new_board}}
   end
 
   defp compare_state_and_presence(state = %__MODULE__{id: id}) do

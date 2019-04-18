@@ -26,13 +26,15 @@ defmodule PhoenixSeaBattle.Game.Board do
     end
   end
 
-  def ship_opts_to_indexes(x, y, :h, l) do
+  def ship_opts_to_indexes(x, y, :h, l)
+      when x >= 0 and y >= 0 and x < 10 and y < 10 and x + l <= 10 do
     for add <- 0..(l - 1) do
       x + add + 10 * y
     end
   end
 
-  def ship_opts_to_indexes(x, y, :v, l) do
+  def ship_opts_to_indexes(x, y, :v, l)
+      when x >= 0 and y >= 0 and x < 10 and y < 10 and y + l <= 10 do
     for add <- 0..(l - 1) do
       x + 10 * (y + add)
     end
