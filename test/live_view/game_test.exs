@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattleWeb.GameTest do
-  use PhoenixSeaBattleWeb.ConnCase
+  use PhoenixSeaBattleWeb.ConnCase, async: true
   alias Phoenix.LiveViewTest
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
   alias PhoenixSeaBattle.Game, as: GameServer
@@ -22,38 +22,17 @@ defmodule PhoenixSeaBattleWeb.GameTest do
   end
 
   defp fill_board(view) do
-    LiveViewTest.render_keydown(view, "keydown", "+")
-    :timer.sleep(10)
-    Enum.each(0..1, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowDown") end)
-    LiveViewTest.render_keydown(view, "keydown", "+")
-    :timer.sleep(10)
-    Enum.each(0..3, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowDown") end)
-    LiveViewTest.render_keydown(view, "keydown", "+")
-    :timer.sleep(10)
-    Enum.each(0..5, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowDown") end)
-    LiveViewTest.render_keydown(view, "keydown", "+")
-    :timer.sleep(10)
-    Enum.each(0..7, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowDown") end)
-    LiveViewTest.render_keydown(view, "keydown", "+")
-    :timer.sleep(10)
-    Enum.each(0..5, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowRight") end)
-    LiveViewTest.render_keydown(view, "keydown", "+")
-    :timer.sleep(10)
-    Enum.each(0..5, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowRight") end)
-    Enum.each(0..1, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowDown") end)
-    LiveViewTest.render_keydown(view, "keydown", "+")
-    :timer.sleep(10)
-    Enum.each(0..5, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowRight") end)
-    Enum.each(0..3, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowDown") end)
-    LiveViewTest.render_keydown(view, "keydown", "+")
-    :timer.sleep(10)
-    Enum.each(0..5, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowRight") end)
-    Enum.each(0..5, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowDown") end)
-    LiveViewTest.render_keydown(view, "keydown", "+")
-    :timer.sleep(10)
-    Enum.each(0..5, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowRight") end)
-    Enum.each(0..7, fn _ -> LiveViewTest.render_keydown(view, "keydown", "ArrowDown") end)
-    LiveViewTest.render_keydown(view, "keydown", "+")
+    %{user: %{id: user_id}, pid: pid} = :sys.get_state(view.pid).socket.assigns
+    GameServer.apply_ship(pid, user_id, %{x: 0, y: 0, pos: :h, l: 4})
+    GameServer.apply_ship(pid, user_id, %{x: 0, y: 2, pos: :h, l: 3})
+    GameServer.apply_ship(pid, user_id, %{x: 0, y: 4, pos: :h, l: 3})
+    GameServer.apply_ship(pid, user_id, %{x: 0, y: 6, pos: :h, l: 2})
+    GameServer.apply_ship(pid, user_id, %{x: 0, y: 8, pos: :h, l: 2})
+    GameServer.apply_ship(pid, user_id, %{x: 5, y: 0, pos: :h, l: 2})
+    GameServer.apply_ship(pid, user_id, %{x: 5, y: 2, pos: :h, l: 1})
+    GameServer.apply_ship(pid, user_id, %{x: 5, y: 4, pos: :h, l: 1})
+    GameServer.apply_ship(pid, user_id, %{x: 5, y: 6, pos: :h, l: 1})
+    GameServer.apply_ship(pid, user_id, %{x: 5, y: 8, pos: :h, l: 1})
     :timer.sleep(10)
     html = LiveViewTest.render(view)
     20 = count_ship_blocks(html)
@@ -76,16 +55,14 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       {:ok, :admin} = GameServer.add_user(GameSupervisor.via_tuple(id), user1)
       params = [session: %{user: user1, id: id, token: token}]
       {:ok, %LiveViewTest.View{}, _} = LiveViewTest.mount(Endpoint, GameLive, params)
-      
+
       {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
       {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
       params = [session: %{user: user2, id: id, token: token}]
       {:ok, %LiveViewTest.View{}, _} = LiveViewTest.mount(Endpoint, GameLive, params)
-      
+
       user3 = insert_user(%{name: "user3"})
       {:error, "game already full"} = GameServer.add_user(GameSupervisor.via_tuple(id), user3)
-      {:ok, :admin} = GameServer.add_user(GameSupervisor.via_tuple(id), user1)
-      {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
       params = [session: %{user: user3, id: id, token: token}]
       # User will be redirected to GET /game/:id
       path = "/game/#{id}"
@@ -288,10 +265,13 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       fill_board(view1)
 
       LiveViewTest.render_keydown(view2, "keydown", "+")
+      :timer.sleep(10)
       Enum.each(0..1, fn _ -> LiveViewTest.render_keydown(view2, "keydown", "ArrowDown") end)
       LiveViewTest.render_keydown(view2, "keydown", "+")
+      :timer.sleep(10)
       Enum.each(0..3, fn _ -> LiveViewTest.render_keydown(view2, "keydown", "ArrowDown") end)
       LiveViewTest.render_keydown(view2, "keydown", "+")
+      :timer.sleep(10)
       Enum.each(0..5, fn _ -> LiveViewTest.render_keydown(view2, "keydown", "ArrowDown") end)
       LiveViewTest.render_keydown(view2, "keydown", "+")
       :timer.sleep(10)

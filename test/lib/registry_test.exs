@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattle.Game.RegistryTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias PhoenixSeaBattle.Game.Registry, as: GameRegistry
 
   test "Registry module" do

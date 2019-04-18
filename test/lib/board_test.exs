@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattle.BoardTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias PhoenixSeaBattle.Game.Board
 
   test "apply_ship/2 horizontal" do

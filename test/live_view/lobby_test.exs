@@ -1,5 +1,5 @@
 defmodule PhoenixSeaBattleWeb.LobbyTest do
-  use PhoenixSeaBattleWeb.ConnCase
+  use PhoenixSeaBattleWeb.ConnCase, async: false
   alias Phoenix.LiveViewTest
   alias PhoenixSeaBattleWeb.{Endpoint, Lobby, Presence}
 
