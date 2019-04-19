@@ -85,8 +85,4 @@ defmodule PhoenixSeaBattleWeb.Game.InitialEventHandle do
   def apply_event("unready", _key, socket = %{assigns: %{game_state: :ready}}) do
     Game.unready(socket.assigns.pid, socket.assigns.user.id)
   end
-
-  def apply_event(event, _key, socket) do
-    Logger.warn("unhandled event: #{inspect(event)} ; #{inspect(socket)}")
-  end
 end

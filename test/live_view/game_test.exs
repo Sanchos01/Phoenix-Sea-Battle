@@ -9,6 +9,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
   @ghost_block "<div class=\"block ghost_block\">"
   @board_class "<div class=\"board\">"
   @some_blocks "[\n\s]*<div class=\"block\">\n<\/div>[\n\s]*"
+  @vertical_repeatence "#{@ghost_block}\n<\/div>(#{@some_blocks}){9}"
 
   defp count_ship_blocks(html) do
     pattern = :binary.compile_pattern([" ", "\\", "\""])
@@ -21,21 +22,31 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     end)
   end
 
-  defp fill_board(view) do
+  defp mount_view(id, user) do
+    {:ok, state} = GameServer.add_user(GameSupervisor.via_tuple(id), user)
+    token = Phoenix.Controller.get_csrf_token()
+    params = [session: %{user: user, id: id, token: token}]
+    {:ok, view, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
+    {:ok, view, state}
+  end
+
+  @ships [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
+  @xs List.duplicate(0, 5) ++ List.duplicate(5, 5)
+  @ys [0, 2, 4, 6, 8] |> List.duplicate(2) |> List.flatten()
+  @ships_with_places Enum.zip(@ships, Enum.zip(@xs, @ys))
+  defp fill_board(view, ships_count \\ 10) do
     %{user: %{id: user_id}, pid: pid} = :sys.get_state(view.pid).socket.assigns
-    GameServer.apply_ship(pid, user_id, %{x: 0, y: 0, pos: :h, l: 4})
-    GameServer.apply_ship(pid, user_id, %{x: 0, y: 2, pos: :h, l: 3})
-    GameServer.apply_ship(pid, user_id, %{x: 0, y: 4, pos: :h, l: 3})
-    GameServer.apply_ship(pid, user_id, %{x: 0, y: 6, pos: :h, l: 2})
-    GameServer.apply_ship(pid, user_id, %{x: 0, y: 8, pos: :h, l: 2})
-    GameServer.apply_ship(pid, user_id, %{x: 5, y: 0, pos: :h, l: 2})
-    GameServer.apply_ship(pid, user_id, %{x: 5, y: 2, pos: :h, l: 1})
-    GameServer.apply_ship(pid, user_id, %{x: 5, y: 4, pos: :h, l: 1})
-    GameServer.apply_ship(pid, user_id, %{x: 5, y: 6, pos: :h, l: 1})
-    GameServer.apply_ship(pid, user_id, %{x: 5, y: 8, pos: :h, l: 1})
+
+    @ships_with_places
+    |> Enum.take(ships_count)
+    |> Enum.each(fn {l, {x, y}} ->
+      GameServer.apply_ship(pid, user_id, %{x: x, y: y, pos: :h, l: l})
+    end)
+
     :timer.sleep(10)
     html = LiveViewTest.render(view)
-    20 = count_ship_blocks(html)
+    count = @ships |> Enum.take(ships_count) |> Enum.sum()
+    ^count = count_ship_blocks(html)
     html
   end
 
@@ -77,12 +88,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       user2 = insert_user(%{name: "user2"})
       <<id::binary-8, _::binary>> = Ecto.UUID.generate()
       GameSupervisor.new_game(id)
-
-      {:ok, :admin} = GameServer.add_user(GameSupervisor.via_tuple(id), user1)
-      token = Phoenix.Controller.get_csrf_token()
-      params = [session: %{user: user1, id: id, token: token}]
-      {:ok, view1, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
-
+      {:ok, view1, :admin} = mount_view(id, user1)
       {:ok, %{id: id, user1: user1, user2: user2, view1: view1}}
     end
 
@@ -140,10 +146,8 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     end
 
     test "render board while moving ghost (vertical)", %{view1: view} do
-      vertical_repeatence = "#{@ghost_block}\n<\/div>(#{@some_blocks}){9}"
-
       html = LiveViewTest.render_keydown(view, "keydown", "-")
-      assert html =~ ~r/#{@board_class}[\n\s]*(#{vertical_repeatence}){4}#{@some_blocks}/
+      assert html =~ ~r/#{@board_class}[\n\s]*(#{@vertical_repeatence}){4}#{@some_blocks}/
 
       assert html == LiveViewTest.render_keydown(view, "keydown", "ArrowUp")
       assert html == LiveViewTest.render_keydown(view, "keydown", "ArrowLeft")
@@ -155,7 +159,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
 
       new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowRight")
       assert html == new_html
-      assert new_html =~ ~r/#{@board_class}(#{@some_blocks}){9}(#{vertical_repeatence}){4}/
+      assert new_html =~ ~r/#{@board_class}(#{@some_blocks}){9}(#{@vertical_repeatence}){4}/
 
       html =
         Enum.reduce(1..6, "", fn _, _ ->
@@ -164,8 +168,38 @@ defmodule PhoenixSeaBattleWeb.GameTest do
 
       new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowDown")
       assert html == new_html
-      reg = ~r/#{@board_class}(#{@some_blocks}){69}(#{vertical_repeatence}){3}#{@ghost_block}/
+      reg = ~r/#{@board_class}(#{@some_blocks}){69}(#{@vertical_repeatence}){3}#{@ghost_block}/
       assert new_html =~ reg
+    end
+
+    test "rotate ghost on board", %{view1: view} do
+      h_reg = ~r/#{@board_class}(#{@some_blocks}){66}(#{@ghost_block}\n<\/div>[\n\s]*){4}/
+      v_reg = ~r/#{@board_class}(#{@some_blocks}){66}(#{@vertical_repeatence}){3}#{@ghost_block}/
+
+      html =
+        Enum.reduce(1..9, "", fn _, _ ->
+          LiveViewTest.render_keydown(view, "keydown", "ArrowRight")
+          LiveViewTest.render_keydown(view, "keydown", "ArrowDown")
+        end)
+
+      new_html = LiveViewTest.render_keydown(view, "keydown", "-")
+      refute html == new_html
+      assert new_html =~ v_reg
+
+      html =
+        Enum.reduce(1..3, "", fn _, _ ->
+          LiveViewTest.render_keydown(view, "keydown", "ArrowRight")
+        end)
+
+      new_html = LiveViewTest.render_keydown(view, "keydown", "-")
+      refute html == new_html
+      assert new_html =~ h_reg
+
+      html = LiveViewTest.render_keydown(view, "keydown", "-")
+      assert html =~ v_reg
+
+      html = LiveViewTest.render_keydown(view, "keydown", "-")
+      assert html =~ h_reg
     end
 
     test "render error messages (admin)", %{view1: view} do
@@ -183,10 +217,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     end
 
     test "render error messages (opponent)", %{user2: user, id: id} do
-      {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user)
-      token = Phoenix.Controller.get_csrf_token()
-      params = [session: %{user: user, id: id, token: token}]
-      {:ok, view, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
+      {:ok, view, :opponent} = mount_view(id, user)
 
       assert LiveViewTest.render(view) =~ "Move your ships with arrows"
       LiveViewTest.render_keydown(view, "keydown", "+")
@@ -203,31 +234,15 @@ defmodule PhoenixSeaBattleWeb.GameTest do
 
     test "render opponent status", %{view1: view1, id: id, user2: user2} do
       assert LiveViewTest.render(view1) =~ "No opponent"
-      {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
-      token = Phoenix.Controller.get_csrf_token()
-      params = [session: %{user: user2, id: id, token: token}]
-      {:ok, _view2, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
+      {:ok, _, :opponent} = mount_view(id, user2)
       :timer.sleep(10)
       assert LiveViewTest.render(view1) =~ "Opponent: #{user2.name}"
     end
 
     test "apply ships, drop last and drop all (admin)", %{view1: view1, user2: user2, id: id} do
-      {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
-      token = Phoenix.Controller.get_csrf_token()
-      params = [session: %{user: user2, id: id, token: token}]
-      {:ok, view2, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
-
+      {:ok, view2, :opponent} = mount_view(id, user2)
       fill_board(view2)
-
-      LiveViewTest.render_keydown(view1, "keydown", "+")
-      Enum.each(0..1, fn _ -> LiveViewTest.render_keydown(view1, "keydown", "ArrowDown") end)
-      LiveViewTest.render_keydown(view1, "keydown", "+")
-      Enum.each(0..3, fn _ -> LiveViewTest.render_keydown(view1, "keydown", "ArrowDown") end)
-      LiveViewTest.render_keydown(view1, "keydown", "+")
-      Enum.each(0..5, fn _ -> LiveViewTest.render_keydown(view1, "keydown", "ArrowDown") end)
-      LiveViewTest.render_keydown(view1, "keydown", "+")
-      :timer.sleep(10)
-      html = LiveViewTest.render(view1)
+      html = fill_board(view1, 4)
       assert 12 == count_ship_blocks(html)
 
       LiveViewTest.render_click(view1, "drop_last")
@@ -257,25 +272,9 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     end
 
     test "apply ships, drop last and drop all (opponent)", %{view1: view1, user2: user2, id: id} do
-      {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
-      token = Phoenix.Controller.get_csrf_token()
-      params = [session: %{user: user2, id: id, token: token}]
-      {:ok, view2, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
-
+      {:ok, view2, :opponent} = mount_view(id, user2)
       fill_board(view1)
-
-      LiveViewTest.render_keydown(view2, "keydown", "+")
-      :timer.sleep(10)
-      Enum.each(0..1, fn _ -> LiveViewTest.render_keydown(view2, "keydown", "ArrowDown") end)
-      LiveViewTest.render_keydown(view2, "keydown", "+")
-      :timer.sleep(10)
-      Enum.each(0..3, fn _ -> LiveViewTest.render_keydown(view2, "keydown", "ArrowDown") end)
-      LiveViewTest.render_keydown(view2, "keydown", "+")
-      :timer.sleep(10)
-      Enum.each(0..5, fn _ -> LiveViewTest.render_keydown(view2, "keydown", "ArrowDown") end)
-      LiveViewTest.render_keydown(view2, "keydown", "+")
-      :timer.sleep(10)
-      html = LiveViewTest.render(view2)
+      html = fill_board(view2, 4)
       assert 12 == count_ship_blocks(html)
 
       LiveViewTest.render_click(view2, "drop_last")
@@ -315,7 +314,6 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     test "render readiness (admin)", %{view1: view} do
       html = fill_board(view)
       assert html =~ "ready"
-
       LiveViewTest.render_click(view, "ready")
       :timer.sleep(10)
       html = LiveViewTest.render(view)
@@ -324,14 +322,9 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     end
 
     test "render readiness (opponent)", %{user2: user2, id: id} do
-      {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
-      token = Phoenix.Controller.get_csrf_token()
-      params = [session: %{user: user2, id: id, token: token}]
-      {:ok, view, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
-
+      {:ok, view, :opponent} = mount_view(id, user2)
       html = fill_board(view)
       assert html =~ "ready"
-
       LiveViewTest.render_click(view, "ready")
       :timer.sleep(10)
       html = LiveViewTest.render(view)
@@ -340,10 +333,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     end
 
     test "start game (ready: admin -> opponent)", %{view1: view1, user2: user2, id: id} do
-      {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
-      token = Phoenix.Controller.get_csrf_token()
-      params = [session: %{user: user2, id: id, token: token}]
-      {:ok, view2, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
+      {:ok, view2, :opponent} = mount_view(id, user2)
 
       html = fill_board(view1)
       assert html =~ "ready"
@@ -364,10 +354,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     end
 
     test "start game (ready: opponent -> admin)", %{view1: view1, user2: user2, id: id} do
-      {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
-      token = Phoenix.Controller.get_csrf_token()
-      params = [session: %{user: user2, id: id, token: token}]
-      {:ok, view2, _html} = LiveViewTest.mount(Endpoint, GameLive, params)
+      {:ok, view2, :opponent} = mount_view(id, user2)
 
       html = fill_board(view2)
       assert html =~ "ready"
@@ -385,6 +372,58 @@ defmodule PhoenixSeaBattleWeb.GameTest do
 
       html = LiveViewTest.render(view2)
       assert html =~ "Make your move" or html =~ "Wait the opponent's move"
+    end
+
+    test "win game (admin)", %{view1: view1, user2: user2, id: id} do
+      {:ok, view2, :opponent} = mount_view(id, user2)
+      fill_board(view1)
+      fill_board(view2)
+      LiveViewTest.render_click(view1, "ready")
+      LiveViewTest.render_click(view2, "ready")
+      :timer.sleep(10)
+      game_server_pid = :sys.get_state(view1.pid).socket.assigns.pid
+      game_state = :sys.replace_state(game_server_pid, &%{&1 | turn: &1.admin.id})
+      send game_state.admin_pid, :update_state
+      send game_state.opponent_pid, :update_state
+      shots = :sys.get_state(view1.pid).socket.assigns.shots
+      Enum.reduce(shots, 0, fn
+        nil, acc ->
+          acc + 1
+        _, acc ->
+          LiveViewTest.render_click(view1, "shot", acc)
+          acc + 1
+      end)
+      :timer.sleep(10)
+      html = LiveViewTest.render(view1)
+      assert html =~ "Congratulations, you win"
+      html = LiveViewTest.render(view2)
+      assert html =~ "You lose, good luck next time"
+    end
+
+    test "win game (opponent)", %{view1: view1, user2: user2, id: id} do
+      {:ok, view2, :opponent} = mount_view(id, user2)
+      fill_board(view1)
+      fill_board(view2)
+      LiveViewTest.render_click(view1, "ready")
+      LiveViewTest.render_click(view2, "ready")
+      :timer.sleep(10)
+      game_server_pid = :sys.get_state(view1.pid).socket.assigns.pid
+      game_state = :sys.replace_state(game_server_pid, &%{&1 | turn: &1.opponent.id})
+      send game_state.admin_pid, :update_state
+      send game_state.opponent_pid, :update_state
+      shots = :sys.get_state(view2.pid).socket.assigns.shots
+      Enum.reduce(shots, 0, fn
+        nil, acc ->
+          acc + 1
+        _, acc ->
+          LiveViewTest.render_click(view2, "shot", acc)
+          acc + 1
+      end)
+      :timer.sleep(10)
+      html = LiveViewTest.render(view2)
+      assert html =~ "Congratulations, you win"
+      html = LiveViewTest.render(view1)
+      assert html =~ "You lose, good luck next time"
     end
   end
 end
