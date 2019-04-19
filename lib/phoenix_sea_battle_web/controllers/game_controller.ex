@@ -1,7 +1,7 @@
 defmodule PhoenixSeaBattleWeb.GameController do
   require Logger
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
-  alias PhoenixSeaBattle.Game
+  alias PhoenixSeaBattle.GameServer
   alias Ecto.UUID
   use PhoenixSeaBattleWeb, :controller
   plug(:authenticate_user)
@@ -14,7 +14,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
         |> redirect(to: page_path(conn, :index))
 
       pid ->
-        case Game.add_user(pid, user) do
+        case GameServer.add_user(pid, user) do
           {:ok, status} when status in ~w(admin opponent)a ->
             render(conn, "index.html", id: id, token: Phoenix.Controller.get_csrf_token())
 

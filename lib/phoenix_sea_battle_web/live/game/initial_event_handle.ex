@@ -1,6 +1,6 @@
 defmodule PhoenixSeaBattleWeb.Game.InitialEventHandle do
   require Logger
-  alias PhoenixSeaBattle.Game
+  alias PhoenixSeaBattle.GameServer
 
   def apply_key(_key, %{assigns: %{render_opts: %{ready: true}}}) do
     :ok
@@ -62,7 +62,7 @@ defmodule PhoenixSeaBattleWeb.Game.InitialEventHandle do
   end
 
   def apply_key(k, %{assigns: assigns}) when k in ~w(+ =) do
-    Game.apply_ship(assigns.pid, assigns.user.id, assigns.render_opts)
+    GameServer.apply_ship(assigns.pid, assigns.user.id, assigns.render_opts)
     :ok
   end
 
@@ -71,18 +71,18 @@ defmodule PhoenixSeaBattleWeb.Game.InitialEventHandle do
   end
 
   def apply_event("drop_last", _key, socket = %{assigns: %{game_state: :initial}}) do
-    Game.drop_last(socket.assigns.pid, socket.assigns.user.id)
+    GameServer.drop_last(socket.assigns.pid, socket.assigns.user.id)
   end
 
   def apply_event("drop_all", _key, socket = %{assigns: %{game_state: :initial}}) do
-    Game.drop_all(socket.assigns.pid, socket.assigns.user.id)
+    GameServer.drop_all(socket.assigns.pid, socket.assigns.user.id)
   end
 
   def apply_event("ready", _key, socket = %{assigns: %{game_state: :initial}}) do
-    Game.ready(socket.assigns.pid, socket.assigns.user.id)
+    GameServer.ready(socket.assigns.pid, socket.assigns.user.id)
   end
 
   def apply_event("unready", _key, socket = %{assigns: %{game_state: :ready}}) do
-    Game.unready(socket.assigns.pid, socket.assigns.user.id)
+    GameServer.unready(socket.assigns.pid, socket.assigns.user.id)
   end
 end

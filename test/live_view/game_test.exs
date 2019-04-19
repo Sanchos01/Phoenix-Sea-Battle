@@ -1,8 +1,9 @@
 defmodule PhoenixSeaBattleWeb.GameTest do
   use PhoenixSeaBattleWeb.ConnCase, async: true
+  require Phoenix.LiveViewTest
   alias Phoenix.LiveViewTest
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
-  alias PhoenixSeaBattle.Game, as: GameServer
+  alias PhoenixSeaBattle.GameServer
   alias PhoenixSeaBattleWeb.Game, as: GameLive
   alias PhoenixSeaBattleWeb.Endpoint
 
@@ -383,16 +384,19 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       :timer.sleep(10)
       game_server_pid = :sys.get_state(view1.pid).socket.assigns.pid
       game_state = :sys.replace_state(game_server_pid, &%{&1 | turn: &1.admin.id})
-      send game_state.admin_pid, :update_state
-      send game_state.opponent_pid, :update_state
+      send(game_state.admin_pid, :update_state)
+      send(game_state.opponent_pid, :update_state)
       shots = :sys.get_state(view1.pid).socket.assigns.shots
+
       Enum.reduce(shots, 0, fn
         nil, acc ->
           acc + 1
+
         _, acc ->
-          LiveViewTest.render_click(view1, "shot", acc)
+          LiveViewTest.render_click(view1, "shot", "#{acc}")
           acc + 1
       end)
+
       :timer.sleep(10)
       html = LiveViewTest.render(view1)
       assert html =~ "Congratulations, you win"
@@ -409,21 +413,39 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       :timer.sleep(10)
       game_server_pid = :sys.get_state(view1.pid).socket.assigns.pid
       game_state = :sys.replace_state(game_server_pid, &%{&1 | turn: &1.opponent.id})
-      send game_state.admin_pid, :update_state
-      send game_state.opponent_pid, :update_state
+      send(game_state.admin_pid, :update_state)
+      send(game_state.opponent_pid, :update_state)
       shots = :sys.get_state(view2.pid).socket.assigns.shots
+
       Enum.reduce(shots, 0, fn
         nil, acc ->
           acc + 1
+
         _, acc ->
-          LiveViewTest.render_click(view2, "shot", acc)
+          LiveViewTest.render_click(view2, "shot", "#{acc}")
           acc + 1
       end)
+
       :timer.sleep(10)
       html = LiveViewTest.render(view2)
       assert html =~ "Congratulations, you win"
       html = LiveViewTest.render(view1)
       assert html =~ "You lose, good luck next time"
+    end
+
+    test "opponent exit on admin exit", %{user1: user1, user2: user2, id: id, conn: conn} do
+      {:ok, view2, :opponent} = mount_view(id, user2)
+
+      conn =
+        conn
+        |> assign(:current_user, user1)
+        |> post(session_path(conn, :create), %{
+          "session" => %{"username" => user1.username, "password" => "supersecret"}
+        })
+
+      delete(conn, game_path(conn, :delete, id))
+      assert html_response(conn, 302)
+      LiveViewTest.assert_redirect(view2, "/", fn -> :ok end)
     end
   end
 end

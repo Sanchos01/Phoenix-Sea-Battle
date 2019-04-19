@@ -5,7 +5,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   import PhoenixSeaBattleWeb.Router.Helpers
   alias PhoenixSeaBattleWeb.{Presence, BoardView}
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
-  alias PhoenixSeaBattle.Game
+  alias PhoenixSeaBattle.GameServer
   alias PhoenixSeaBattleWeb.Router.Helpers, as: Routes
   alias PhoenixSeaBattle.Game.Board
 
@@ -32,7 +32,7 @@ defmodule PhoenixSeaBattleWeb.Game do
     with true <- connected?(socket),
          pid when is_pid(pid) <- GenServer.whereis(GameSupervisor.via_tuple(id)),
          {:ok, socket} <- socket |> assign(pid: pid) |> update_state() do
-      messages = Game.get_messages(pid)
+      messages = GameServer.get_messages(pid)
       socket = assign(socket, messages: messages, error: nil)
       {:ok, socket}
     else
@@ -91,7 +91,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   def handle_event("insert_message", %{"chat-input" => msg}, socket) when msg != "" do
     username = socket.assigns.user.name
     payload = %{user: username, body: HtmlSanitizeEx.strip_tags(msg)}
-    Game.new_msg(socket.assigns.pid, payload)
+    GameServer.new_msg(socket.assigns.pid, payload)
     {:noreply, socket}
   end
 
@@ -132,7 +132,7 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   def handle_event("shot", value, socket = %{assigns: %{game_state: :move}})
       when is_integer(value) and value >= 0 and value < 100 do
-    Game.shot(socket.assigns.pid, socket.assigns.user.id, value)
+    GameServer.shot(socket.assigns.pid, socket.assigns.user.id, value)
     {:noreply, socket}
   end
 
@@ -168,8 +168,8 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   defp update_state(socket = %{assigns: %{pid: pid, user: user = %{name: username}}}) do
-    with {:ok, game_state} <- Game.get(pid, user),
-         {:ok, board, shots, other_shots} <- Game.get_board_and_shots(pid, user) do
+    with {:ok, game_state} <- GameServer.get(pid, user),
+         {:ok, board, shots, other_shots} <- GameServer.get_board_and_shots(pid, user) do
       {state, other} = get_state(username, game_state)
       set_presence("lobby", username, %{state: state, game_id: socket.assigns.id, with: other})
       set_presence("game:" <> socket.assigns.id, username, %{})

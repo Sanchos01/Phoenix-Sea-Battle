@@ -1,4 +1,4 @@
-defmodule PhoenixSeaBattle.Game do
+defmodule PhoenixSeaBattle.GameServer do
   use GenServer
   require Logger
   alias PhoenixSeaBattle.Game.Board
@@ -446,11 +446,7 @@ defmodule PhoenixSeaBattle.Game do
     :ok
   end
 
-  def terminate(reason, state) do
-    Logger.error(
-      "Unusual stop game #{state.id} with reason #{inspect(reason)}, state: #{inspect(state)}"
-    )
-
+  def terminate(_reason, state) do
     state.admin_pid && send(state.admin_pid, :retry_connect)
     state.opponent_pid && send(state.opponent_pid, :retry_connect)
     :ets.insert(:saver, {state.id, state, :os.system_time(:second) + 30_000})

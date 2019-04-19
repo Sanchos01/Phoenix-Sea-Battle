@@ -1,7 +1,7 @@
 defmodule PhoenixSeaBattle.GameControllerTest do
   use PhoenixSeaBattleWeb.ConnCase, async: true
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
-  alias PhoenixSeaBattle.Game
+  alias PhoenixSeaBattle.GameServer
   import Mock
 
   setup %{conn: conn} = config do
@@ -9,8 +9,8 @@ defmodule PhoenixSeaBattle.GameControllerTest do
     GameSupervisor.new_game(id)
     user_max123 = insert_user(%{name: "max123", username: "user_max123", password: "secret"})
     user_alex123 = insert_user(%{name: "alex123", username: "user_alex123", password: "secret"})
-    {:ok, :admin} = Game.add_user(GameSupervisor.via_tuple(id), user_max123)
-    {:ok, :opponent} = Game.add_user(GameSupervisor.via_tuple(id), user_alex123)
+    {:ok, :admin} = GameServer.add_user(GameSupervisor.via_tuple(id), user_max123)
+    {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user_alex123)
 
     config =
       case config[:login_as] do
@@ -110,12 +110,22 @@ defmodule PhoenixSeaBattle.GameControllerTest do
   end
 
   @tag login_as: "max123"
-  test "DELETE sessions/:id", %{conn: conn, id: game_id} do
+  test "DELETE sessions/:id (admin)", %{conn: conn, id: game_id} do
     pid = "#{game_id}" |> GameSupervisor.via_tuple() |> GenServer.whereis()
     ref = Process.monitor(pid)
     conn = delete(conn, game_path(conn, :delete, game_id))
     assert html_response(conn, 302)
     assert_receive {:DOWN, ^ref, :process, ^pid, :normal}, 100
+  end
+
+  @tag login_as: "alex123"
+  test "DELETE sessions/:id (opponent)", %{conn: conn, id: game_id} do
+    pid = "#{game_id}" |> GameSupervisor.via_tuple() |> GenServer.whereis()
+    ref = Process.monitor(pid)
+    conn = delete(conn, game_path(conn, :delete, game_id))
+    assert html_response(conn, 302)
+    # game don't stop on opponent exit
+    refute_receive {:DOWN, ^ref, :process, ^pid, :normal}, 100
   end
 
   @tag login_as: "john123", game_id: "17342072"
