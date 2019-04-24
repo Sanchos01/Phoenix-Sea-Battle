@@ -7,10 +7,10 @@ defmodule PhoenixSeaBattleWeb.GameTest do
   alias PhoenixSeaBattleWeb.Game, as: GameLive
   alias PhoenixSeaBattleWeb.Endpoint
 
-  @ghost_block "<div class=\"block ghost_block\">"
-  @board_class "<div class=\"board\">"
-  @some_blocks "[\n\s]*<div class=\"block\">\n<\/div>[\n\s]*"
-  @vertical_repeatence "#{@ghost_block}\n<\/div>(#{@some_blocks}){9}"
+  @ghost_block "[\n\s\r]*<div class=\"block ghost_block\">\n<\/div>"
+  @board_class "[\n\s\r]*<div class=\"board\">"
+  @some_blocks "[\n\s\r]*<div class=\"block\">\n<\/div>"
+  @vertical_repeatence "#{@ghost_block}(#{@some_blocks}){9}"
 
   defp count_ship_blocks(html) do
     pattern = :binary.compile_pattern([" ", "\\", "\""])
@@ -121,11 +121,11 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       html = LiveViewTest.render(view)
       new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowUp")
       assert html == new_html
-      assert new_html =~ ~r/(#{@ghost_block}\n<\/div>[\n\s]*){4}/
+      assert new_html =~ ~r/(#{@ghost_block}[\n\s]*){4}/
 
       new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowLeft")
       assert html == new_html
-      assert new_html =~ ~r/(#{@ghost_block}\n<\/div>[\n\s]*){4}/
+      assert new_html =~ ~r/(#{@ghost_block}[\n\s]*){4}/
 
       html =
         Enum.reduce(1..6, "", fn _, _ ->
@@ -134,7 +134,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
 
       new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowRight")
       assert html == new_html
-      assert new_html =~ ~r/(#{@ghost_block}\n<\/div>[\n\s]*){4}/
+      assert new_html =~ ~r/(#{@ghost_block}[\n\s]*){4}/
 
       html =
         Enum.reduce(1..9, "", fn _, _ ->
@@ -143,12 +143,12 @@ defmodule PhoenixSeaBattleWeb.GameTest do
 
       new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowDown")
       assert html == new_html
-      assert new_html =~ ~r/(#{@ghost_block}\n<\/div>[\n\s]*){4}/
+      assert new_html =~ ~r/(#{@ghost_block}[\n\s]*){4}/
     end
 
     test "render board while moving ghost (vertical)", %{view1: view} do
       html = LiveViewTest.render_keydown(view, "keydown", "-")
-      assert html =~ ~r/#{@board_class}[\n\s]*(#{@vertical_repeatence}){4}#{@some_blocks}/
+      assert html =~ ~r/#{@board_class}(#{@vertical_repeatence}){4}#{@some_blocks}/
 
       assert html == LiveViewTest.render_keydown(view, "keydown", "ArrowUp")
       assert html == LiveViewTest.render_keydown(view, "keydown", "ArrowLeft")
@@ -174,7 +174,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     end
 
     test "rotate ghost on board", %{view1: view} do
-      h_reg = ~r/#{@board_class}(#{@some_blocks}){66}(#{@ghost_block}\n<\/div>[\n\s]*){4}/
+      h_reg = ~r/#{@board_class}(#{@some_blocks}){66}(#{@ghost_block}[\n\s]*){4}/
       v_reg = ~r/#{@board_class}(#{@some_blocks}){66}(#{@vertical_repeatence}){3}#{@ghost_block}/
 
       html =
