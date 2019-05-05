@@ -6,7 +6,7 @@ defmodule PhoenixSeaBattleWeb.UserLive.Index do
   alias PhoenixSeaBattle.{User, Repo}
   alias PhoenixSeaBattleWeb.UserView
 
-  @page_size 2
+  @page_size 10
   @pre_query from(u in User, order_by: u.id, select: map(u, [:id, :name]))
 
   def mount(_session, socket) do
@@ -28,9 +28,9 @@ defmodule PhoenixSeaBattleWeb.UserLive.Index do
       <% else %>
         <button class="button">Next</button>
       <% end %>
-      Total: <%= @total %>
-
       <%= render_users(@page, @page_size) %>
+      Total users: <%= @total %>;
+      Total pages: <%= ceil(@total/@page_size) %>
     """
   end
 

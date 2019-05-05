@@ -10,7 +10,9 @@ liveSocket.connect()
 
 document.addEventListener("DOMContentLoaded", _event => {
   let el = document.getElementById("messages");
-  el.scrollTop = el.scrollHeight;
+  if (el != undefined) {
+    el.scrollTop = el.scrollHeight;
+  }
 });
 
 Array.from(document.getElementsByName("chat-input")).map(elem => {

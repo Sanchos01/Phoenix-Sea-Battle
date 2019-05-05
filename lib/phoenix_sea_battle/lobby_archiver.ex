@@ -19,7 +19,7 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
 
   def handle_cast({:new_msg, body, user}, state) do
     new_msg = %{body: body, user: user, timestamp: :os.system_time(:second)}
-    new_msgs = [new_msg | Enum.take(state.msg, @msg_count)]
+    new_msgs = Enum.take([new_msg | state.msg], @msg_count)
     Enum.each(state.subs, fn pid -> send(pid, {:update, Enum.reverse(new_msgs)}) end)
     {:noreply, %{state | msg: new_msgs}}
   end

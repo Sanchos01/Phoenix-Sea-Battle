@@ -51,7 +51,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
           </div>
           <div id="userList" class="panel-body">
             <div>
-              <%= for {user, %{metas: [meta]}} <- sort_users(@online_users) do %>
+              <%= for {user, %{metas: [meta | _]}} <- sort_users(@online_users) do %>
                 <li class="users">
                 <%= BoardView.render_user(user, meta) %>
                 </li>
