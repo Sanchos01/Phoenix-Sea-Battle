@@ -1,0 +1,12 @@
+<div class="boards">
+  <div class="board">
+    <%= for cell <- @board do %>
+      <%= render_cell(cell) %>
+    <% end %>
+  </div>
+  <div class="board">
+    <%= for cell <- @shots do %>
+      <%= render_cell(cell) %>
+    <% end %>
+  </div>
+</div>

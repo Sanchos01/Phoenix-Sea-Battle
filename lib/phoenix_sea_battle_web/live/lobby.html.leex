@@ -1,0 +1,41 @@
+<div id="chat" class="chat container">
+  <div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        Messages:
+      </div>
+      <div id="messages" class="panel-body">
+        <%= for msg <- @messages do %>
+          <div>
+            <%= "[#{format_ts(msg.timestamp)}] #{msg.user}: #{msg.body}" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        Users Online:
+      </div>
+      <div id="userList" class="panel-body">
+        <div>
+          <%= for {user, %{metas: [meta | _]}} <- sort_users(@online_users) do %>
+            <li class="users">
+            <%= BoardView.render_user(user, meta) %>
+            </li>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <%= live_component(PhoenixSeaBattleWeb.ChatInput) %>
+  </div>
+  <div>
+    <td class="text-right">
+      <%= link "Start game", to: Routes.game_path(@socket, :index),
+            class: "button button-default" %>
+    </td>
+  </div>
+</div>

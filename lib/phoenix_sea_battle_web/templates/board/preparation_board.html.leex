@@ -1,0 +1,12 @@
+<div class="boards">
+  <div id=board phx-hook="PreparePhase" class="board start_board" phx-click="place">
+    <%= for {cell, i} <- Enum.with_index(@board) do %>
+      <%= render_cell(cell, i) %>
+    <% end %>
+  </div>
+  <div>
+    <div id=rotate class=button phx-click="rotate">Rotate</div>
+    <br>
+    <%= render_placing_ship(@render_opts) %>
+  </div>
+</div>

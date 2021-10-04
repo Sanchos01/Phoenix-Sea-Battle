@@ -1,1 +1,1 @@
-<%= live_render(@conn, PhoenixSeaBattleWeb.Game, session: %{user: @current_user, id: @id, token: @token}) %>
+<%= live_render(@conn, PhoenixSeaBattleWeb.Game, session: %{"user" => @current_user, "id" => @id, "token" => @token}) %>

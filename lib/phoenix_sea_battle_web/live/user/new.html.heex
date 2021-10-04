@@ -6,8 +6,7 @@
   </div>
 <% end %>
 
-<%= f = form_for @changeset, "#", [phx_change: :validate, phx_submit: :save] %>
-
+<.form let={f} for={@changeset} phx_change="validate" phx_submit="save">
   <div class="form-group">
     <%= text_input f, :name, placeholder: "Name (your nickname for others)", class: "form-control" %>
     <%= error_tag f, :name %>
@@ -26,4 +25,4 @@
   <div>
     <%= submit "Create User", class: "btn btn-primary", phx_disable_wih: "Saving..." %>
   </div>
-</form>
+</.form>

@@ -11,7 +11,7 @@ defmodule PhoenixSeaBattleWeb.SessionController do
       {:ok, conn} ->
         conn
         |> put_flash(:info, "Welcome back, #{user}!")
-        |> redirect(to: page_path(conn, :index))
+        |> redirect(to: Routes.page_path(conn, :index))
 
       {:error, _reason, conn} ->
         conn
@@ -23,6 +23,6 @@ defmodule PhoenixSeaBattleWeb.SessionController do
   def delete(conn, _params) do
     conn
     |> Auth.logout()
-    |> redirect(to: page_path(conn, :index))
+    |> redirect(to: Routes.page_path(conn, :index))
   end
 end

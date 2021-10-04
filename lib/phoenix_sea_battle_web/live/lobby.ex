@@ -1,6 +1,5 @@
 defmodule PhoenixSeaBattleWeb.Lobby do
-  use Phoenix.LiveView
-  use Phoenix.HTML
+  use PhoenixSeaBattleWeb, :live_view
   require Logger
 
   alias PhoenixSeaBattleWeb.{Endpoint, Presence, BoardView}
@@ -8,7 +7,7 @@ defmodule PhoenixSeaBattleWeb.Lobby do
   alias Phoenix.Socket.Broadcast
   alias PhoenixSeaBattleWeb.Router.Helpers, as: Routes
 
-  def mount(%{user: user}, socket) do
+  def mount(_params, %{"user" => user}, socket) do
     with true <- connected?(socket) do
       :ok = Endpoint.subscribe("lobby")
       {:ok, msgs} = LobbyArchiver.subs()
@@ -25,55 +24,6 @@ defmodule PhoenixSeaBattleWeb.Lobby do
     else
       false -> {:ok, socket |> assign(messages: [], online_users: [])}
     end
-  end
-
-  def render(assigns) do
-    ~L"""
-    <div id="chat" class="chat container">
-      <div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            Messages:
-          </div>
-          <div id="messages" class="panel-body">
-            <%= for msg <- @messages do %>
-              <div>
-                <%= "[#{format_ts(msg.timestamp)}] #{msg.user}: #{msg.body}" %>
-              </div>
-            <% end %>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            Users Online:
-          </div>
-          <div id="userList" class="panel-body">
-            <div>
-              <%= for {user, %{metas: [meta | _]}} <- sort_users(@online_users) do %>
-                <li class="users">
-                <%= BoardView.render_user(user, meta) %>
-                </li>
-              <% end %>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <form phx-submit="insert_message">
-          <input name="chat-input" type="text" class="form-control" value=""
-                  maxlength="100" placeholder="Type a message..." autocomplete="off">
-        </form>
-      </div>
-      <div>
-        <td class="text-right">
-          <%= link "Start game", to: Routes.game_path(@socket, :index),
-                class: "button button-default" %>
-        </td>
-      </div>
-    </div>
-    """
   end
 
   def handle_event("insert_message", %{"chat-input" => msg}, socket) when msg != "" do

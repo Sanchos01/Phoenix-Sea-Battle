@@ -11,7 +11,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
       nil ->
         conn
         |> put_flash(:error, "Such game not exist")
-        |> redirect(to: page_path(conn, :index))
+        |> redirect(to: Routes.page_path(conn, :index))
 
       pid ->
         case GameServer.add_user(pid, user) do
@@ -21,7 +21,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
           {:error, reason} ->
             conn
             |> put_flash(:error, reason)
-            |> redirect(to: page_path(conn, :index))
+            |> redirect(to: Routes.page_path(conn, :index))
         end
     end
   end
@@ -32,7 +32,7 @@ defmodule PhoenixSeaBattleWeb.GameController do
     case GenServer.whereis(GameSupervisor.via_tuple(id)) do
       nil ->
         GameSupervisor.new_game(id)
-        redirect(conn, to: game_path(conn, :show, id))
+        redirect(conn, to: Routes.game_path(conn, :show, id))
 
       _ ->
         index(conn, nil)
@@ -45,6 +45,6 @@ defmodule PhoenixSeaBattleWeb.GameController do
       pid -> send(pid, {:terminate, user})
     end
 
-    redirect(conn, to: page_path(conn, :index))
+    redirect(conn, to: Routes.page_path(conn, :index))
   end
 end

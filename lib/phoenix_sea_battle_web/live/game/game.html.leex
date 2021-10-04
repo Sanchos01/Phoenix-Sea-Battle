@@ -1,0 +1,42 @@
+<div id="game-container" class="game container">
+  <div>
+    <div class="panel panel-default">
+      <div id="state-bar" class="panel-heading">
+        <%= BoardView.message(@error, @game_state) %>
+      </div>
+      <div id="game" class="panel-body">
+        <div class="opponent-status"><%= opponent_status(@opponent) %></div>
+        <%= render_board(@game_state, @board, @shots, @other_shots, @render_opts) %>
+        <%= sub_panel(@game_state, @board, @shots) %>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        InGame Chat:
+      </div>
+      <div id="messages" class="panel-body panel-messages">
+        <%= for msg <- Enum.reverse(@messages) do %>
+        <div>
+        <%= "#{msg.user}: #{msg.body}" %>
+        </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  <div>
+    <%= live_component(PhoenixSeaBattleWeb.ChatInput, []) %>
+  </div>
+  <div>
+    <td class="text-right">
+      <%= if @game_state in ~w(win lose)a do %>
+        <%= link "Exit Game", to: game_path(@socket, :delete, @id), method: :delete, csrf_token: @token,
+          data: [], class: "button button-default" %>
+      <% else %>
+        <%= link "Exit Game", to: game_path(@socket, :delete, @id), method: :delete, csrf_token: @token,
+          data: [confirm: "You want leave the game?"], class: "button button-default" %>
+      <% end %>
+    </td>
+  </div>
+</div>

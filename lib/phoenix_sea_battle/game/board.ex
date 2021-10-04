@@ -18,11 +18,11 @@ defmodule PhoenixSeaBattle.Game.Board do
   end
 
   def apply_ship(board, %{x: x, y: y, pos: p, l: l}) do
-    pre_ship_blocks = ship_opts_to_indexes(x, y, p, l)
+    pre_ship_cells = ship_opts_to_indexes(x, y, p, l)
 
-    with :ok <- check_cross(board, pre_ship_blocks),
-         true <- all_nearest_empty?(pre_ship_blocks, board) || {:error, :nearest} do
-      apply_pre_blocks(board, pre_ship_blocks, l)
+    with :ok <- check_cross(board, pre_ship_cells),
+         true <- all_nearest_empty?(pre_ship_cells, board) || {:error, :nearest} do
+      apply_pre_cells(board, pre_ship_cells, l)
     end
   end
 
@@ -136,7 +136,7 @@ defmodule PhoenixSeaBattle.Game.Board do
   defp return_index(false, false, index), do: [index]
   defp return_index(_, _, _), do: [nil]
 
-  defp apply_pre_blocks(board, indexes, l) do
+  defp apply_pre_cells(board, indexes, l) do
     ships = all_ships(board)
     {mark, _} = anyone_missed?(ships)
 

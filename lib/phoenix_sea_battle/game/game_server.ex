@@ -64,7 +64,7 @@ defmodule PhoenixSeaBattle.GameServer do
       if state.opponent_pid != pid, do: %__MODULE__{state | opponent_pid: pid}, else: state
 
     {:reply, make_get_reply(new_state), new_state}
-      end
+  end
 
   def handle_call({:get, _}, _from, state) do
     {:reply, :error, state}
@@ -315,7 +315,6 @@ defmodule PhoenixSeaBattle.GameServer do
     {:noreply, state}
   end
 
-  # TODO add check winner
   def handle_cast(
         {:shot, user_id, index},
         state = %__MODULE__{playing: true, turn: user_id, admin: %{id: user_id}}
@@ -328,9 +327,9 @@ defmodule PhoenixSeaBattle.GameServer do
     if Board.all_dead?(new_shots) do
       {:noreply, %__MODULE__{state | admin_shots: new_shots, winner: user_id, playing: false}}
     else
-    new_turn = if same_turn?, do: state.turn, else: state.opponent.id
-    {:noreply, %__MODULE__{state | admin_shots: new_shots, turn: new_turn}}
-  end
+      new_turn = if same_turn?, do: state.turn, else: state.opponent.id
+      {:noreply, %__MODULE__{state | admin_shots: new_shots, turn: new_turn}}
+    end
   end
 
   def handle_cast(
@@ -345,9 +344,9 @@ defmodule PhoenixSeaBattle.GameServer do
     if Board.all_dead?(new_shots) do
       {:noreply, %__MODULE__{state | opponent_shots: new_shots, winner: user_id, playing: false}}
     else
-    new_turn = if same_turn?, do: state.turn, else: state.admin.id
-    {:noreply, %__MODULE__{state | opponent_shots: new_shots, turn: new_turn}}
-  end
+      new_turn = if same_turn?, do: state.turn, else: state.admin.id
+      {:noreply, %__MODULE__{state | opponent_shots: new_shots, turn: new_turn}}
+    end
   end
 
   def handle_cast({:shot, _user_id, _index}, state) do
@@ -458,7 +457,7 @@ defmodule PhoenixSeaBattle.GameServer do
     |> Map.update(:admin, nil, &get_user_name/1)
     |> Map.update(:opponent, nil, &get_user_name/1)
     |> Map.take(@get_keys)
-    |> (fn x -> {:ok, x} end).()
+    |> then(fn x -> {:ok, x} end)
   end
 
   defp dropping_last(:admin, state) do

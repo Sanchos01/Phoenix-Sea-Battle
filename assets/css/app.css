@@ -1,7 +1,6 @@
 /* This file is for your main application css. */
 
 @import "./phoenix.css";
-@import "../../deps/phoenix_live_view/assets/css/live_view.css";
 
 #game {
   display: grid;
@@ -94,34 +93,46 @@
   padding: 0;
   margin: 0;
 }
-.block {
+.cell {
   display: block;
   background-color: #6699ff;
   border-color: black;
   border-width: 0.1em;
   border-style: solid;
 }
-.ghost_block {
+.ghost_cell {
   background-color: rgb(255, 145, 0);
 }
-.cross_block {
+.cross_cell {
   background-color: rgb(255, 0, 0);
 }
-.ship_block {
+.ship_cell {
   background-color: rgb(29, 25, 23);
 }
-.empty_block {
+.empty_cell {
   background-color: azure;
 }
-.shotted_block {
+.shotted_cell {
   background-color: rgb(185, 0, 0);
 }
-.killed_block {
+.killed_cell {
   background-color: rgb(100, 0, 0);
 }
-.near_block {
+.near_cell {
   background-color: rgb(34, 92, 168);
 }
-.missed_block {
+.missed_cell {
   background-color: rgb(150, 150, 150);
+}
+.ghost_ship_horizontal {
+  display: grid;
+  grid-template-rows: 1.3em;
+  grid-template-columns: repeat(4, 1.3em);
+  grid-gap: 0.2em;
+}
+.ghost_ship_vertical {
+  display: grid;
+  grid-template-rows: repeat(4, 1.3em);
+  grid-template-columns: 1.3em;
+  grid-gap: 0.2em;
 }
