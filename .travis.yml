@@ -3,6 +3,8 @@ elixir:
   - 1.12.2
 otp_release:
   - 24.0
+services:
+  - postgresql
 script:
   - "mix do ecto.setup, coveralls.travis"
 cache:
