@@ -63,7 +63,7 @@ defmodule PhoenixSeaBattle.Mixfile do
       {:plug_cowboy, "~> 2.5"},
       {:comeonin, "~> 3.2"},
       {:jason, "~> 1.2"},
-      {:excoveralls, "~> 0.6", only: :test},
+      {:excoveralls, "~> 0.14", only: :test},
       {:mock, "~> 0.2.0", only: :test},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:phoenix_live_view, "~> 0.16"},
