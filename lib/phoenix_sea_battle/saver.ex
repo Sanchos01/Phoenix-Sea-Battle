@@ -2,7 +2,7 @@ defmodule PhoenixSeaBattle.Saver do
   use GenServer
   @timeout if Mix.env() == :test, do: 100, else: 10_000
 
-  def start_link(), do: GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  def start_link(_), do: GenServer.start_link(__MODULE__, nil, name: __MODULE__)
 
   def init(_) do
     :ets.new(:saver, ~w(named_table public set)a)

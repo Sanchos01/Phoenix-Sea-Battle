@@ -1,0 +1,12 @@
+<div class="boards" phx-keydown="keydown" phx-target="window">
+  <div class="board">
+    <%= for cell <- @board do %>
+      <%= render_cell(cell) %>
+    <% end %>
+  </div>
+  <div class="board">
+    <%= for {cell, index} <- apply_shots(@shots) do %>
+      <%= render_shot(cell, index, @move?) %>
+    <% end %>
+  </div>
+</div>

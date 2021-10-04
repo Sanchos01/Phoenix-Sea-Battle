@@ -1,11 +1,11 @@
 defmodule PhoenixSeaBattleWeb.LobbyTest do
   use PhoenixSeaBattleWeb.ConnCase, async: false
-  alias Phoenix.LiveViewTest
-  alias PhoenixSeaBattleWeb.{Endpoint, Lobby, Presence}
+  import Phoenix.LiveViewTest
+  alias PhoenixSeaBattleWeb.{Lobby, Presence}
 
-  setup do
+  setup %{conn: conn} do
     user = insert_user()
-    {:ok, view, _html} = LiveViewTest.mount(Endpoint, Lobby, session: %{user: user})
+    {:ok, view, _html} = live_isolated(conn, Lobby, session: %{"user" => user})
     {:ok, %{view: view, user: user}}
   end
 
@@ -19,18 +19,18 @@ defmodule PhoenixSeaBattleWeb.LobbyTest do
     Task.async(fn -> track_and_sleep("user2", %{state: 2, with: "user3"}) end)
     Task.async(fn -> track_and_sleep("user4", %{state: 3}) end)
     :timer.sleep(20)
-    html = LiveViewTest.render(view)
-    assert html =~ "#{name}\n<br>\n<small>in lobby</small>"
-    assert html =~ "user1\n<br>\n<small>in game</small>"
-    assert html =~ "user2\n<br>\n<small>in game with user3</small>"
-    assert html =~ "user4\n<br>\n<small>game ended</small>"
+    html = render(view)
+    assert html =~ "#{name}\n<br/><small>in lobby</small>"
+    assert html =~ "user1\n<br/><small>in game</small>"
+    assert html =~ "user2\n<br/><small>in game with user3</small>"
+    assert html =~ "user4\n<br/><small>game ended</small>"
   end
 
   test "render messages and update", %{view: view} do
     msg = "lobby live view test"
-    refute LiveViewTest.render(view) =~ msg
-    LiveViewTest.render_submit(view, "insert_message", %{"chat-input" => msg})
+    refute render(view) =~ msg
+    render_submit(view, "insert_message", %{"chat-input" => msg})
     :timer.sleep(20)
-    assert LiveViewTest.render(view) =~ "] SomeUser: #{msg}"
+    assert render(view) =~ "] SomeUser: #{msg}"
   end
 end

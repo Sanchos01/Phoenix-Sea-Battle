@@ -1,6 +1,5 @@
 defmodule PhoenixSeaBattleWeb.Game do
-  use Phoenix.LiveView
-  use Phoenix.HTML
+  use PhoenixSeaBattleWeb, :live_view
   require Logger
   import PhoenixSeaBattleWeb.Router.Helpers
   alias PhoenixSeaBattleWeb.{Presence, BoardView}
@@ -12,7 +11,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   @error_timeout Application.get_env(:phoenix_sea_battle, :game_live_timeout, 3_000)
 
   # user states: 0 - in lobby; 1 - game, wait opponent; 2 - game, full; 3 - game, ended
-  def mount(%{id: id, user: user, token: token}, socket) do
+  def mount(_params, %{"id" => id, "user" => user, "token" => token}, socket) do
     socket =
       assign(socket,
         id: id,
@@ -40,52 +39,8 @@ defmodule PhoenixSeaBattleWeb.Game do
         {:ok, socket}
 
       _ ->
-        {:stop, redirect(socket, to: Routes.game_path(socket, :show, id))}
+        {:ok, redirect(socket, to: Routes.game_path(socket, :show, id))}
     end
-  end
-
-  def render(assigns) do
-    ~L"""
-    <div id="game-container" class="game container">
-      <div>
-        <div class="panel panel-default">
-          <div id="state-bar" class="panel-heading">
-            <%= BoardView.message(@error, @game_state) %>
-          </div>
-          <div id="game" class="panel-body">
-            <div class="opponent-status"><%= opponent_status(@opponent) %></div>
-            <%= render_board(@game_state, @board, @shots, @other_shots, @render_opts) %>
-            <%= sub_panel(@game_state, @board, @shots) %>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            InGame Chat:
-          </div>
-          <div id="messages" class="panel-body panel-messages">
-            <%= for msg <- Enum.reverse(@messages) do %>
-            <div>
-            <%= "#{msg.user}: #{msg.body}" %>
-            </div>
-            <% end %>
-          </div>
-        </div>
-      </div>
-      <div>
-        <form phx-submit="insert_message">
-          <input name="chat-input" type="text" class="form-control" placeholder="Type a message..." autocomplete="off">
-        </form>
-      </div>
-      <div>
-        <td class="text-right">
-          <%= link "Exit Game", to: game_path(@socket, :delete, @id), method: :delete, csrf_token: @token,
-            data: [confirm: "You want leave the game?"], class: "button button-default" %>
-        </td>
-      </div>
-    </div>
-    """
   end
 
   def handle_event("insert_message", %{"chat-input" => msg}, socket) when msg != "" do
@@ -141,7 +96,7 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   def handle_info(:retry_connect, socket = %{assigns: %{id: id}}) do
-    {:stop, redirect(socket, to: Routes.game_path(socket, :show, id))}
+    {:noreply, redirect(socket, to: Routes.game_path(socket, :show, id))}
   end
 
   def handle_info(:update_state, socket) do
@@ -164,7 +119,7 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   def handle_info(:exit, socket) do
     socket = socket |> put_flash(:info, "Game ended because of admin out")
-    {:stop, redirect(socket, to: Routes.page_path(socket, :index))}
+    {:noreply, redirect(socket, to: Routes.page_path(socket, :index))}
   end
 
   defp update_state(socket = %{assigns: %{pid: pid, user: user = %{name: username}}}) do
@@ -216,8 +171,8 @@ defmodule PhoenixSeaBattleWeb.Game do
 
   defp render_board(state, board, _, _, %{x: x, y: y, pos: pos, l: l})
        when state in ~w(initial ready)a do
-    pre_ship_blocks = Board.ship_opts_to_indexes(x, y, pos, l)
-    board = append_pre_ship(board, pre_ship_blocks)
+    pre_ship_cells = Board.ship_opts_to_indexes(x, y, pos, l)
+    board = append_pre_ship(board, pre_ship_cells)
     assigns = [board: board, shots: [], move?: false]
     BoardView.render("board.html", assigns)
   end
@@ -299,8 +254,8 @@ defmodule PhoenixSeaBattleWeb.Game do
     end
   end
 
-  defp append_pre_ship(list, pre_ship_blocks) do
-    pre_ship_blocks
+  defp append_pre_ship(list, pre_ship_cells) do
+    pre_ship_cells
     |> Enum.reduce(list, fn index, acc ->
       case Enum.at(acc, index) do
         nil ->

@@ -5,21 +5,22 @@ defmodule PhoenixSeaBattle do
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
-    import Supervisor.Spec
-
-    # Define workers and child supervisors to be supervised
     children = [
+      # Start the Telemetry supervisor
+      PhoenixSeaBattleWeb.Telemetry,
+      # Start the PubSub system
+      {Phoenix.PubSub, name: PhoenixSeaBattle.PubSub},
       # Start the Ecto repository
-      supervisor(PhoenixSeaBattle.Repo, []),
+      PhoenixSeaBattle.Repo,
       # Start the endpoint when the application starts
-      supervisor(PhoenixSeaBattleWeb.Endpoint, []),
+      PhoenixSeaBattleWeb.Endpoint,
       # Start your own worker by calling: PhoenixSeaBattle.Worker.start_link(arg1, arg2, arg3)
-      # worker(PhoenixSeaBattle.Worker, [arg1, arg2, arg3]),
-      supervisor(PhoenixSeaBattleWeb.Presence, []),
-      worker(PhoenixSeaBattle.Saver, []),
-      worker(PhoenixSeaBattle.LobbyArchiver, []),
-      supervisor(Registry, [:unique, PhoenixSeaBattle.Game.Registry]),
-      supervisor(PhoenixSeaBattle.Game.Supervisor, [])
+      # {PhoenixSeaBattle.Worker, [arg1, arg2, arg3]},
+      PhoenixSeaBattleWeb.Presence,
+      PhoenixSeaBattle.Saver,
+      PhoenixSeaBattle.LobbyArchiver,
+      {Registry, [keys: :unique, name: PhoenixSeaBattle.Game.Registry]},
+      PhoenixSeaBattle.Game.Supervisor
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

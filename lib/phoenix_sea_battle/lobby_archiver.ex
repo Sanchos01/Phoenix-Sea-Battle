@@ -4,7 +4,7 @@ defmodule PhoenixSeaBattle.LobbyArchiver do
   @msg_count Application.get_env(:phoenix_sea_battle, :msg_count)
   @timeout 1_000
 
-  def start_link() do
+  def start_link(_) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 

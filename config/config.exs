@@ -18,8 +18,17 @@ config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "GdMl3er/H5562PpEcWuZhDELgZhen1bufkuMrTMeVpBVM8GS4U3h5t93kq0gpEUj",
   render_errors: [view: PhoenixSeaBattleWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: PhoenixSeaBattle.PubSub, adapter: Phoenix.PubSub.PG2],
+  pubsub_server: PhoenixSeaBattle.PubSub,
   live_view: [signing_salt: "T7tp90J9XJ3qpScUicyq/af1qvT/I2Ca"]
+
+# Configure esbuild (the version is required)
+config :esbuild,
+  version: "0.12.18",
+  default: [
+    args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
 
 # Configures Elixir's Logger
 config :logger, :console,

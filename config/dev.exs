@@ -17,21 +17,9 @@ config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,
   code_reloader: true,
   check_origin: false,
   watchers: [
-    node: [
-      "node_modules/webpack/bin/webpack.js",
-      "--mode",
-      "development",
-      "--watch-stdin",
-      "--color",
-      "--display",
-      "minimal",
-      cd: Path.expand("../assets", __DIR__)
-    ]
+    # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
+    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}
   ]
-
-config :kernel,
-  inet_dist_listen_min: 41014,
-  inet_dist_listen_max: 41024
 
 # Watch static and templates for browser reloading.
 config :phoenix_sea_battle, PhoenixSeaBattleWeb.Endpoint,

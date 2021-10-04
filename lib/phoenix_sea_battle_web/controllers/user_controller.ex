@@ -3,12 +3,13 @@ defmodule PhoenixSeaBattleWeb.UserController do
 
   alias PhoenixSeaBattle.User
   alias PhoenixSeaBattleWeb.UserLive
-  alias Phoenix.LiveView.Controller, as: LiveController
+  import Phoenix.LiveView.Controller
+  alias PhoenixSeaBattle.Repo
 
   plug(:authenticate_user when action in [:index, :show])
 
   def index(conn, _params) do
-    LiveController.live_render(conn, UserLive.Index, session: %{})
+    live_render(conn, UserLive.Index, session: %{})
   end
 
   def show(conn, %{"id" => id}) do
@@ -17,6 +18,6 @@ defmodule PhoenixSeaBattleWeb.UserController do
   end
 
   def new(conn, _params) do
-    LiveController.live_render(conn, UserLive.New, session: %{})
+    live_render(conn, UserLive.New, session: %{})
   end
 end
