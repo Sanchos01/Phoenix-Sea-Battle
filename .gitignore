@@ -20,3 +20,4 @@ phoenix_sea_battle-*.tar
 /priv/static/cache_manifest.json
 
 .iex.exs
+/.elixir_ls

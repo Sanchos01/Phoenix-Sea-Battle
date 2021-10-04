@@ -18,6 +18,14 @@ defmodule PhoenixSeaBattle.Mixfile do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
+      ],
+      releases: [
+        phoenix_sea_battle: [
+          include_executables_for: [:unix],
+          applications: [runtime_tools: :permanent],
+          path: "./rel/phoenix_sea_battle",
+          quiet: true
+        ]
       ]
     ]
   end

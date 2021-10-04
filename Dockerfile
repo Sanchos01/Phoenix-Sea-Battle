@@ -1,4 +1,4 @@
-FROM elixir:1.8.1-alpine as asset-builder-mix-getter
+FROM elixir:1.12-alpine as asset-builder
 
 ENV HOME=/app
 
@@ -10,23 +10,10 @@ COPY config/ $HOME/config/
 COPY mix.exs mix.lock $HOME/
 
 WORKDIR $HOME
-RUN mix deps.get
+RUN mix do deps.get, deps.compile, deploy.assets, phx.digest
 
 ########################################################################
-FROM node:6 as asset-builder
-
-ENV HOME=/app
-WORKDIR $HOME
-
-COPY --from=asset-builder-mix-getter $HOME/deps $HOME/deps
-COPY assets/ $HOME/assets
-
-RUN cd assets && \
-    npm install && \
-    npm run deploy
-
-########################################################################
-FROM elixir:1.8.1-alpine as releaser
+FROM elixir:1.12-alpine as releaser
 
 ENV HOME=/app
 
@@ -47,23 +34,22 @@ RUN mix do deps.get --only $MIX_ENV, deps.compile
 COPY lib $HOME/lib
 COPY priv $HOME/priv
 COPY rel $HOME/rel
+COPY assets $HOME/assets
+
+WORKDIR $HOME
 
 # Digest precompiled assets
 COPY --from=asset-builder $HOME/priv/static/ $HOME/priv/static/
 
-WORKDIR $HOME
-RUN mix phx.digest
-
 # Release
-RUN mix release --env=$MIX_ENV --verbose
+RUN mix release
 
 ########################################################################
-FROM alpine:3.9
+FROM alpine:3.14
 
 ENV LANG=en_US.UTF-8 \
     HOME=/app/ \
-    TERM=xterm \
-    VERSION=0.2.0 \
+    VERSION=0.3.0 \
     MIX_ENV=prod \
     REPLACE_OS_VARS=true \
     SHELL=/bin/sh \
@@ -73,9 +59,8 @@ RUN apk update && \
     apk upgrade && \
     apk add --no-cache bash ncurses-libs ca-certificates openssl
 
-COPY --from=releaser $HOME/rel/$APP/releases/$VERSION/$APP.tar.gz $HOME
+COPY --from=releaser $HOME/rel/$APP $HOME
 WORKDIR $HOME
-RUN tar -xzf $APP.tar.gz && rm $APP.tar.gz
 
-ENTRYPOINT ["/app/bin/phoenix_sea_battle"]
-CMD ["foreground"]
+ENTRYPOINT ["bin/phoenix_sea_battle"]
+CMD ["start"]
