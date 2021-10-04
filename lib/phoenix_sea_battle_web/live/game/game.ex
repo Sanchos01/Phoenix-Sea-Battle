@@ -54,20 +54,6 @@ defmodule PhoenixSeaBattleWeb.Game do
     {:noreply, socket}
   end
 
-  def handle_event("keydown", key, socket = %{assigns: %{game_state: :initial}}) do
-    case __MODULE__.InitialEventHandle.apply_key(key, socket) do
-      {:ok, new_assigns} ->
-        {:noreply, assign(socket, new_assigns)}
-
-      _ ->
-        {:noreply, socket}
-    end
-  end
-
-  def handle_event("keydown", _key, socket) do
-    {:noreply, socket}
-  end
-
   def handle_event(event, key, socket = %{assigns: %{game_state: state}})
       when state in ~w(initial ready)a do
     case __MODULE__.InitialEventHandle.apply_event(event, key, socket) do
@@ -79,15 +65,9 @@ defmodule PhoenixSeaBattleWeb.Game do
     end
   end
 
-  def handle_event("shot", value, socket = %{assigns: %{game_state: :move}})
-      when is_binary(value) do
+  def handle_event("shot", %{"index" => value}, socket = %{assigns: %{game_state: :move}}) do
     {index, ""} = Integer.parse(value)
-    handle_event("shot", index, socket)
-  end
-
-  def handle_event("shot", value, socket = %{assigns: %{game_state: :move}})
-      when is_integer(value) and value >= 0 and value < 100 do
-    GameServer.shot(socket.assigns.pid, socket.assigns.user.id, value)
+    GameServer.shot(socket.assigns.pid, socket.assigns.user.id, index)
     {:noreply, socket}
   end
 
@@ -164,17 +144,18 @@ defmodule PhoenixSeaBattleWeb.Game do
     {:ok, socket |> assign(game_state: state, render_opts: nil)}
   end
 
-  defp render_board(state, board, _, _, %{ready: true}) when state in ~w(initial ready)a do
-    assigns = [board: board, shots: [], move?: false]
-    BoardView.render("board.html", assigns)
+  defp render_board(state, board, _, _, render_opts = %{ready: true})
+       when state in ~w(initial ready)a do
+    assigns = [board: board, shots: [], move?: false, render_opts: render_opts]
+    BoardView.render("preparation_board.html", assigns)
   end
 
-  defp render_board(state, board, _, _, %{x: x, y: y, pos: pos, l: l})
+  defp render_board(state, board, _, _, render_opts = %{x: x, y: y, pos: pos, l: l})
        when state in ~w(initial ready)a do
     pre_ship_cells = Board.ship_opts_to_indexes(x, y, pos, l)
     board = append_pre_ship(board, pre_ship_cells)
-    assigns = [board: board, shots: [], move?: false]
-    BoardView.render("board.html", assigns)
+    assigns = [board: board, shots: [], move?: false, render_opts: render_opts]
+    BoardView.render("preparation_board.html", assigns)
   end
 
   defp render_board(state, _, shots, other_shots, _) when state in ~w(win lose)a do
@@ -250,7 +231,7 @@ defmodule PhoenixSeaBattleWeb.Game do
         {:ok, socket |> assign(render_opts: %{ready: true})}
 
       {_type, l} when l in 1..4 ->
-        {:ok, assign(socket, render_opts: %{x: 0, y: 0, pos: :h, l: l})}
+        {:ok, assign(socket, render_opts: %{ready: false, x: 0, y: 0, pos: :h, l: l})}
     end
   end
 

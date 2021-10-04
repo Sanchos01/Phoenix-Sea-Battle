@@ -60,7 +60,7 @@ defmodule PhoenixSeaBattleWeb.BoardView do
   def message(nil, :initial) do
     ~E"""
     <div>
-    Move your ships with arrows, use '-' for rotating and '+' for placing
+    Place your ships
     </div>
     """
   end
@@ -105,51 +105,51 @@ defmodule PhoenixSeaBattleWeb.BoardView do
     """
   end
 
-  defp render_cell(cell)
+  defp render_cell(cell, i \\ 0)
 
-  defp render_cell(k) when k in [nil, :near] do
+  defp render_cell(k, i) when k in [nil, :near] do
     ~E"""
-    <div class="cell">
+    <div phx-value=<%= i %> class="cell">
     </div>
     """
   end
 
-  defp render_cell(:ghost) do
+  defp render_cell(:ghost, i) do
     ~E"""
-    <div class="cell ghost_cell">
+    <div phx-value=<%= i %> class="cell ghost_cell">
     </div>
     """
   end
 
-  defp render_cell(:cross) do
+  defp render_cell(:cross, i) do
     ~E"""
-    <div class="cell cross_cell">
+    <div phx-value=<%= i %> class="cell cross_cell">
     </div>
     """
   end
 
-  defp render_cell(mark) when mark in @marks do
+  defp render_cell(mark, i) when mark in @marks do
     ~E"""
-    <div class="cell ship_cell">
+    <div phx-value=<%= i %> class="cell ship_cell">
     </div>
     """
   end
 
-  defp render_cell(:shotted) do
+  defp render_cell(:shotted, _) do
     ~E"""
     <div class="cell shotted_cell">
     </div>
     """
   end
 
-  defp render_cell(:killed) do
+  defp render_cell(:killed, _) do
     ~E"""
     <div class="cell killed_cell">
     </div>
     """
   end
 
-  defp render_cell(:miss) do
+  defp render_cell(:miss, _) do
     ~E"""
     <div class="cell missed_cell">
     </div>
@@ -160,7 +160,7 @@ defmodule PhoenixSeaBattleWeb.BoardView do
 
   defp render_shot(k, index, true) when is_nil(k) or k in @marks do
     ~E"""
-    <button class="cell empty-cell empty-button" phx-click="shot" phx-value=<%= index %>>
+    <button class="cell empty-cell empty-button" phx-click="shot" phx-value-index=<%= index %>>
     </button>
     """
   end
@@ -206,4 +206,29 @@ defmodule PhoenixSeaBattleWeb.BoardView do
 
   defp apply_shots([]), do: Board.new_board() |> Stream.with_index()
   defp apply_shots(shots = [_ | _]), do: Stream.with_index(shots)
+
+  def render_placing_ship(%{pos: pos, l: l}) do
+    ~E"""
+    Ship to place:
+    <%= if pos == :h do %>
+      <div class=ghost_ship_horizontal>
+        <%= for _ <- Stream.cycle([nil]) |> Stream.take(l) do %>
+          <%= render_cell(:ghost) %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class=ghost_ship_vertical>
+        <%= for _ <- Stream.cycle([nil]) |> Stream.take(l) do %>
+          <%= render_cell(:ghost) %>
+        <% end %>
+      </div>
+    <% end %>
+    """
+  end
+
+  def render_placing_ship(_) do
+    ~E"""
+    All ships placed
+    """
+  end
 end

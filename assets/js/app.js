@@ -26,8 +26,33 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
+let Hooks = {}
+Hooks.PreparePhase = {
+  mounted(){
+    Array.from(document.getElementById("board").children).map(elem => {
+      elem.addEventListener("mouseover", _event => {
+        let i = elem.attributes.getNamedItem("phx-value").value
+        this.pushEvent("mouseover", {"index": i})
+      })
+    })
+  }
+}
+
+Hooks.ClearChat = {
+  mounted() {
+    elem = document.getElementById("chat-input");
+    elem.addEventListener("keyup", event => {
+      if(event.key === "Enter" && elem.value != ""){
+        elem.value = "";
+        let el = document.getElementById("messages");
+        el.scrollTop = el.scrollHeight;
+      }
+    })
+  }
+}
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+let liveSocket = new LiveSocket("/live", Socket, {hooks: Hooks, params: {_csrf_token: csrfToken}})
 
 // Show progress bar on live navigation and form submits
 topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
@@ -48,14 +73,4 @@ document.addEventListener("DOMContentLoaded", _event => {
   if (el != undefined) {
     el.scrollTop = el.scrollHeight;
   }
-});
-
-Array.from(document.getElementsByName("chat-input")).map(elem => {
-  elem.addEventListener("focus", event => {
-    if(event.sourceCapabilities === null && elem.value != ""){
-      elem.value = "";
-      let el = document.getElementById("messages");
-      el.scrollTop = el.scrollHeight;
-    }
-  })
 });

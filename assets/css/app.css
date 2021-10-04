@@ -124,3 +124,15 @@
 .missed_cell {
   background-color: rgb(150, 150, 150);
 }
+.ghost_ship_horizontal {
+  display: grid;
+  grid-template-rows: 1.3em;
+  grid-template-columns: repeat(4, 1.3em);
+  grid-gap: 0.2em;
+}
+.ghost_ship_vertical {
+  display: grid;
+  grid-template-rows: repeat(4, 1.3em);
+  grid-template-columns: 1.3em;
+  grid-gap: 0.2em;
+}

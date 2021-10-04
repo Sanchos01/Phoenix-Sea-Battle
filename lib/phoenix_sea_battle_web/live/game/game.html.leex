@@ -26,14 +26,17 @@
     </div>
   </div>
   <div>
-    <form phx-submit="insert_message">
-      <input name="chat-input" type="text" class="form-control" placeholder="Type a message..." autocomplete="off">
-    </form>
+    <%= live_component(PhoenixSeaBattleWeb.ChatInput, []) %>
   </div>
   <div>
     <td class="text-right">
-      <%= link "Exit Game", to: game_path(@socket, :delete, @id), method: :delete, csrf_token: @token,
-        data: [confirm: "You want leave the game?"], class: "button button-default" %>
+      <%= if @game_state in ~w(win lose)a do %>
+        <%= link "Exit Game", to: game_path(@socket, :delete, @id), method: :delete, csrf_token: @token,
+          data: [], class: "button button-default" %>
+      <% else %>
+        <%= link "Exit Game", to: game_path(@socket, :delete, @id), method: :delete, csrf_token: @token,
+          data: [confirm: "You want leave the game?"], class: "button button-default" %>
+      <% end %>
     </td>
   </div>
 </div>

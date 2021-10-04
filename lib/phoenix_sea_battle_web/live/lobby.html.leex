@@ -30,10 +30,7 @@
     </div>
   </div>
   <div>
-    <form phx-submit="insert_message">
-      <input name="chat-input" type="text" class="form-control" value=""
-              maxlength="100" placeholder="Type a message..." autocomplete="off">
-    </form>
+    <%= live_component(PhoenixSeaBattleWeb.ChatInput) %>
   </div>
   <div>
     <td class="text-right">

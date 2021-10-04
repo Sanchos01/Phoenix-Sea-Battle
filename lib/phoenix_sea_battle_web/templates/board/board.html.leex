@@ -1,4 +1,4 @@
-<div class="boards" phx-keydown="keydown" phx-target="window">
+<div class="boards">
   <div class="board">
     <%= for cell <- @board do %>
       <%= render_cell(cell) %>
