@@ -1,15 +1,14 @@
 defmodule PhoenixSeaBattleWeb.GameTest do
   use PhoenixSeaBattleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
-  alias Phoenix.LiveViewTest
   alias PhoenixSeaBattle.Game.Supervisor, as: GameSupervisor
   alias PhoenixSeaBattle.GameServer
   alias PhoenixSeaBattleWeb.Game, as: GameLive
 
-  @ghost_cell "[\n\s\r]*<div class=\"cell ghost_cell\"><\/div>"
-  @board_class "[\n\s\r]*<div class=\"board\">"
-  @some_cells "[\n\s\r]*<div class=\"cell\"><\/div>"
-  @vertical_repeatence "#{@ghost_cell}(#{@some_cells}){9}"
+  @ghost_cell "[\n\s\r]*<div phx-value=\"\\d{1,2}\" class=\"cell ghost_cell\"><\/div>"
+  @board_class "class=\"board start_board\" phx-click=\"place\">"
+  @empty_cell "[\n\s\r]*<div phx-value=\"\\d{1,2}\" class=\"cell\"><\/div>"
+  @vertical_repeatence "#{@ghost_cell}(#{@empty_cell}){9}"
 
   defp count_ship_cells(html) do
     pattern = :binary.compile_pattern([" ", "\\", "\""])
@@ -44,7 +43,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     end)
 
     :timer.sleep(10)
-    html = LiveViewTest.render(view)
+    html = render(view)
     count = @ships |> Enum.take(ships_count) |> Enum.sum()
     ^count = count_ship_cells(html)
     html
@@ -70,12 +69,12 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       {:ok, :admin} = GameServer.add_user(GameSupervisor.via_tuple(id), user1)
       {:ok, :admin} = GameServer.add_user(GameSupervisor.via_tuple(id), user1)
       params = [session: %{"user" => user1, "id" => id, "token" => token}]
-      {:ok, %LiveViewTest.View{}, _} = live_isolated(conn, GameLive, params)
+      {:ok, _view, _html} = live_isolated(conn, GameLive, params)
 
       {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
       {:ok, :opponent} = GameServer.add_user(GameSupervisor.via_tuple(id), user2)
       params = [session: %{"user" => user2, "id" => id, "token" => token}]
-      {:ok, %LiveViewTest.View{}, _} = live_isolated(conn, GameLive, params)
+      {:ok, _view, _html} = live_isolated(conn, GameLive, params)
 
       user3 = insert_user(%{name: "user3"})
       {:error, "game already full"} = GameServer.add_user(GameSupervisor.via_tuple(id), user3)
@@ -97,152 +96,114 @@ defmodule PhoenixSeaBattleWeb.GameTest do
     end
 
     test "render board while placing ships", %{view1: view} do
-      assert LiveViewTest.render(view) =~ ~r/#{@board_class}#{@ghost_cell}/
+      assert render(view) =~ ~r/#{@board_class}#{@ghost_cell}/
 
-      assert LiveViewTest.render_keydown(view, "keydown", "ArrowDown") =~
-               ~r/#{@board_class}(#{@some_cells}){10}#{@ghost_cell}/
+      assert render_hook(view, "mouseover", %{"index" => "10"}) =~
+               ~r/#{@board_class}(#{@empty_cell}){10}#{@ghost_cell}/
 
-      assert LiveViewTest.render_keydown(view, "keydown", "ArrowRight") =~
-               ~r/#{@board_class}(#{@some_cells}){11}#{@ghost_cell}/
+      assert render_hook(view, "mouseover", %{"index" => "11"}) =~
+               ~r/#{@board_class}(#{@empty_cell}){11}#{@ghost_cell}/
 
-      assert LiveViewTest.render_keydown(view, "keydown", "ArrowLeft") =~
-               ~r/#{@board_class}(#{@some_cells}){10}#{@ghost_cell}/
+      assert render_hook(view, "mouseover", %{"index" => "10"}) =~
+               ~r/#{@board_class}(#{@empty_cell}){10}#{@ghost_cell}/
 
-      assert LiveViewTest.render_keydown(view, "keydown", "ArrowUp") =~
+      assert render_hook(view, "mouseover", %{"index" => "0"}) =~
                ~r/#{@board_class}#{@ghost_cell}/
 
-      refute LiveViewTest.render_keydown(view, "keydown", "+") =~
-               "<div class=\"cell ship_cell\">"
+      refute view |> element("#board") |> render_click() =~ "<div class=\"cell ship_cell\">"
 
       :timer.sleep(10)
-      html = LiveViewTest.render(view) |> IO.inspect(label: "HTML")
-      assert html =~ "<div class=\"cell ship_cell\">"
-      assert html =~ ~r/(<div class=\"cell cross_cell\"><\/div>[\n\s]*){3}/
+      html = render(view)
+      assert html =~ ~r/<div phx-value="\d{1,2}" class="cell ship_cell">/
+      assert html =~ ~r/(<div phx-value="\d{1,2}" class="cell cross_cell"><\/div>[\n\s]*){3}/
     end
 
     test "render board while moving ghost (horizontal)", %{view1: view} do
-      html = LiveViewTest.render(view)
-      new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowUp")
-      assert html == new_html
-      assert new_html =~ ~r/(#{@ghost_cell}[\n\s]*){4}/
+      assert render(view) =~ ~r/class="ghost_ship_horizontal"/
+      assert render(view) =~ ~r/#{@board_class}(#{@ghost_cell}*){4}/
 
-      new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowLeft")
-      assert html == new_html
-      assert new_html =~ ~r/(#{@ghost_cell}[\n\s]*){4}/
+      assert render_hook(view, "mouseover", %{"index" => "3"}) =~
+               ~r/#{@board_class}(#{@empty_cell}){3}(#{@ghost_cell}*){4}/
 
-      html =
-        Enum.reduce(1..6, "", fn _, _ ->
-          LiveViewTest.render_keydown(view, "keydown", "ArrowRight")
-        end)
-
-      new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowRight")
-      assert html == new_html
-      assert new_html =~ ~r/(#{@ghost_cell}[\n\s]*){4}/
-
-      html =
-        Enum.reduce(1..9, "", fn _, _ ->
-          LiveViewTest.render_keydown(view, "keydown", "ArrowDown")
-        end)
-
-      new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowDown")
-      assert html == new_html
-      assert new_html =~ ~r/(#{@ghost_cell}[\n\s]*){4}/
+      assert render_hook(view, "mouseover", %{"index" => "9"}) =~
+               ~r/#{@board_class}(#{@empty_cell}){6}(#{@ghost_cell}*){4}/
     end
 
     test "render board while moving ghost (vertical)", %{view1: view} do
-      html = LiveViewTest.render_keydown(view, "keydown", "-")
-      assert html =~ ~r/#{@board_class}(#{@vertical_repeatence}){4}#{@some_cells}/
+      view |> element("#rotate") |> render_click() =~ ~r/class="ghost_ship_vertical"/
+      assert render(view) =~ ~r/#{@board_class}(#{@vertical_repeatence}){4}#{@empty_cell}/
 
-      assert html == LiveViewTest.render_keydown(view, "keydown", "ArrowUp")
-      assert html == LiveViewTest.render_keydown(view, "keydown", "ArrowLeft")
+      assert render_hook(view, "mouseover", %{"index" => "9"}) =~
+               ~r/#{@board_class}(#{@empty_cell}){9}(#{@vertical_repeatence}){4}/
 
-      html =
-        Enum.reduce(1..9, "", fn _, _ ->
-          LiveViewTest.render_keydown(view, "keydown", "ArrowRight")
-        end)
+      assert render_hook(view, "mouseover", %{"index" => "30"}) =~
+               ~r/#{@board_class}(#{@empty_cell}){30}(#{@vertical_repeatence}){4}/
 
-      new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowRight")
-      assert html == new_html
-      assert new_html =~ ~r/#{@board_class}(#{@some_cells}){9}(#{@vertical_repeatence}){4}/
-
-      html =
-        Enum.reduce(1..6, "", fn _, _ ->
-          LiveViewTest.render_keydown(view, "keydown", "ArrowDown")
-        end)
-
-      new_html = LiveViewTest.render_keydown(view, "keydown", "ArrowDown")
-      assert html == new_html
-      reg = ~r/#{@board_class}(#{@some_cells}){69}(#{@vertical_repeatence}){3}#{@ghost_cell}/
-      assert new_html =~ reg
+      assert render_hook(view, "mouseover", %{"index" => "90"}) =~
+               ~r/#{@board_class}(#{@empty_cell}){60}(#{@vertical_repeatence}){4}/
     end
 
     test "rotate ghost on board", %{view1: view} do
-      h_reg = ~r/#{@board_class}(#{@some_cells}){66}(#{@ghost_cell}[\n\s]*){4}/
-      v_reg = ~r/#{@board_class}(#{@some_cells}){66}(#{@vertical_repeatence}){3}#{@ghost_cell}/
+      h_reg = ~r/#{@board_class}(#{@empty_cell}){66}(#{@ghost_cell}){4}/
+      v_reg = ~r/#{@board_class}(#{@empty_cell}){66}(#{@vertical_repeatence}){3}#{@ghost_cell}/
 
-      html =
-        Enum.reduce(1..9, "", fn _, _ ->
-          LiveViewTest.render_keydown(view, "keydown", "ArrowRight")
-          LiveViewTest.render_keydown(view, "keydown", "ArrowDown")
-        end)
+      html = render_hook(view, "mouseover", %{"index" => "99"})
 
-      new_html = LiveViewTest.render_keydown(view, "keydown", "-")
+      new_html = view |> element("#rotate") |> render_click()
       refute html == new_html
       assert new_html =~ v_reg
 
-      html =
-        Enum.reduce(1..3, "", fn _, _ ->
-          LiveViewTest.render_keydown(view, "keydown", "ArrowRight")
-        end)
+      html = render_hook(view, "mouseover", %{"index" => "99"})
 
-      new_html = LiveViewTest.render_keydown(view, "keydown", "-")
+      new_html = view |> element("#rotate") |> render_click()
       refute html == new_html
       assert new_html =~ h_reg
 
-      html = LiveViewTest.render_keydown(view, "keydown", "-")
+      html = view |> element("#rotate") |> render_click()
       assert html =~ v_reg
 
-      html = LiveViewTest.render_keydown(view, "keydown", "-")
+      html = view |> element("#rotate") |> render_click()
       assert html =~ h_reg
     end
 
     test "render error messages (admin)", %{view1: view} do
-      assert LiveViewTest.render(view) =~ "Move your ships with arrows"
-      LiveViewTest.render_keydown(view, "keydown", "+")
-      LiveViewTest.render_keydown(view, "keydown", "+")
+      assert render(view) =~ "Place your ships"
+      view |> element("#board") |> render_click()
+      view |> element("#board") |> render_click()
       :timer.sleep(10)
-      assert LiveViewTest.render(view) =~ "<div class=\"error\">\nShips shouldn't cross"
-      LiveViewTest.render_keydown(view, "keydown", "ArrowDown")
-      LiveViewTest.render_keydown(view, "keydown", "+")
+      assert render(view) =~ "<div class=\"error\">\nShips shouldn&#39;t cross"
+      render_hook(view, "mouseover", %{"index" => "10"})
+      view |> element("#board") |> render_click()
       :timer.sleep(10)
-      assert LiveViewTest.render(view) =~ "<div class=\"error\">\nShips shouldn't touch"
+      assert render(view) =~ "<div class=\"error\">\nShips shouldn&#39;t touch"
       :timer.sleep(100)
-      refute LiveViewTest.render(view) =~ "<div class=\"error\">\nShips shouldn't touch"
+      refute render(view) =~ "<div class=\"error\">\nShips shouldn&#39;t touch"
     end
 
     test "render error messages (opponent)", %{conn: conn, user2: user, id: id} do
       {:ok, view, :opponent} = mount_view(conn, id, user)
 
-      assert LiveViewTest.render(view) =~ "Move your ships with arrows"
-      LiveViewTest.render_keydown(view, "keydown", "+")
-      LiveViewTest.render_keydown(view, "keydown", "+")
+      assert render(view) =~ "Place your ships"
+      view |> element("#board") |> render_click()
+      view |> element("#board") |> render_click()
       :timer.sleep(10)
-      assert LiveViewTest.render(view) =~ "<div class=\"error\">\nShips shouldn't cross"
-      LiveViewTest.render_keydown(view, "keydown", "ArrowDown")
-      LiveViewTest.render_keydown(view, "keydown", "+")
+      assert render(view) =~ "<div class=\"error\">\nShips shouldn&#39;t cross"
+      render_hook(view, "mouseover", %{"index" => "10"})
+      view |> element("#board") |> render_click()
       :timer.sleep(10)
-      assert LiveViewTest.render(view) =~ "<div class=\"error\">\nShips shouldn't touch"
+      assert render(view) =~ "<div class=\"error\">\nShips shouldn&#39;t touch"
       :timer.sleep(100)
-      refute LiveViewTest.render(view) =~ "<div class=\"error\">\nShips shouldn't touch"
+      refute render(view) =~ "<div class=\"error\">\nShips shouldn&#39;t touch"
     end
 
     test "render opponent status", %{conn: conn, view1: view1, id: id, user2: user2} do
-      assert LiveViewTest.render(view1) =~ "No opponent"
+      assert render(view1) =~ "No opponent"
       {:ok, _, :opponent} = mount_view(conn, id, user2)
       :timer.sleep(10)
-      assert LiveViewTest.render(view1) =~ "Opponent: #{user2.name}"
+      assert render(view1) =~ "Opponent: #{user2.name}"
     end
 
+    # TODO check and fix
     test "apply ships, drop last and drop all (admin)", %{
       conn: conn,
       view1: view1,
@@ -254,29 +215,29 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       html = fill_board(view1, 4)
       assert 12 == count_ship_cells(html)
 
-      LiveViewTest.render_click(view1, "drop_last")
+      render_click(view1, "drop_last")
       :timer.sleep(10)
-      html = LiveViewTest.render(view1)
+      html = render(view1)
       assert 10 == count_ship_cells(html)
 
-      LiveViewTest.render_click(view2, "ready")
-      LiveViewTest.render_click(view1, "drop_last")
+      render_click(view2, "ready")
+      render_click(view1, "drop_last")
       :timer.sleep(10)
-      html = LiveViewTest.render(view1)
+      html = render(view1)
       assert 7 == count_ship_cells(html)
 
-      LiveViewTest.render_click(view2, "unready")
-      LiveViewTest.render_click(view1, "drop_all")
+      render_click(view2, "unready")
+      render_click(view1, "drop_all")
       :timer.sleep(10)
-      html = LiveViewTest.render(view1)
+      html = render(view1)
       assert 0 == count_ship_cells(html)
 
       html = fill_board(view1)
       assert 20 == count_ship_cells(html)
-      LiveViewTest.render_click(view2, "ready")
-      LiveViewTest.render_click(view1, "drop_all")
+      render_click(view2, "ready")
+      render_click(view1, "drop_all")
       :timer.sleep(10)
-      html = LiveViewTest.render(view1)
+      html = render(view1)
       assert 0 == count_ship_cells(html)
     end
 
@@ -291,46 +252,46 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       html = fill_board(view2, 4)
       assert 12 == count_ship_cells(html)
 
-      LiveViewTest.render_click(view2, "drop_last")
+      render_click(view2, "drop_last")
       :timer.sleep(10)
-      html = LiveViewTest.render(view2)
+      html = render(view2)
       assert 10 == count_ship_cells(html)
 
-      LiveViewTest.render_click(view1, "ready")
-      LiveViewTest.render_click(view2, "drop_last")
+      render_click(view1, "ready")
+      render_click(view2, "drop_last")
       :timer.sleep(10)
-      html = LiveViewTest.render(view2)
+      html = render(view2)
       assert 7 == count_ship_cells(html)
 
-      LiveViewTest.render_click(view1, "unready")
-      LiveViewTest.render_click(view2, "drop_all")
+      render_click(view1, "unready")
+      render_click(view2, "drop_all")
       :timer.sleep(10)
-      html = LiveViewTest.render(view2)
+      html = render(view2)
       assert 0 == count_ship_cells(html)
 
       html = fill_board(view2)
       assert 20 == count_ship_cells(html)
-      LiveViewTest.render_click(view1, "ready")
-      LiveViewTest.render_click(view2, "drop_all")
+      render_click(view1, "ready")
+      render_click(view2, "drop_all")
       :timer.sleep(10)
-      html = LiveViewTest.render(view2)
+      html = render(view2)
       assert 0 == count_ship_cells(html)
     end
 
     test "render new message", %{view1: view, user1: %{name: username}} do
       msg = "game live view test"
-      refute LiveViewTest.render(view) =~ msg
-      LiveViewTest.render_submit(view, "insert_message", %{"chat-input" => msg})
+      refute render(view) =~ msg
+      render_submit(view, "insert_message", %{"chat-input" => msg})
       :timer.sleep(10)
-      assert LiveViewTest.render(view) =~ "#{username}: #{msg}"
+      assert render(view) =~ "#{username}: #{msg}"
     end
 
     test "render readiness (admin)", %{view1: view} do
       html = fill_board(view)
       assert html =~ "ready"
-      LiveViewTest.render_click(view, "ready")
+      render_click(view, "ready")
       :timer.sleep(10)
-      html = LiveViewTest.render(view)
+      html = render(view)
       assert html =~ "Ready, await your opponent"
       assert html =~ "unready"
     end
@@ -339,9 +300,9 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       {:ok, view, :opponent} = mount_view(conn, id, user2)
       html = fill_board(view)
       assert html =~ "ready"
-      LiveViewTest.render_click(view, "ready")
+      render_click(view, "ready")
       :timer.sleep(10)
-      html = LiveViewTest.render(view)
+      html = render(view)
       assert html =~ "Ready, await your opponent"
       assert html =~ "unready"
     end
@@ -356,20 +317,20 @@ defmodule PhoenixSeaBattleWeb.GameTest do
 
       html = fill_board(view1)
       assert html =~ "ready"
-      LiveViewTest.render_click(view1, "ready")
+      render_click(view1, "ready")
       :timer.sleep(10)
-      html = LiveViewTest.render(view1)
+      html = render(view1)
       assert html =~ "Ready, await your opponent"
 
       html = fill_board(view2)
       assert html =~ "ready"
-      LiveViewTest.render_click(view2, "ready")
+      render_click(view2, "ready")
       :timer.sleep(10)
-      html = LiveViewTest.render(view2)
-      assert html =~ "Make your move" or html =~ "Wait the opponent's move"
+      html = render(view2)
+      assert html =~ "Make your move" or html =~ "Wait the opponent&#39;s move"
 
-      html = LiveViewTest.render(view1)
-      assert html =~ "Make your move" or html =~ "Wait the opponent's move"
+      html = render(view1)
+      assert html =~ "Make your move" or html =~ "Wait the opponent&#39;s move"
     end
 
     test "start game (ready: opponent -> admin)", %{
@@ -382,28 +343,28 @@ defmodule PhoenixSeaBattleWeb.GameTest do
 
       html = fill_board(view2)
       assert html =~ "ready"
-      LiveViewTest.render_click(view2, "ready")
+      render_click(view2, "ready")
       :timer.sleep(10)
-      html = LiveViewTest.render(view2)
+      html = render(view2)
       assert html =~ "Ready, await your opponent"
 
       html = fill_board(view1)
       assert html =~ "ready"
-      LiveViewTest.render_click(view1, "ready")
+      render_click(view1, "ready")
       :timer.sleep(10)
-      html = LiveViewTest.render(view1)
-      assert html =~ "Make your move" or html =~ "Wait the opponent's move"
+      html = render(view1)
+      assert html =~ "Make your move" or html =~ "Wait the opponent&#39;s move"
 
-      html = LiveViewTest.render(view2)
-      assert html =~ "Make your move" or html =~ "Wait the opponent's move"
+      html = render(view2)
+      assert html =~ "Make your move" or html =~ "Wait the opponent&#39;s move"
     end
 
     test "win game (admin)", %{conn: conn, view1: view1, user2: user2, id: id} do
       {:ok, view2, :opponent} = mount_view(conn, id, user2)
       fill_board(view1)
       fill_board(view2)
-      LiveViewTest.render_click(view1, "ready")
-      LiveViewTest.render_click(view2, "ready")
+      render_click(view1, "ready")
+      render_click(view2, "ready")
       :timer.sleep(10)
       game_server_pid = :sys.get_state(view1.pid).socket.assigns.pid
       game_state = :sys.replace_state(game_server_pid, &%{&1 | turn: &1.admin.id})
@@ -416,14 +377,14 @@ defmodule PhoenixSeaBattleWeb.GameTest do
           acc + 1
 
         _, acc ->
-          LiveViewTest.render_click(view1, "shot", "#{acc}")
+          render_click(view1, "shot", %{"index" => "#{acc}"})
           acc + 1
       end)
 
       :timer.sleep(10)
-      html = LiveViewTest.render(view1)
+      html = render(view1)
       assert html =~ "Congratulations, you win"
-      html = LiveViewTest.render(view2)
+      html = render(view2)
       assert html =~ "You lose, good luck next time"
     end
 
@@ -431,8 +392,8 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       {:ok, view2, :opponent} = mount_view(conn, id, user2)
       fill_board(view1)
       fill_board(view2)
-      LiveViewTest.render_click(view1, "ready")
-      LiveViewTest.render_click(view2, "ready")
+      render_click(view1, "ready")
+      render_click(view2, "ready")
       :timer.sleep(10)
       game_server_pid = :sys.get_state(view1.pid).socket.assigns.pid
       game_state = :sys.replace_state(game_server_pid, &%{&1 | turn: &1.opponent.id})
@@ -445,14 +406,14 @@ defmodule PhoenixSeaBattleWeb.GameTest do
           acc + 1
 
         _, acc ->
-          LiveViewTest.render_click(view2, "shot", "#{acc}")
+          render_click(view2, "shot", %{"index" => "#{acc}"})
           acc + 1
       end)
 
       :timer.sleep(10)
-      html = LiveViewTest.render(view2)
+      html = render(view2)
       assert html =~ "Congratulations, you win"
-      html = LiveViewTest.render(view1)
+      html = render(view1)
       assert html =~ "You lose, good luck next time"
     end
 
@@ -468,7 +429,7 @@ defmodule PhoenixSeaBattleWeb.GameTest do
 
       delete(conn, game_path(conn, :delete, id))
       assert html_response(conn, 302)
-      LiveViewTest.assert_redirect(view2, "/")
+      assert_redirect(view2, "/")
     end
   end
 end
