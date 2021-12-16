@@ -210,13 +210,17 @@ defmodule PhoenixSeaBattleWeb.Game do
   end
 
   defp opponent_status(nil) do
-    ~E"""
+    assigns = %{}
+
+    ~H"""
     No opponent
     """
   end
 
   defp opponent_status(opponent) do
-    ~E"""
+    assigns = %{}
+
+    ~H"""
     Opponent: <%= opponent %>
     """
   end

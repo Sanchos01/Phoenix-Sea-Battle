@@ -1,4 +1,4 @@
-defmodule PhoenixSeaBattleWeb.Lobby do
+defmodule PhoenixSeaBattleWeb.Live.Lobby do
   use PhoenixSeaBattleWeb, :live_view
   require Logger
 
@@ -26,11 +26,14 @@ defmodule PhoenixSeaBattleWeb.Lobby do
     end
   end
 
-  def handle_event("insert_message", %{"chat-input" => msg}, socket) when msg != "" do
-    with msg when is_binary(msg) and msg != "" <- HtmlSanitizeEx.strip_tags(msg),
-         %{user: %User{name: username}} <- socket.assigns do
-      LobbyArchiver.new_msg(msg, username)
-    else
+  def handle_event(
+        "insert_message",
+        %{"chat-input" => msg},
+        %{assigns: %{user: %User{name: username}}} = socket
+      )
+      when msg != "" do
+    case HtmlSanitizeEx.strip_tags(msg) do
+      msg when is_binary(msg) and msg != "" -> LobbyArchiver.new_msg(msg, username)
       _ -> :ok
     end
 

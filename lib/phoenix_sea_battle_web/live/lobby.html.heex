@@ -22,7 +22,7 @@
         <div>
           <%= for {user, %{metas: [meta | _]}} <- sort_users(@online_users) do %>
             <li class="users">
-            <%= BoardView.render_user(user, meta) %>
+            <%= BoardView.render_user(%{user: user, meta: meta}) %>
             </li>
           <% end %>
         </div>
@@ -30,7 +30,8 @@
     </div>
   </div>
   <div>
-    <%= live_component(PhoenixSeaBattleWeb.ChatInput) %>
+    <.live_component module={PhoenixSeaBattleWeb.Live.ChatInput} id="chat" />
+    <%# <.live_component module={FormComponent} id="form" /> %>
   </div>
   <div>
     <td class="text-right">

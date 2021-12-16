@@ -66,7 +66,7 @@ defmodule PhoenixSeaBattle.Mixfile do
       {:excoveralls, "~> 0.14", only: :test},
       {:mock, "~> 0.2.0", only: :test},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
-      {:phoenix_live_view, "~> 0.16"},
+      {:phoenix_live_view, "~> 0.17"},
       {:floki, ">= 0.30.0", only: :test},
       {:calendar, "~> 1.0"},
       {:html_sanitize_ex, "~> 1.3"}

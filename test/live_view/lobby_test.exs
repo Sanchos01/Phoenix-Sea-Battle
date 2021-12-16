@@ -1,7 +1,8 @@
 defmodule PhoenixSeaBattleWeb.LobbyTest do
   use PhoenixSeaBattleWeb.ConnCase, async: false
   import Phoenix.LiveViewTest
-  alias PhoenixSeaBattleWeb.{Lobby, Presence}
+  alias PhoenixSeaBattleWeb.Presence
+  alias PhoenixSeaBattleWeb.Live.Lobby
 
   setup %{conn: conn} do
     user = insert_user()

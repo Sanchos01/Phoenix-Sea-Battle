@@ -38,12 +38,11 @@ Hooks.PreparePhase = {
   }
 }
 
-Hooks.ClearChat = {
+Hooks.MoveChat = {
   mounted() {
     elem = document.getElementById("chat-input");
-    elem.addEventListener("keyup", event => {
-      if(event.key === "Enter" && elem.value != ""){
-        elem.value = "";
+    elem.addEventListener("keydown", event => {
+      if(event.key === "Enter"){
         let el = document.getElementById("messages");
         el.scrollTop = el.scrollHeight;
       }

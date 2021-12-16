@@ -2,7 +2,7 @@
   <div>
     <div class="panel panel-default">
       <div id="state-bar" class="panel-heading">
-        <%= BoardView.message(@error, @game_state) %>
+        <%= BoardView.message(%{error: @error, game_state: @game_state}) %>
       </div>
       <div id="game" class="panel-body">
         <div class="opponent-status"><%= opponent_status(@opponent) %></div>
@@ -26,7 +26,7 @@
     </div>
   </div>
   <div>
-    <%= live_component(PhoenixSeaBattleWeb.ChatInput, []) %>
+    <.live_component module={PhoenixSeaBattleWeb.Live.ChatInput} id="chat" />
   </div>
   <div>
     <td class="text-right">

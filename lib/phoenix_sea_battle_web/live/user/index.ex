@@ -23,7 +23,9 @@ defmodule PhoenixSeaBattleWeb.UserLive.Index do
       |> offset([u], ^offset)
       |> Repo.all()
 
-    ~E"""
+    assigns = %{}
+
+    ~H"""
     <table class="table">
       <%= for user <- users do %>
         <tr>
