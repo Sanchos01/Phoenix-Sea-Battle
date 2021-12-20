@@ -417,6 +417,41 @@ defmodule PhoenixSeaBattleWeb.GameTest do
       assert html =~ "You lose, good luck next time"
     end
 
+    test "render different shots", %{conn: conn, view1: view1, user2: user2, id: id} do
+      {:ok, view2, :opponent} = mount_view(conn, id, user2)
+      fill_board(view1)
+      fill_board(view2)
+      render_click(view1, "ready")
+      render_click(view2, "ready")
+      :timer.sleep(10)
+      game_server_pid = :sys.get_state(view1.pid).socket.assigns.pid
+      game_state = :sys.replace_state(game_server_pid, &%{&1 | turn: &1.admin.id})
+      send(game_state.admin_pid, :update_state)
+      send(game_state.opponent_pid, :update_state)
+
+      # render miss
+      render_click(view1, "shot", %{"index" => "4"})
+      :timer.sleep(10)
+      html = render(view1)
+      assert html =~ "<div class=\"cell missed_cell\">"
+
+      # render hit, shooting opponent
+      render_click(view2, "shot", %{"index" => "0"})
+      :timer.sleep(10)
+      html = render(view2)
+      assert html =~ "<div class=\"cell shotted_cell\">"
+
+      # render kill
+      for i <- ~w(1 2 3) do
+        render_click(view2, "shot", %{"index" => i})
+      end
+
+      :timer.sleep(10)
+      html = render(view2)
+      assert html =~ "<div class=\"cell killed_cell\">"
+      assert html =~ "<div class=\"cell near_cell\">"
+    end
+
     test "opponent exit on admin exit", %{user1: user1, user2: user2, id: id, conn: conn} do
       {:ok, view2, :opponent} = mount_view(conn, id, user2)
 
